@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name"  translatable="false">Aml Miracast</string>
+    <string name="about_version">Version1.0</string>
+    <string name="enable_p2p_button">P2P On/Off</string>
+    <string name="discover_peers_button">Discover</string>
+    <string name="connect_peer_button">Connect</string>
+    <string name="disconnect_peer_button">Disconnect</string>
+    <string name="get_file_button">Launch Gallery</string>
+    <string name="empty" translatable="false"></string>
+    <string name="yes">yes</string>
+    <string name="no">no</string>
+    <string name="client_text">This device will act as a client. Click on Gallery button to pick a local(stored) file</string>
+    <string name="empty_message">No devices found. Turn on P2P and perform discovery from the Action Bar</string>
+    <string name="p2p_off_warning">Enable P2P from action bar button above or system settings</string>
+    <string name="group_owner_text">"Am I the Group Owner? "</string>
+    <string name="label_me">ME</string>
+    <string name="label_peers">PEERS</string>
+    <string name="source_ip">source ip:</string>
+    <string name="exit">exit miracast</string>
+    <string name="exit_miracast">Do you want to exit miracast?</string>
+    <string name="connecting_desc">Connecting to wireless display device &#160;&#160;&#160;&#160;</string>
+    <string name="connect_not_ready">Connect is not Ready.\n\n</string>
+    <string name="connect_ready">Connecting... \n\n Launch wireless display on your phone,tablet or PC</string>
+    <string name="device_info">Device:</string>
+    <string name="go">&#160;&#160;&#160;&#160;GO</string>
+    <string name="discover_init">Discovery Initiated</string>
+    <string name="discover_fail">Discovery Failed</string>
+    <string name="channel_try">Channel lost. Trying again</string>
+    <string name="channel_close">Severe! Channel is probably lost premanently. Try Disable/Re-Enable P2P.</string>
+    <string name="close_dlg">Close</string>
+</resources>
