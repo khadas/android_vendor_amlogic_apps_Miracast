@@ -8,7 +8,7 @@
  *              conditions of the Non-Disclosure Agreement pursuant to which
  *              this source code was originally received.
  */
-package com.aml.miracast;
+package com.amlogic.miracast;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,11 +16,13 @@ import java.util.List;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.AlertDialog.Builder;
+import android.content.DialogInterface;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.DialogInterface;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pManager;
@@ -36,6 +38,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Button;
 import android.widget.Toast;
 import android.provider.Settings;
 import android.graphics.drawable.AnimationDrawable;
@@ -82,7 +85,7 @@ public class WiFiDirectMainActivity extends Activity implements
     private ImageView                mConnectStatus;
     private TextView                 mConnectWarn;
     private TextView                 mConnectDesc;
-    private TextView                 mClick2Settings;
+    private Button                 mClick2Settings;
     private boolean                  retryChannel           = false;
     private WifiP2pDevice            mDevice                = null;
     private ArrayList<WifiP2pDevice> peers                  = new ArrayList<WifiP2pDevice>();
@@ -108,7 +111,7 @@ public class WiFiDirectMainActivity extends Activity implements
         mConnectStatus = (ImageView) findViewById(R.id.show_connect);
         mConnectDesc = (TextView) findViewById(R.id.show_connect_desc);
         mConnectWarn = (TextView) findViewById(R.id.show_desc_more);
-        mClick2Settings = (TextView) findViewById(R.id.settings_btn);
+        mClick2Settings = (Button) findViewById(R.id.settings_btn);
         mClick2Settings.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -116,6 +119,12 @@ public class WiFiDirectMainActivity extends Activity implements
                         Settings.ACTION_WIRELESS_SETTINGS));
             }
         });
+        if(!isNetAvailiable()) {
+            mConnectWarn.setText(WiFiDirectMainActivity.this.getResources()
+                        .getString(R.string.p2p_off_warning));
+            mConnectWarn.setVisibility(View.VISIBLE);
+            mClick2Settings.setVisibility(View.VISIBLE);
+        }
         TextView tv = (TextView) findViewById(R.id.device_dec);
         if (mDevice != null)
             tv.setText(mDevice.deviceName);
@@ -192,13 +201,13 @@ public class WiFiDirectMainActivity extends Activity implements
     
     public void resetData() {
         mConnectStatus.setBackgroundResource(R.drawable.wifi_connect);
+        mConnectDesc.setText(getString(R.string.connect_ready));
         peers.clear();
     }
 
     public void setConnect() {
-        mConnectDesc.setText(getString(R.string.connecting_desc));
-        mConnectStatus.setImageDrawable(this.getResources().getDrawable(
-                R.drawable.wifi_yes));
+        mConnectDesc.setText(getString(R.string.connected_info));
+        mConnectStatus.setBackgroundResource(R.drawable.wifi_yes);
     }
 
     public void setIsWifiP2pEnabled(boolean enable) {
@@ -243,12 +252,9 @@ public class WiFiDirectMainActivity extends Activity implements
         // add necessary intent values to be matched.
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
-        intentFilter
-                .addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
-        intentFilter
-                .addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
-        intentFilter
-                .addAction(WifiP2pManager.WIFI_P2P_DISCOVERY_CHANGED_ACTION);
+        intentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
+        intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
+        intentFilter.addAction(WifiP2pManager.WIFI_P2P_DISCOVERY_CHANGED_ACTION);
         intentFilter.addAction(DNSMASQ_IP_ADDR_ACTION);
         manager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
         channel = manager.initialize(this, getMainLooper(), null);
@@ -283,8 +289,7 @@ public class WiFiDirectMainActivity extends Activity implements
     private void freshView() {
         for (int i = 0; i < peers.size(); i++) {
             if (peers.get(i).status == WifiP2pDevice.CONNECTED) {
-                mConnectWarn.setVisibility(View.VISIBLE);
-                mConnectWarn.setText(getString(R.string.connecting_desc)
+                mConnectDesc.setText(getString(R.string.connecting_desc)
                         + peers.get(i).deviceName);
                 break;
             }
@@ -335,5 +340,18 @@ public class WiFiDirectMainActivity extends Activity implements
             e.printStackTrace();
         }
         return result;
+    }
+
+    private boolean isNetAvailiable() {
+        ConnectivityManager connectivity = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (connectivity != null) {
+            NetworkInfo info = connectivity.getActiveNetworkInfo();
+            if (info == null || !info.isAvailable()) {
+                return false;
+            }else {
+                return true;
+            }
+        }
+        return false;
     }
 }

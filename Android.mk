@@ -21,7 +21,8 @@ LOCAL_SRC_FILES := $(call all-java-files-under, src)
 LOCAL_PACKAGE_NAME := AmlMiracast
 LOCAL_CERTIFICATE := platform
 
-LOCAL_JNI_SHARED_LIBRARIES := libwfd_jni
+#LOCAL_JNI_SHARED_LIBRARIES := libwfd_jni
+LOCAL_REQUIRED_MODULES := libwfd_jni
 
 #LOCAL_PROGUARD_ENABLED := disabled
 LOCAL_PROGUARD_ENABLED := full

@@ -3,7 +3,7 @@ LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
 LOCAL_SRC_FILES:= \
-    com_aml_miracast_wfd.cpp
+    com_amlogic_miracast_wfd.cpp
 
 LOCAL_C_INCLUDES := \
     $(JNI_H_INCLUDE) \

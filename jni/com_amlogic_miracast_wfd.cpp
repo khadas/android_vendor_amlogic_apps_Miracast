@@ -166,8 +166,8 @@ static JNINativeMethod gMethods[] = {
     //        (void*) source_stop },
 };
 
-int register_com_aml_miracast_WiFiDirectActivity(JNIEnv *env) {
-    static const char* const kClassPathName = "com/aml/miracast/SinkActivity";
+int register_com_amlogic_miracast_WiFiDirectActivity(JNIEnv *env) {
+    static const char* const kClassPathName = "com/amlogic/miracast/SinkActivity";
 
     return jniRegisterNativeMethods(env, kClassPathName, gMethods, sizeof(gMethods) / sizeof(gMethods[0]));
 }
@@ -189,7 +189,7 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved)
         goto bail;
     }*/
 
-    if(register_com_aml_miracast_WiFiDirectActivity(env) < 0){
+    if(register_com_amlogic_miracast_WiFiDirectActivity(env) < 0){
         ALOGE("Can't register WiFiDirectActivity");
         goto bail;
     }

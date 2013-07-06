@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.aml.miracast;
+package com.amlogic.miracast;
 
 import android.annotation.TargetApi;
 import android.app.Activity;

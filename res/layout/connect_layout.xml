@@ -32,14 +32,15 @@
         android:text="@string/p2p_off_warning"
         android:textAppearance="?android:attr/textAppearanceLarge"  >
     </TextView>
-    <TextView android:id="@+id/settings_btn"
+    <Button android:id="@+id/settings_btn"
         android:text="@string/go"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignBaseline="@id/show_desc_more"
         android:layout_toRightOf="@id/show_desc_more"
         android:visibility="gone"
-        android:textAppearance="@style/LinkFont" />
+        android:layout_marginLeft="30dp"
+        android:textSize="20sp" />
     <TextView
         android:id="@+id/device_title"
         android:layout_width="wrap_content"
