@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name"  translatable="false">Aml Miracast</string>
-    <string name="about_version">Version1.0</string>
+    <string name="about_version">Version1.1</string>
     <string name="enable_p2p_button">P2P On/Off</string>
     <string name="discover_peers_button">Discover</string>
     <string name="connect_peer_button">Connect</string>
@@ -21,9 +21,10 @@
     <string name="exit_miracast">Do you want to exit miracast?</string>
     <string name="connecting_desc">Connecting to wireless display device &#160;&#160;&#160;&#160;</string>
     <string name="connect_not_ready">Connect is not Ready.\n\n</string>
-    <string name="connect_ready">Connecting... \n\n Launch wireless display on your phone,tablet or PC</string>
+    <string name="connect_ready">Waitting for the user to connect. \n\n Launch wireless display on your phone,tablet or PC</string>
     <string name="device_info">Device:</string>
-    <string name="go">&#160;&#160;&#160;&#160;GO</string>
+    <string name="go">GO</string>
+    <string name="connected_info">"Connected"</string>
     <string name="discover_init">Discovery Initiated</string>
     <string name="discover_fail">Discovery Failed</string>
     <string name="channel_try">Channel lost. Trying again</string>

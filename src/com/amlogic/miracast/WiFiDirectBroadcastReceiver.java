@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.aml.miracast;
+package com.amlogic.miracast;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -95,7 +95,7 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver {
             if (networkInfo.isConnected()) {
                 // we are connected with the other device, request connection
                 // info to find group owner IP
-                activity.setConnect();
+                //activity.setConnect();
             } else {
                 // It's a disconnect
                 activity.resetData();
