@@ -114,11 +114,18 @@ public class SinkActivity extends Activity{
 
                 //Log.d(TAG, "P2P connection changed isConnected:" + networkInfo.isConnected());
                 if (!networkInfo.isConnected()) {
-                    SinkActivity.this.finish();
+                    finishView();
                 }
             } 
         }
   };
+
+    private void finishView() {
+        Intent homeIntent = new Intent(SinkActivity.this,WiFiDirectMainActivity.class);
+        homeIntent.setFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT);
+        SinkActivity.this.startActivity(homeIntent);
+        SinkActivity.this.finish();
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -285,7 +292,7 @@ public class SinkActivity extends Activity{
             .setPositiveButton(android.R.string.ok,
                 new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int whichButton) {
-                        SinkActivity.this.finish();
+                        finishView();
                     }
                 })
             .setNegativeButton(android.R.string.cancel, 

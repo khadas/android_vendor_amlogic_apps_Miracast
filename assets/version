@@ -1,3 +1,4 @@
-version: 1.1
+version: 1.2
 release note:
 	1. MiracastSink display Functions of Version1.0 release at 20130628;
+	2. Add New Menu of Search Device,and Rename Device

@@ -16,22 +16,31 @@ import java.util.List;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.AlertDialog.Builder;
+import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.net.wifi.p2p.WifiP2pManager.Channel;
 import android.net.wifi.p2p.WifiP2pManager.ChannelListener;
 import android.net.wifi.p2p.WifiP2pManager.PeerListListener;
+import android.net.wifi.p2p.WifiP2pManager.ConnectionInfoListener;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.PowerManager;
+import android.os.Message;
+import android.text.TextUtils;
+
 import android.util.Log;
 import android.view.View;
 import android.view.Menu;
@@ -40,6 +49,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Button;
 import android.widget.Toast;
+import android.widget.EditText;
 import android.provider.Settings;
 import android.graphics.drawable.AnimationDrawable;
 
@@ -55,7 +65,7 @@ import org.apache.http.util.EncodingUtils;
  * @Version V1.0
  */
 public class WiFiDirectMainActivity extends Activity implements
-        ChannelListener, PeerListListener {
+        ChannelListener, PeerListListener,ConnectionInfoListener {
     public static final String       TAG                    = "amlWifiDirect";
     public static final boolean      DEBUG                  = false;
     public static final String       DNSMASQ_IP_ADDR_ACTION = "android.net.dnsmasq.IP_ADDR";
@@ -78,6 +88,7 @@ public class WiFiDirectMainActivity extends Activity implements
     private String                   mIP;
     private Handler                  mHandler               = new Handler();
     private static final int         MAX_DELAY_MS           = 3000;
+    private static final int DIALOG_RENAME = 3;
     private final IntentFilter       intentFilter           = new IntentFilter();
     private Channel                  channel;
     private BroadcastReceiver        mReceiver              = null;
@@ -89,6 +100,12 @@ public class WiFiDirectMainActivity extends Activity implements
     private boolean                  retryChannel           = false;
     private WifiP2pDevice            mDevice                = null;
     private ArrayList<WifiP2pDevice> peers                  = new ArrayList<WifiP2pDevice>();
+    private ProgressDialog progressDialog = null;
+    private OnClickListener mRenameListener;
+    private EditText mDeviceNameText;
+    private TextView mDeviceNameShow;
+    private TextView mDeviceTitle;
+    private String mSavedDeviceName;
 
     @Override
     public void onContentChanged() {
@@ -100,8 +117,8 @@ public class WiFiDirectMainActivity extends Activity implements
     public void onResume() {
         super.onResume();
         /* enable backlight */
+        mReceiver = new WiFiDirectBroadcastReceiver(manager, channel, this);
         PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-        setContentView(R.layout.connect_layout);
         mWakeLock = pm.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK
                 | PowerManager.ON_AFTER_RELEASE, TAG);
         mWakeLock.acquire();
@@ -125,17 +142,26 @@ public class WiFiDirectMainActivity extends Activity implements
             mConnectWarn.setVisibility(View.VISIBLE);
             mClick2Settings.setVisibility(View.VISIBLE);
         }
-        TextView tv = (TextView) findViewById(R.id.device_dec);
-        if (mDevice != null)
-            tv.setText(mDevice.deviceName);
+        mDeviceNameShow = (TextView) findViewById(R.id.device_dec);
+        mDeviceTitle = (TextView) findViewById(R.id.device_title);
+        if (mDevice != null) {
+            mSavedDeviceName = mDevice.deviceName;
+            mDeviceNameShow.setText(mSavedDeviceName);
+        }else{
+            mDeviceTitle.setVisibility(View.INVISIBLE);
+        }
         resetData();
     }
 
     public void setDevice(WifiP2pDevice device) {
         mDevice = device;
-        TextView tv = (TextView) findViewById(R.id.device_dec);
-        if (mDevice != null)
-            tv.setText(mDevice.deviceName);
+        if (mDevice != null) {
+            if(mDeviceTitle != null)
+                mDeviceTitle.setVisibility(View.VISIBLE);
+            mSavedDeviceName = mDevice.deviceName;
+            if(mDeviceNameShow != null)
+                mDeviceNameShow.setText(mSavedDeviceName);
+        }
         if (DEBUG)
             Log.d(TAG, "mDevice.status" + mDevice.status);
     }
@@ -152,6 +178,7 @@ public class WiFiDirectMainActivity extends Activity implements
             }
             return;
         }
+        onInitiateDiscovery();
         manager.discoverPeers(channel, new WifiP2pManager.ActionListener() {
             @Override
             public void onSuccess() {
@@ -195,7 +222,7 @@ public class WiFiDirectMainActivity extends Activity implements
                     this,
                     WiFiDirectMainActivity.this.getResources().getString(R.string.channel_close),
                     Toast.LENGTH_LONG).show();
-            retryChannel = false;
+            //retryChannel = false;
         }
     }
     
@@ -249,6 +276,7 @@ public class WiFiDirectMainActivity extends Activity implements
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.connect_layout);
         // add necessary intent values to be matched.
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
@@ -258,7 +286,29 @@ public class WiFiDirectMainActivity extends Activity implements
         intentFilter.addAction(DNSMASQ_IP_ADDR_ACTION);
         manager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
         channel = manager.initialize(this, getMainLooper(), null);
-        mReceiver = new WiFiDirectBroadcastReceiver(manager, channel, this);
+        mRenameListener = new OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                if (which == DialogInterface.BUTTON_POSITIVE) {
+                    if (manager != null) {
+                        manager.setDeviceName(channel,
+                                mDeviceNameText.getText().toString(),
+                                new WifiP2pManager.ActionListener() {
+                            public void onSuccess() {
+                                mSavedDeviceName = mDeviceNameText.getText().toString();
+                                mDeviceNameShow.setText(mSavedDeviceName);
+                                if(DEBUG) Log.d(TAG, " device rename success");
+                            }
+                            public void onFailure(int reason) {
+                                Toast.makeText(WiFiDirectMainActivity.this,
+                                        R.string.wifi_p2p_failed_rename_message,
+                                        Toast.LENGTH_LONG).show();
+                            }
+                        });
+                    }
+                }
+            }
+        };
     }
 
     @Override  
@@ -278,6 +328,9 @@ public class WiFiDirectMainActivity extends Activity implements
      */
     @Override
     public void onPeersAvailable(WifiP2pDeviceList devicelist) {
+        if (progressDialog != null && progressDialog.isShowing()) {
+            progressDialog.dismiss();
+        }
         peers.clear();
         peers.addAll(devicelist.getDeviceList());
         freshView();
@@ -322,6 +375,12 @@ public class WiFiDirectMainActivity extends Activity implements
                 });
                 builder.create().show();
                 break;
+            case R.id.atn_direct_discover:
+                startSearch();
+                return true;
+            case R.id.setting_name:
+                showDialog(DIALOG_RENAME);
+                return true;
             default:
                 break;
         }
@@ -353,5 +412,46 @@ public class WiFiDirectMainActivity extends Activity implements
             }
         }
         return false;
+    }
+
+    public void onConnectionInfoAvailable(WifiP2pInfo info){
+        if(DEBUG) Log.d(TAG, "onConnectionInfoAvailable info:" + info);
+    }
+
+    public void onInitiateDiscovery() {
+        if (progressDialog != null && progressDialog.isShowing()) {
+            progressDialog.dismiss();
+        }
+        progressDialog = ProgressDialog.show(this, getResources().getString(R.string.find_title), getResources().getString(R.string.find_progress), true,
+                true, new DialogInterface.OnCancelListener() {
+
+                    @Override
+                    public void onCancel(DialogInterface dialog) {
+                        
+                    }
+                });
+    }
+
+    @Override
+    public Dialog onCreateDialog(int id) {
+        if (id == DIALOG_RENAME) {
+            mDeviceNameText = new EditText(this);
+            if (mSavedDeviceName != null) {
+                mDeviceNameText.setText(mSavedDeviceName);
+                mDeviceNameText.setSelection(mSavedDeviceName.length());
+            } else if (mDevice != null && !TextUtils.isEmpty(mDevice.deviceName)) {
+                mDeviceNameText.setText(mDevice.deviceName);
+                mDeviceNameText.setSelection(0, mDevice.deviceName.length());
+            }
+            mSavedDeviceName = null;
+            AlertDialog dialog = new AlertDialog.Builder(this)
+                .setTitle(R.string.change_name)
+                .setView(mDeviceNameText)
+                .setPositiveButton(WiFiDirectMainActivity.this.getResources().getString(R.string.dlg_ok), mRenameListener)
+                .setNegativeButton(WiFiDirectMainActivity.this.getResources().getString(R.string.dlg_cancel), null)
+                .create();
+            return dialog;
+        }
+        return null;
     }
 }
