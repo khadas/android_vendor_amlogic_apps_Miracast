@@ -87,7 +87,7 @@ public class WiFiDirectMainActivity extends Activity implements
     private String                   mPort;
     private String                   mIP;
     private Handler                  mHandler               = new Handler();
-    private static final int         MAX_DELAY_MS           = 3000;
+    private static final int         MAX_DELAY_MS           = 500;
     private static final int DIALOG_RENAME = 3;
     private final IntentFilter       intentFilter           = new IntentFilter();
     private Channel                  channel;
