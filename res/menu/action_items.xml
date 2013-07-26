@@ -4,7 +4,7 @@
     <item
         android:id="@+id/atn_direct_discover"
         android:title="@string/discover_peers_button"
-        android:showAsAction="ifRoom|withText" />
+        android:showAsAction="ifRoom|withText"> <requestFocus /> </item>
     <item
         android:id="@+id/setting_name"
         android:title="@string/change_name"
@@ -12,5 +12,5 @@
     <item
         android:id="@+id/about_version"
         android:title="@string/about_version"
-        android:showAsAction="ifRoom|withText" />
+        android:showAsAction="ifRoom|withText"/>
 </menu>
