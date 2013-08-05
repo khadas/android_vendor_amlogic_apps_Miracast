@@ -38,4 +38,7 @@
     <string name="dlg_ok">OK</string>
     <!-- Manage applications, individual application screen, confirmation dialog button. Displays when user selects to "Clear data". -->
     <string name="dlg_cancel">Cancel</string>
+    <string name="peer_list">Peer List : </string>
+    <string name="rtsp_fail">Miracast Connection Failure</string>
+    <string name="rtsp_suggestion">Please retry miracast connection from source device ...</string>
 </resources>

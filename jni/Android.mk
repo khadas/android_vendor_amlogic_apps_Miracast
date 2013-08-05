@@ -10,6 +10,7 @@ LOCAL_C_INCLUDES := \
     frameworks/av/media/libstagefright/wifi-display
 
 LOCAL_SHARED_LIBRARIES:= \
+        libandroid_runtime \
         libbinder \
         libgui \
         libmedia \

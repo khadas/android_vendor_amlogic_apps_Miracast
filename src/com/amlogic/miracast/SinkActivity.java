@@ -68,6 +68,8 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import com.amlogic.miracast.WiFiDirectMainActivity;
+import android.os.UserHandle;
 
 import java.util.Timer;   
 import java.util.TimerTask;
@@ -292,6 +294,8 @@ public class SinkActivity extends Activity{
             .setPositiveButton(android.R.string.ok,
                 new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int whichButton) {
+						Intent intent = new Intent(WiFiDirectMainActivity.ACTION_REMOVE_GROUP);
+						sendBroadcastAsUser(intent, UserHandle.ALL);
                         finishView();
                     }
                 })
@@ -304,6 +308,7 @@ public class SinkActivity extends Activity{
     }
 
     public void startMiracast(String ip, String port){
+        Log.d(TAG, "start miracast isRunning:" + mMiracastRunning + " IP:" + ip + ":" + port);
         mMiracastRunning = true;
         
         Message msg = Message.obtain();
@@ -312,8 +317,6 @@ public class SinkActivity extends Activity{
         data.putString(KEY_IP, ip);
         data.putString(KEY_PORT, port);
         mMiracastThreadHandler.sendMessage(msg);
-
-        Log.d(TAG, "start miracast isRunning:" + mMiracastRunning + " IP:" + ip + ":" + port);
     }
 
     /**
@@ -355,11 +358,16 @@ public class SinkActivity extends Activity{
         }
     }
  
-    private native void nativeConnectWifiSource(String ip, int port);
-    //private native void nativeConnectRTSPUri(String ip);
+    private native void nativeConnectWifiSource(SinkActivity sink, String ip, int port);
     private native void nativeDisconnectSink();
     //private native void nativeSourceStart(String ip);
     //private native void nativeSourceStop();
+	// Native callback.
+	private void notifyRtspError() {
+		Log.d(TAG, "notifyRtspError received!!!");
+		Intent intent = new Intent(WiFiDirectMainActivity.ACTION_FIX_RTSP_FAIL);
+		sendBroadcastAsUser(intent, UserHandle.ALL);
+	}
 
     private final int CMD_MIRACAST_START      = 10;
     private final int CMD_MIRACAST_STOP         = 11;
@@ -377,7 +385,7 @@ public class SinkActivity extends Activity{
                             String ip = data.getString(KEY_IP);
                             String port = data.getString(KEY_PORT);
         
-                            nativeConnectWifiSource(ip, Integer.parseInt(port));
+                            nativeConnectWifiSource(SinkActivity.this, ip, Integer.parseInt(port));
                         }
                         break;
                         default:break;

@@ -33,6 +33,7 @@
 #include <media/IMediaPlayerService.h>
 #include <media/stagefright/DataSource.h>
 #include <media/stagefright/foundation/ADebug.h>
+#include <media/stagefright/foundation/AMessage.h>
 
 using namespace android;
 
@@ -42,6 +43,45 @@ sp<ANetworkSession> mSession = new ANetworkSession;
 sp<WifiDisplaySink> mSink;
 bool mStart = false;
 bool mInit = false;
+
+struct SinkHandler : public AHandler {
+	SinkHandler() {};
+protected:
+	virtual ~SinkHandler() {};
+    virtual void onMessageReceived(const sp<AMessage> &msg);
+
+private:
+	enum {
+		kWhatSinkNotify,
+	};
+};
+
+sp<SinkHandler> mHandler;
+static jmethodID notifyRtspError;
+static jobject sinkObject;
+
+static void report_rtsp_error(void) {
+    JNIEnv* env = AndroidRuntime::getJNIEnv();
+	env->CallVoidMethod(sinkObject, notifyRtspError);
+}
+
+void SinkHandler::onMessageReceived(const sp<AMessage> &msg) {
+    switch (msg->what()) {
+		case kWhatSinkNotify:
+		{
+			AString reason;
+			msg->findString("reason", &reason);
+			ALOGI("SinkHandler received : %s\n", reason.c_str());
+			if (strncmp(reason.c_str(), "RTSP_ERROR", 10) == 0) {
+				ALOGI("libstagefright_wfd reports RTSP_ERROR");
+				report_rtsp_error();
+			}
+			break;
+		}
+        default:
+            TRESPASS();
+    }
+}
 
 static int connect(const char *sourceHost, int32_t sourcePort) {
     /*
@@ -71,9 +111,14 @@ static int connect(const char *sourceHost, int32_t sourcePort) {
     if(!mInit){
     mInit = true;
     mSink = new WifiDisplaySink(mSession);
+	mHandler = new SinkHandler();
     }
 
     mSinkLooper->registerHandler(mSink);
+	mSinkLooper->registerHandler(mHandler);
+
+	ALOGI("SinkHandler mSink=%d, mHandler=%d", mSink->id(), mHandler->id());
+	mSink->setHandlerId(mHandler->id());
 
     if (sourcePort >= 0) {
         mSink->start(sourceHost, sourcePort);
@@ -88,9 +133,12 @@ static int connect(const char *sourceHost, int32_t sourcePort) {
     return 0;
 }
 
-static void connect_to_wifi_source(JNIEnv* env, jclass clazz, jstring jip, jint jport) {
+static void connect_to_wifi_source(JNIEnv* env, jclass clazz, jobject sinkobj, jstring jip, jint jport) {
     const char *ip = env->GetStringUTFChars(jip, NULL);
-
+	
+	ALOGI("ref sinkobj");
+	sinkObject = env->NewGlobalRef(sinkobj);
+	
     ALOGI("connect to wifi source %s:%d\n", ip, jport);
 
     connect(ip, jport);
@@ -109,10 +157,14 @@ static void connect_to_rtsp_uri(JNIEnv* env, jclass clazz, jstring juri) {
 static void disconnectSink(JNIEnv* env, jclass clazz) {
     ALOGI("disconnect sink mStart:%d\n", mStart);
 
+	ALOGI("deref sinkobj");
+	env->DeleteGlobalRef(sinkObject);
+	
     if(mStart){
         mSink->stop();
         mSession->stop();
         mSinkLooper->unregisterHandler(mSink->id());
+        mSinkLooper->unregisterHandler(mHandler->id());
         //mSinkLooper->stop();
         mStart = false;
     }
@@ -154,7 +206,7 @@ static void run_as_source(JNIEnv* env, jclass clazz, jstring jip) {
 
 // ----------------------------------------------------------------------------
 static JNINativeMethod gMethods[] = {
-    { "nativeConnectWifiSource", "(Ljava/lang/String;I)V",
+    { "nativeConnectWifiSource", "(Lcom/amlogic/miracast/SinkActivity;Ljava/lang/String;I)V",
             (void*) connect_to_wifi_source },
     //{ "nativeConnectRTSPUri", "(Ljava/lang/String;)V",
     //        (void*) connect_to_rtsp_uri },
@@ -166,8 +218,19 @@ static JNINativeMethod gMethods[] = {
     //        (void*) source_stop },
 };
 
+#define FIND_CLASS(var, className) \
+        var = env->FindClass(className); \
+        LOG_FATAL_IF(! var, "Unable to find class " className);
+
+#define GET_METHOD_ID(var, clazz, methodName, methodDescriptor) \
+        var = env->GetMethodID(clazz, methodName, methodDescriptor); \
+        LOG_FATAL_IF(! var, "Unable to find method " methodName);
+
 int register_com_amlogic_miracast_WiFiDirectActivity(JNIEnv *env) {
     static const char* const kClassPathName = "com/amlogic/miracast/SinkActivity";
+	jclass clazz;
+	FIND_CLASS(clazz, kClassPathName);
+	GET_METHOD_ID(notifyRtspError, clazz, "notifyRtspError", "()V"); 
 
     return jniRegisterNativeMethods(env, kClassPathName, gMethods, sizeof(gMethods) / sizeof(gMethods[0]));
 }
