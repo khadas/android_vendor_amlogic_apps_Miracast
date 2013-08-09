@@ -20,4 +20,5 @@
 #}
 -keepclassmembers class com.amlogic.miracast.SinkActivity {
     private void notifyRtspError();
+    private void notifyRtpNopacket();
 }

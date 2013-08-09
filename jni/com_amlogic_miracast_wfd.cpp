@@ -58,11 +58,16 @@ private:
 
 sp<SinkHandler> mHandler;
 static jmethodID notifyRtspError;
+static jmethodID notifyRtpNopacket;
 static jobject sinkObject;
 
 static void report_rtsp_error(void) {
     JNIEnv* env = AndroidRuntime::getJNIEnv();
 	env->CallVoidMethod(sinkObject, notifyRtspError);
+}
+static void report_rtp_nopacket(void) {
+    JNIEnv* env = AndroidRuntime::getJNIEnv();
+        env->CallVoidMethod(sinkObject, notifyRtpNopacket);
 }
 
 void SinkHandler::onMessageReceived(const sp<AMessage> &msg) {
@@ -75,7 +80,10 @@ void SinkHandler::onMessageReceived(const sp<AMessage> &msg) {
 			if (strncmp(reason.c_str(), "RTSP_ERROR", 10) == 0) {
 				ALOGI("libstagefright_wfd reports RTSP_ERROR");
 				report_rtsp_error();
-			}
+			}else if (strncmp(reason.c_str(),"RTP_NO_PACKET", 13) == 0) {
+                                ALOGI("libstagefright_wfd reports no packets");
+                                report_rtp_nopacket();
+                        }
 			break;
 		}
         default:
@@ -231,10 +239,9 @@ int register_com_amlogic_miracast_WiFiDirectActivity(JNIEnv *env) {
 	jclass clazz;
 	FIND_CLASS(clazz, kClassPathName);
 	GET_METHOD_ID(notifyRtspError, clazz, "notifyRtspError", "()V"); 
-
+	 GET_METHOD_ID(notifyRtpNopacket, clazz, "notifyRtpNopacket", "()V");
     return jniRegisterNativeMethods(env, kClassPathName, gMethods, sizeof(gMethods) / sizeof(gMethods[0]));
 }
-
 jint JNI_OnLoad(JavaVM* vm, void* reserved)
 {
     JNIEnv* env = NULL;

@@ -356,8 +356,7 @@ public class SinkActivity extends Activity{
             }
             
         }
-    }
- 
+	}
     private native void nativeConnectWifiSource(SinkActivity sink, String ip, int port);
     private native void nativeDisconnectSink();
     //private native void nativeSourceStart(String ip);
@@ -368,7 +367,10 @@ public class SinkActivity extends Activity{
 		Intent intent = new Intent(WiFiDirectMainActivity.ACTION_FIX_RTSP_FAIL);
 		sendBroadcastAsUser(intent, UserHandle.ALL);
 	}
-
+	private void notifyRtpNopacket() {
+                Log.d(TAG, "notifyRtpNopacket received!!!");
+	        finishView();	
+        }
     private final int CMD_MIRACAST_START      = 10;
     private final int CMD_MIRACAST_STOP         = 11;
     class MiracastThread implements Runnable{
