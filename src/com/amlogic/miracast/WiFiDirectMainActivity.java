@@ -354,6 +354,12 @@ public class WiFiDirectMainActivity extends Activity implements
 		filter.addAction(ACTION_REMOVE_GROUP);
 		registerReceiver(mReceiver2, filter);
     }
+	
+    @Override
+    protected void onDestroy() {
+        unregisterReceiver(mReceiver2);
+        super.onDestroy();
+    }
 
     @Override  
     public void onWindowFocusChanged(boolean hasFocus) {  
