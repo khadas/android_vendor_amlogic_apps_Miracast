@@ -93,7 +93,7 @@ public class WiFiDirectMainActivity extends Activity implements
     private String                   mPort;
     private String                   mIP;
     private Handler                  mHandler               = new Handler();
-    private static final int         MAX_DELAY_MS           = 500;
+    private static final int         MAX_DELAY_MS           = 0;
     private static final int DIALOG_RENAME = 3;
     private final IntentFilter       intentFilter           = new IntentFilter();
     private Channel                  channel;
@@ -266,6 +266,7 @@ public class WiFiDirectMainActivity extends Activity implements
         mPort = port;
         mIP = ip;
         setConnect();
+        Log.d(TAG, "start miracast delay " + MAX_DELAY_MS + " ms");
         mHandler.postDelayed(new Runnable() {
             public void run() {
                 Intent intent = new Intent(WiFiDirectMainActivity.this,
@@ -277,8 +278,6 @@ public class WiFiDirectMainActivity extends Activity implements
                 startActivity(intent);
             }
         }, MAX_DELAY_MS);
-        if (DEBUG)
-            Log.d(TAG, "start miracast delay " + MAX_DELAY_MS + " ms");
     }
 
     public void stopMiracast(boolean stop) {}
@@ -388,7 +387,7 @@ public class WiFiDirectMainActivity extends Activity implements
 
 	public void onGroupInfoAvailable(WifiP2pGroup group) {
 		if (group != null) {
-			Log.d(TAG, "onGroupInfoAvailable true");
+			Log.d(TAG, "onGroupInfoAvailable true : " + group);
 			mNetId = group.getNetworkId();
 		} else {
 			Log.d(TAG, "onGroupInfoAvailable false");
