@@ -18,7 +18,7 @@ include $(CLEAR_VARS)
 LOCAL_SRC_FILES := $(call all-java-files-under, src)
 
 
-LOCAL_PACKAGE_NAME := AmlMiracast
+LOCAL_PACKAGE_NAME := Miracast
 LOCAL_CERTIFICATE := platform
 
 #LOCAL_JNI_SHARED_LIBRARIES := libwfd_jni

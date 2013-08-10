@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name"  translatable="false">Aml Miracast</string>
+    <string name="app_name"  translatable="false">Miracast</string>
     <string name="about_version">Version Information</string>
     <string name="enable_p2p_button">P2P On/Off</string>
     <string name="discover_peers_button">Search Device</string>
