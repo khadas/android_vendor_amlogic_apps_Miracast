@@ -82,6 +82,7 @@ void SinkHandler::onMessageReceived(const sp<AMessage> &msg) {
 				report_rtsp_error();
 			}else if (strncmp(reason.c_str(),"RTP_NO_PACKET", 13) == 0) {
                                 ALOGI("libstagefright_wfd reports no packets");
+				if(mStart)
                                 report_rtp_nopacket();
                         }
 			break;
@@ -120,14 +121,14 @@ static int connect(const char *sourceHost, int32_t sourcePort) {
     mInit = true;
     mSink = new WifiDisplaySink(mSession);
 	mHandler = new SinkHandler();
-    }
+    
 
     mSinkLooper->registerHandler(mSink);
-	mSinkLooper->registerHandler(mHandler);
+    mSinkLooper->registerHandler(mHandler);
 
-	ALOGI("SinkHandler mSink=%d, mHandler=%d", mSink->id(), mHandler->id());
-	mSink->setHandlerId(mHandler->id());
-
+    mSink->setHandlerId(mHandler->id());
+    }
+    ALOGI("SinkHandler mSink=%d, mHandler=%d", mSink->id(), mHandler->id());
     if (sourcePort >= 0) {
         mSink->start(sourceHost, sourcePort);
     } else {
@@ -169,10 +170,11 @@ static void disconnectSink(JNIEnv* env, jclass clazz) {
 	env->DeleteGlobalRef(sinkObject);
 	
     if(mStart){
+	ALOGI("stop WifiDisplaySink");
         mSink->stop();
         mSession->stop();
-        mSinkLooper->unregisterHandler(mSink->id());
-        mSinkLooper->unregisterHandler(mHandler->id());
+        //mSinkLooper->unregisterHandler(mSink->id());
+        //mSinkLooper->unregisterHandler(mHandler->id());
         //mSinkLooper->stop();
         mStart = false;
     }
