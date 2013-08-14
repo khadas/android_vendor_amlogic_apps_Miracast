@@ -369,6 +369,8 @@ public class SinkActivity extends Activity{
 	}
 	private void notifyRtpNopacket() {
                 Log.d(TAG, "notifyRtpNopacket received!!!");
+		Intent intent = new Intent(WiFiDirectMainActivity.ACTION_REMOVE_GROUP);
+                sendBroadcastAsUser(intent, UserHandle.ALL);
 	        finishView();	
         }
     private final int CMD_MIRACAST_START      = 10;
