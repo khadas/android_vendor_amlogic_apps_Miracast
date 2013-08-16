@@ -24,6 +24,7 @@ import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.net.wifi.p2p.WifiP2pManager.Channel;
 import android.net.wifi.p2p.WifiP2pManager.PeerListListener;
+import android.net.wifi.p2p.WifiP2pManager.GroupInfoListener;
 import android.util.Log;
 /**
  * A BroadcastReceiver that notifies of important wifi p2p events.
@@ -92,6 +93,9 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver {
 
             if(WiFiDirectMainActivity.DEBUG)
                 Log.d(WiFiDirectMainActivity.TAG, "P2P connection changed isConnected:" + networkInfo.isConnected());
+			if (manager != null) {
+				manager.requestGroupInfo(channel, (GroupInfoListener) activity);
+			}
             if (networkInfo.isConnected()) {
                 // we are connected with the other device, request connection
                 // info to find group owner IP

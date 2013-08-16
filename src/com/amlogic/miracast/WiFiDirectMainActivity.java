@@ -35,6 +35,8 @@ import android.net.wifi.p2p.WifiP2pManager.Channel;
 import android.net.wifi.p2p.WifiP2pManager.ChannelListener;
 import android.net.wifi.p2p.WifiP2pManager.PeerListListener;
 import android.net.wifi.p2p.WifiP2pManager.ConnectionInfoListener;
+import android.net.wifi.p2p.WifiP2pManager.GroupInfoListener;
+import android.net.wifi.p2p.WifiP2pGroup;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.PowerManager;
@@ -65,7 +67,7 @@ import org.apache.http.util.EncodingUtils;
  * @Version V1.0
  */
 public class WiFiDirectMainActivity extends Activity implements
-        ChannelListener, PeerListListener,ConnectionInfoListener {
+        ChannelListener, PeerListListener,ConnectionInfoListener, GroupInfoListener  {
     public static final String       TAG                    = "amlWifiDirect";
     public static final boolean      DEBUG                  = false;
     public static final String       DNSMASQ_IP_ADDR_ACTION = "android.net.dnsmasq.IP_ADDR";
@@ -77,6 +79,10 @@ public class WiFiDirectMainActivity extends Activity implements
     private final String             FB0_BLANK              = "/sys/class/graphics/fb0/blank";
     public static final String ENCODING = "UTF-8";
     private static final String VERSION_FILE = "version";
+
+    public static final String  ACTION_FIX_RTSP_FAIL 	= "com.amlogic.miracast.RTSP_FAIL";
+    public static final String  ACTION_REMOVE_GROUP 	= "com.amlogic.miracast.REMOVE_GROUP";
+
     // private final String CLOSE_GRAPHIC_LAYER =
     // "echo 1 > /sys/class/graphics/fb0/blank";
     // private final String OPEN_GRAPHIC_LAYER =
@@ -87,15 +93,17 @@ public class WiFiDirectMainActivity extends Activity implements
     private String                   mPort;
     private String                   mIP;
     private Handler                  mHandler               = new Handler();
-    private static final int         MAX_DELAY_MS           = 3000;
+    private static final int         MAX_DELAY_MS           = 0;
     private static final int DIALOG_RENAME = 3;
     private final IntentFilter       intentFilter           = new IntentFilter();
     private Channel                  channel;
     private BroadcastReceiver        mReceiver              = null;
+    private BroadcastReceiver        mReceiver2              = null;
     private PowerManager.WakeLock    mWakeLock;
     private ImageView                mConnectStatus;
     private TextView                 mConnectWarn;
     private TextView                 mConnectDesc;
+    private TextView                 mPeerList;
     private Button                 mClick2Settings;
     private boolean                  retryChannel           = false;
     private WifiP2pDevice            mDevice                = null;
@@ -106,6 +114,7 @@ public class WiFiDirectMainActivity extends Activity implements
     private TextView mDeviceNameShow;
     private TextView mDeviceTitle;
     private String mSavedDeviceName;
+	private int mNetId = -1;
 
     @Override
     public void onContentChanged() {
@@ -131,6 +140,8 @@ public class WiFiDirectMainActivity extends Activity implements
         mClick2Settings = (Button) findViewById(R.id.settings_btn);
         mConnectDesc.setFocusable(true);
         mConnectDesc.requestFocus();
+        mPeerList = (TextView) findViewById(R.id.peer_devices);
+
         mClick2Settings.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -262,6 +273,7 @@ public class WiFiDirectMainActivity extends Activity implements
         mPort = port;
         mIP = ip;
         setConnect();
+        Log.d(TAG, "start miracast delay " + MAX_DELAY_MS + " ms");
         mHandler.postDelayed(new Runnable() {
             public void run() {
                 Intent intent = new Intent(WiFiDirectMainActivity.this,
@@ -273,11 +285,27 @@ public class WiFiDirectMainActivity extends Activity implements
                 startActivity(intent);
             }
         }, MAX_DELAY_MS);
-        if (DEBUG)
-            Log.d(TAG, "start miracast delay " + MAX_DELAY_MS + " ms");
     }
 
     public void stopMiracast(boolean stop) {}
+
+	private void fixRtspFail() {
+		if (manager != null && mNetId != -1) {
+			manager.removeGroup(channel, null);
+			manager.deletePersistentGroup(channel, mNetId, null);
+			
+			new AlertDialog.Builder(this)
+				.setTitle(R.string.rtsp_fail)
+				.setMessage(R.string.rtsp_suggestion)
+				.setIconAttribute(android.R.attr.alertDialogIcon)
+				.setPositiveButton(android.R.string.ok,
+					new DialogInterface.OnClickListener() {
+						public void onClick(DialogInterface dialog, int whichButton) {
+						}
+					})
+				.show();			
+		}
+	}
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -315,6 +343,29 @@ public class WiFiDirectMainActivity extends Activity implements
                 }
             }
         };
+		mReceiver2 = new BroadcastReceiver() {
+			@Override
+			public void onReceive(Context context, Intent intent) {
+				String action = intent.getAction();
+				if (action.equals(ACTION_FIX_RTSP_FAIL)) {
+					Log.d(TAG, "ACTION_FIX_RTSP_FAIL : mNetId=" + mNetId);
+					fixRtspFail();
+				} else if (action.equals(ACTION_REMOVE_GROUP)) {
+					Log.d(TAG, "ACTION_REMOVE_GROUP");
+					manager.removeGroup(channel, null);
+				}
+			}
+		};
+		IntentFilter filter = new IntentFilter();
+		filter.addAction(ACTION_FIX_RTSP_FAIL);
+		filter.addAction(ACTION_REMOVE_GROUP);
+		registerReceiver(mReceiver2, filter);
+    }
+	
+    @Override
+    protected void onDestroy() {
+        unregisterReceiver(mReceiver2);
+        super.onDestroy();
     }
 
     @Override  
@@ -334,13 +385,28 @@ public class WiFiDirectMainActivity extends Activity implements
      */
     @Override
     public void onPeersAvailable(WifiP2pDeviceList devicelist) {
+    	String list = new String("Peer List : ");
         if (progressDialog != null && progressDialog.isShowing()) {
             progressDialog.dismiss();
         }
         peers.clear();
         peers.addAll(devicelist.getDeviceList());
         freshView();
+		for (int i = 0; i < peers.size(); i++) {
+			list += peers.get(i).deviceName + " ";
+		}
+		mPeerList.setText(list);
     }
+
+	public void onGroupInfoAvailable(WifiP2pGroup group) {
+		if (group != null) {
+			Log.d(TAG, "onGroupInfoAvailable true : " + group);
+			mNetId = group.getNetworkId();
+		} else {
+			Log.d(TAG, "onGroupInfoAvailable false");
+			mNetId = -1;
+		}
+	}
 
     /**
      * @Description TODO
@@ -382,6 +448,7 @@ public class WiFiDirectMainActivity extends Activity implements
                 builder.create().show();
                 break;
             case R.id.atn_direct_discover:
+				mPeerList.setText(R.string.peer_list);
                 startSearch();
                 return true;
             case R.id.setting_name:

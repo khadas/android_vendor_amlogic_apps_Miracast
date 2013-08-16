@@ -42,12 +42,21 @@
         android:layout_marginLeft="30dp"
         android:textSize="20sp" />
     <TextView
-        android:id="@+id/device_title"
+        android:id="@+id/peer_devices"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/show_desc_more"
         android:layout_marginLeft="60dp"
-        android:layout_marginTop="60dp"
+        android:layout_marginTop="30dp"
+        android:text="@string/peer_list"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
+    <TextView
+        android:id="@+id/device_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/peer_devices"
+        android:layout_marginLeft="60dp"
+        android:layout_marginTop="30dp"
         android:text="@string/device_info"
         android:textAppearance="?android:attr/textAppearanceMedium" />
     <TextView
