@@ -385,7 +385,7 @@ public class WiFiDirectMainActivity extends Activity implements
      */
     @Override
     public void onPeersAvailable(WifiP2pDeviceList devicelist) {
-    	String list = new String("Peer List : ");
+    	String list = WiFiDirectMainActivity.this.getResources().getString(R.string.peer_list);
         if (progressDialog != null && progressDialog.isShowing()) {
             progressDialog.dismiss();
         }

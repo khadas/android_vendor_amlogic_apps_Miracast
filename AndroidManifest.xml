@@ -2,8 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.amlogic.miracast"
     android:sharedUserId="android.uid.system"
-    android:versionCode="20130516"
-    android:versionName="1.3.201308161826" >
+    android:versionCode="20130910"
+    android:versionName="1.3.201309101826" >
 
     <uses-sdk android:minSdkVersion="14" />
 
