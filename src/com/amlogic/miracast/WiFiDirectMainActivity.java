@@ -243,7 +243,8 @@ public class WiFiDirectMainActivity extends Activity implements
     
     public void resetData() {
         mConnectStatus.setBackgroundResource(R.drawable.wifi_connect);
-        mConnectDesc.setText(getString(R.string.connect_ready));
+        String sFinal1 = String.format(getString(R.string.connect_ready),getString(R.string.device_name));
+        mConnectDesc.setText(sFinal1);
         peers.clear();
     }
 
@@ -260,7 +261,8 @@ public class WiFiDirectMainActivity extends Activity implements
             mClick2Settings.setVisibility(View.GONE);
             mConnectDesc.setFocusable(false);
         } else {
-            mConnectDesc.setText(getString(R.string.connect_not_ready));
+            String sFinal1 = String.format(getString(R.string.connect_ready),getString(R.string.device_name));
+            mConnectDesc.setText(sFinal1);
             mConnectWarn.setText(WiFiDirectMainActivity.this.getResources()
                         .getString(R.string.p2p_off_warning));
             mConnectWarn.setVisibility(View.VISIBLE);

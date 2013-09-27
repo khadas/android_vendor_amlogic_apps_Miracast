@@ -21,7 +21,9 @@
     <string name="exit_miracast">Do you want to exit miracast?</string>
     <string name="connecting_desc">Connecting to wireless display device &#160;&#160;&#160;&#160;</string>
     <string name="connect_not_ready">Connect is not Ready.\n\n</string>
-    <string name="connect_ready">Waitting for the user to connect. \n\n Launch wireless display on your phone,tablet or PC</string>
+    <string name="connect_ready">Waiting for the user to connect. \n\n Launch wireless display on your %1$s</string>
+    <string name="device_name"  product="tablet">tablet</string>
+    <string name="device_name"  product="mbx">mbox</string>
     <string name="device_info">Device:</string>
     <string name="go">GO</string>
     <string name="connected_info">"Connected"</string>
