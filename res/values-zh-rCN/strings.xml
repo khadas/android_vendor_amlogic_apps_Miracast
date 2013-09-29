@@ -19,7 +19,10 @@
     <string name="exit_miracast">"你将退出Mircast应用程序"</string>
     <string name="connecting_desc">"正在连接到无线显示设备&#160;&#160;&#160;&#160;"</string>
     <string name="connect_not_ready">"连接尚未准备好"</string>
-    <string name="connect_ready">"等待用户连接.\n\n确保通讯过程中设备的无线显示选项已经打开"</string>
+    <string name="connect_ready">"等待用户连接.\n\n确保通讯过程中您的%1$s的无线显示选项已经打开"</string>
+    <string name="device_name"  product="tablet">"平板电脑"</string>
+    <string name="device_name"  product="mbx">"机顶盒"</string>
+    <string name="device_name"  product="default">"机顶盒，平板电脑或是电视机"</string>
     <string name="device_info">"设备名称"</string>
     <string name="connected_info">"已连接"</string>
     <string name="go">"去设置"</string>

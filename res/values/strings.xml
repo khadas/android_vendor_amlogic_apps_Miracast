@@ -24,6 +24,7 @@
     <string name="connect_ready">Waiting for the user to connect. \n\n Launch wireless display on your %1$s</string>
     <string name="device_name"  product="tablet">tablet</string>
     <string name="device_name"  product="mbx">mbox</string>
+    <string name="device_name"  product="default">mbox, tablet or tv</string>
     <string name="device_info">Device:</string>
     <string name="go">GO</string>
     <string name="connected_info">"Connected"</string>
