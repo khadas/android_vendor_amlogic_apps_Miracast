@@ -451,6 +451,19 @@ public class SinkActivity extends Activity{
         public void surfaceDestroyed(SurfaceHolder holder) {
               // TODO Auto-generated method stub
               Log.v(TAG, "surfaceDestroyed");
+              if(getAndroidSDKVersion() == 17){
+                  writeSysfs("/sys/class/graphics/fb0/free_scale","0");
+                  writeSysfs("/sys/class/graphics/fb0/free_scale","1");
+              }
         }
+    }
+
+    private int getAndroidSDKVersion() {  
+        int version = 0;  
+        try {  
+            version = Integer.valueOf(android.os.Build.VERSION.SDK);  
+        } catch (NumberFormatException e) {  
+        }  
+        return version;  
     }
 }
