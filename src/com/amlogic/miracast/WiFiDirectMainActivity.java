@@ -37,6 +37,7 @@ import android.net.wifi.p2p.WifiP2pManager.PeerListListener;
 import android.net.wifi.p2p.WifiP2pManager.ConnectionInfoListener;
 import android.net.wifi.p2p.WifiP2pManager.GroupInfoListener;
 import android.net.wifi.p2p.WifiP2pGroup;
+import android.net.wifi.p2p.WifiP2pWfdInfo;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.PowerManager;
@@ -115,7 +116,7 @@ public class WiFiDirectMainActivity extends Activity implements
     private TextView mDeviceTitle;
     private String mSavedDeviceName;
 	private int mNetId = -1;
-
+    private WifiP2pWfdInfo wfdInfo;
     @Override
     public void onContentChanged() {
         super.onContentChanged();
@@ -125,6 +126,7 @@ public class WiFiDirectMainActivity extends Activity implements
     @Override
     public void onResume() {
         super.onResume();
+        wfdInfo.setDeviceType(WifiP2pWfdInfo.PRIMARY_SINK);
         /* enable backlight */
         mReceiver = new WiFiDirectBroadcastReceiver(manager, channel, this);
         PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
@@ -312,6 +314,7 @@ public class WiFiDirectMainActivity extends Activity implements
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        wfdInfo = new WifiP2pWfdInfo();
         setContentView(R.layout.connect_layout);
         // add necessary intent values to be matched.
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);

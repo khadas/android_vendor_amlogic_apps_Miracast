@@ -56,6 +56,7 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ImageButton;
 import android.widget.Toast;
+import android.net.wifi.p2p.WifiP2pWfdInfo;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -94,7 +95,7 @@ public class SinkActivity extends Activity{
     private String mPort;
     private boolean mMiracastRunning = false;
     private PowerManager.WakeLock mWakeLock;
-
+    private WifiP2pWfdInfo wfdInfo;
     private Handler mMiracastThreadHandler = null;
 
     private SurfaceView mSurfaceView;
@@ -133,6 +134,7 @@ public class SinkActivity extends Activity{
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        wfdInfo = new WifiP2pWfdInfo();
         //no title and no status bar
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
@@ -171,6 +173,7 @@ public class SinkActivity extends Activity{
     @Override
     public void onResume() {
         super.onResume();
+
         /* enable backlight */
         PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
         mWakeLock = pm.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK | 
@@ -180,6 +183,7 @@ public class SinkActivity extends Activity{
         IntentFilter intentFilter = new IntentFilter(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
         registerReceiver(mReceiver, intentFilter);
 
+        wfdInfo.setDeviceType(WifiP2pWfdInfo.PRIMARY_SINK);
         setSinkParameters(true);
         startMiracast(mIP, mPort);
     }
@@ -191,6 +195,7 @@ public class SinkActivity extends Activity{
         unregisterReceiver(mReceiver);
         mWakeLock.release();
         setSinkParameters(false);
+        wfdInfo.setDeviceType(WifiP2pWfdInfo.PRIMARY_SINK);
     }
       
     @Override
