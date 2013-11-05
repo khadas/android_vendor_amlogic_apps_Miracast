@@ -95,7 +95,6 @@ public class SinkActivity extends Activity{
     private String mPort;
     private boolean mMiracastRunning = false;
     private PowerManager.WakeLock mWakeLock;
-    private WifiP2pWfdInfo wfdInfo;
     private Handler mMiracastThreadHandler = null;
 
     private SurfaceView mSurfaceView;
@@ -133,8 +132,7 @@ public class SinkActivity extends Activity{
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        wfdInfo = new WifiP2pWfdInfo();
+        
         //no title and no status bar
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
@@ -173,7 +171,7 @@ public class SinkActivity extends Activity{
     @Override
     public void onResume() {
         super.onResume();
-
+        changeRole(false);
         /* enable backlight */
         PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
         mWakeLock = pm.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK | 
@@ -183,7 +181,6 @@ public class SinkActivity extends Activity{
         IntentFilter intentFilter = new IntentFilter(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
         registerReceiver(mReceiver, intentFilter);
 
-        wfdInfo.setDeviceType(WifiP2pWfdInfo.PRIMARY_SINK);
         setSinkParameters(true);
         startMiracast(mIP, mPort);
     }
@@ -195,7 +192,6 @@ public class SinkActivity extends Activity{
         unregisterReceiver(mReceiver);
         mWakeLock.release();
         setSinkParameters(false);
-        wfdInfo.setDeviceType(WifiP2pWfdInfo.PRIMARY_SINK);
     }
       
     @Override
@@ -470,5 +466,19 @@ public class SinkActivity extends Activity{
         } catch (NumberFormatException e) {  
         }  
         return version;  
+    }
+
+    private void changeRole(boolean isSource){
+        
+        WifiP2pWfdInfo wfdInfo = new WifiP2pWfdInfo();
+        wfdInfo.setWfdEnabled(true);
+        if(isSource){
+            wfdInfo.setDeviceType(WifiP2pWfdInfo.WFD_SOURCE);
+        }else{
+            wfdInfo.setDeviceType(WifiP2pWfdInfo.PRIMARY_SINK);
+        }
+        wfdInfo.setSessionAvailable(true);
+        wfdInfo.setControlPort(7236);
+        wfdInfo.setMaxThroughput(50);
     }
 }

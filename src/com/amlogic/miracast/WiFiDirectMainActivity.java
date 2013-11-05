@@ -31,6 +31,7 @@ import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pManager;
+import android.net.wifi.p2p.WifiP2pManager.ActionListener;
 import android.net.wifi.p2p.WifiP2pManager.Channel;
 import android.net.wifi.p2p.WifiP2pManager.ChannelListener;
 import android.net.wifi.p2p.WifiP2pManager.PeerListListener;
@@ -116,7 +117,6 @@ public class WiFiDirectMainActivity extends Activity implements
     private TextView mDeviceTitle;
     private String mSavedDeviceName;
 	private int mNetId = -1;
-    private WifiP2pWfdInfo wfdInfo;
     @Override
     public void onContentChanged() {
         super.onContentChanged();
@@ -126,7 +126,7 @@ public class WiFiDirectMainActivity extends Activity implements
     @Override
     public void onResume() {
         super.onResume();
-        wfdInfo.setDeviceType(WifiP2pWfdInfo.PRIMARY_SINK);
+        changeRole(false);
         /* enable backlight */
         mReceiver = new WiFiDirectBroadcastReceiver(manager, channel, this);
         PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
@@ -217,6 +217,7 @@ public class WiFiDirectMainActivity extends Activity implements
         super.onPause();
         unregisterReceiver(mReceiver);
         mWakeLock.release();
+        changeRole(true);
     }
 
     /*
@@ -314,8 +315,8 @@ public class WiFiDirectMainActivity extends Activity implements
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        wfdInfo = new WifiP2pWfdInfo();
         setContentView(R.layout.connect_layout);
+
         // add necessary intent values to be matched.
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
@@ -531,5 +532,30 @@ public class WiFiDirectMainActivity extends Activity implements
             return dialog;
         }
         return null;
+    }
+
+    private void changeRole(boolean isSource){
+        
+        WifiP2pWfdInfo wfdInfo = new WifiP2pWfdInfo();
+        wfdInfo.setWfdEnabled(true);
+        if(isSource){
+            wfdInfo.setDeviceType(WifiP2pWfdInfo.WFD_SOURCE);
+        }else{
+            wfdInfo.setDeviceType(WifiP2pWfdInfo.PRIMARY_SINK);
+        }
+        wfdInfo.setSessionAvailable(true);
+        wfdInfo.setControlPort(7236);
+        wfdInfo.setMaxThroughput(50);
+        manager.setWFDInfo(channel, wfdInfo, new ActionListener() {
+            @Override
+            public void onSuccess() {
+                    Log.d(TAG, "Successfully set WFD info.");
+            }
+
+            @Override
+            public void onFailure(int reason) {
+                    Log.d(TAG, "Failed to set WFD info with reason " + reason + ".");
+            }
+        });;
     }
 }
