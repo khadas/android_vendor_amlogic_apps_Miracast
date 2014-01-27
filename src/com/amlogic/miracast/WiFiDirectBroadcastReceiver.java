@@ -119,6 +119,9 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver {
         else if (WifiP2pManager.WIFI_P2P_DISCOVERY_CHANGED_ACTION.equals(action)) {
             int discoveryState = intent.getIntExtra(WifiP2pManager.EXTRA_DISCOVERY_STATE,
                 WifiP2pManager.WIFI_P2P_DISCOVERY_STOPPED);
+            if( activity != null && discoveryState == WifiP2pManager.WIFI_P2P_DISCOVERY_STOPPED){
+                activity.discoveryStop();
+            }
             if(WiFiDirectMainActivity.DEBUG)
                 Log.d(WiFiDirectMainActivity.TAG, "Discovery state changed: " + discoveryState + " ->1:stop, 2:start");
         }

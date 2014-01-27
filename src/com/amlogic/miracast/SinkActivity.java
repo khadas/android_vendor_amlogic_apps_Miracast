@@ -96,7 +96,7 @@ public class SinkActivity extends Activity{
     private boolean mMiracastRunning = false;
     private PowerManager.WakeLock mWakeLock;
     private Handler mMiracastThreadHandler = null;
-
+    private boolean isHD = false;
     private SurfaceView mSurfaceView;
 
     private View mRootView;
@@ -153,7 +153,7 @@ public class SinkActivity extends Activity{
         Bundle bundle = intent.getExtras();
         mPort = bundle.getString(KEY_PORT);
         mIP = bundle.getString(KEY_IP);
-            
+        isHD = bundle.getBoolean(WiFiDirectMainActivity.HRESOLUTION_DISPLAY);
         MiracastThread thr = new MiracastThread();
         new Thread(thr).start();
         synchronized (thr) {
@@ -163,7 +163,6 @@ public class SinkActivity extends Activity{
                 } catch (InterruptedException e) {}
             }
         }
-
         SystemWriteManager mSystemWrite = (SystemWriteManager) getSystemService(Context.SYSTEM_WRITE_SERVICE); 
     }
 
@@ -360,6 +359,7 @@ public class SinkActivity extends Activity{
 	}
     private native void nativeConnectWifiSource(SinkActivity sink, String ip, int port);
     private native void nativeDisconnectSink();
+    private native void nativeResolutionSettings(boolean isHD);
     //private native void nativeSourceStart(String ip);
     //private native void nativeSourceStop();
 	// Native callback.
@@ -391,6 +391,7 @@ public class SinkActivity extends Activity{
                             String port = data.getString(KEY_PORT);
         
                             nativeConnectWifiSource(SinkActivity.this, ip, Integer.parseInt(port));
+
                         }
                         break;
                         default:break;
@@ -446,6 +447,7 @@ public class SinkActivity extends Activity{
         public void surfaceCreated(SurfaceHolder holder) {
               // TODO Auto-generated method stub
               Log.v(TAG, "surfaceCreated");
+              nativeResolutionSettings(isHD);
         }
 
         @Override

@@ -25,6 +25,8 @@ import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.res.Resources;
+import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.wifi.p2p.WifiP2pInfo;
@@ -43,6 +45,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.PowerManager;
 import android.os.Message;
+import android.preference.PreferenceManager;
 import android.text.TextUtils;
 
 import android.util.Log;
@@ -72,6 +75,7 @@ public class WiFiDirectMainActivity extends Activity implements
         ChannelListener, PeerListListener,ConnectionInfoListener, GroupInfoListener  {
     public static final String       TAG                    = "amlWifiDirect";
     public static final boolean      DEBUG                  = false;
+    public static final String       HRESOLUTION_DISPLAY     = "display_resolution_hd";
     public static final String       DNSMASQ_IP_ADDR_ACTION = "android.net.dnsmasq.IP_ADDR";
     public static final String       DNSMASQ_MAC_EXTRA      = "MAC_EXTRA";
     public static final String       DNSMASQ_IP_EXTRA       = "IP_EXTRA";
@@ -116,7 +120,11 @@ public class WiFiDirectMainActivity extends Activity implements
     private TextView mDeviceNameShow;
     private TextView mDeviceTitle;
     private String mSavedDeviceName;
-	private int mNetId = -1;
+    private int mNetId = -1;
+    private SharedPreferences mPref;
+    private SharedPreferences.Editor mEditor;
+    private MenuItem mDisplayResolution;
+
     @Override
     public void onContentChanged() {
         super.onContentChanged();
@@ -211,6 +219,26 @@ public class WiFiDirectMainActivity extends Activity implements
             }
         });
     }
+    public void onQuery(MenuItem item){
+        if(mDisplayResolution == null){
+            return;
+        }
+        Resources res = WiFiDirectMainActivity.this.getResources();
+        switch(item.getItemId()){
+            case R.id.setting_sd:
+                mDisplayResolution.setTitle(res.getString(R.string.setting_definition)
+                    +" : "+res.getString(R.string.setting_definition_sd));
+                mEditor.putBoolean(HRESOLUTION_DISPLAY, false);
+                mEditor.commit();
+            break;
+            case R.id.setting_hd:
+                mDisplayResolution.setTitle(res.getString(R.string.setting_definition)
+                    +" : "+res.getString(R.string.setting_definition_hd));
+                mEditor.putBoolean(HRESOLUTION_DISPLAY, true);
+                mEditor.commit();
+            break;
+        }
+    }
 
     @Override
     public void onPause() {
@@ -286,6 +314,7 @@ public class WiFiDirectMainActivity extends Activity implements
                 Bundle bundle = new Bundle();
                 bundle.putString(SinkActivity.KEY_PORT, mPort);
                 bundle.putString(SinkActivity.KEY_IP, mIP);
+                bundle.putBoolean(HRESOLUTION_DISPLAY, mPref.getBoolean(HRESOLUTION_DISPLAY, false));
                 intent.putExtras(bundle);
                 startActivity(intent);
             }
@@ -366,6 +395,8 @@ public class WiFiDirectMainActivity extends Activity implements
 		filter.addAction(ACTION_FIX_RTSP_FAIL);
 		filter.addAction(ACTION_REMOVE_GROUP);
 		registerReceiver(mReceiver2, filter);
+        mPref = PreferenceManager.getDefaultSharedPreferences(this);
+        mEditor = mPref.edit();
     }
 	
     @Override
@@ -430,6 +461,18 @@ public class WiFiDirectMainActivity extends Activity implements
     @Override
     public boolean onCreateOptionsMenu( Menu menu ) {
         getMenuInflater().inflate( R.menu.action_items, menu );
+        mDisplayResolution = menu.findItem(R.id.setting_definition);
+        if(mPref != null) {
+            boolean high = mPref.getBoolean(HRESOLUTION_DISPLAY, false);
+            Resources res = WiFiDirectMainActivity.this.getResources();
+            if(high){
+                mDisplayResolution.setTitle(res.getString(R.string.setting_definition)
+                    +" : "+res.getString(R.string.setting_definition_hd));
+            }else{
+                mDisplayResolution.setTitle(res.getString(R.string.setting_definition)
+                    +" : "+res.getString(R.string.setting_definition_sd));
+            }
+        }
         return true;
     }
 
@@ -506,7 +549,20 @@ public class WiFiDirectMainActivity extends Activity implements
 
                     @Override
                     public void onCancel(DialogInterface dialog) {
-                        
+                        manager.stopPeerDiscovery(channel, new WifiP2pManager.ActionListener(){
+                            public void onSuccess() {
+                                if(mDeviceNameText != null){
+                                    mSavedDeviceName = mDeviceNameText.getText().toString();
+                                    mDeviceNameShow.setText(mSavedDeviceName);
+                                }
+                                if(DEBUG) Log.d(TAG, " device rename success");
+                            }
+                            public void onFailure(int reason) {
+                                Toast.makeText(WiFiDirectMainActivity.this,
+                                        R.string.wifi_p2p_failed_rename_message,
+                                        Toast.LENGTH_LONG).show();
+                            }
+                        });
                     }
                 });
     }
@@ -557,5 +613,11 @@ public class WiFiDirectMainActivity extends Activity implements
                     Log.d(TAG, "Failed to set WFD info with reason " + reason + ".");
             }
         });;
+    }
+
+    public void discoveryStop(){
+        if (progressDialog != null && progressDialog.isShowing()) {
+            progressDialog.dismiss();
+        }
     }
 }

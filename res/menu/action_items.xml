@@ -10,6 +10,19 @@
         android:title="@string/change_name"
         android:showAsAction="ifRoom|withText"/>
     <item
+        android:id="@+id/setting_definition"
+        android:title="@string/setting_definition"
+        android:showAsAction="ifRoom|withText">
+        <menu>  
+            <item android:id="@+id/setting_sd"
+                  android:title="@string/setting_definition_sd"
+                  android:onClick="onQuery" />
+            <item android:id="@+id/setting_hd"
+                  android:title="@string/setting_definition_hd"
+                  android:onClick="onQuery" />
+        </menu>  
+    </item>
+    <item
         android:id="@+id/about_version"
         android:title="@string/about_version"
         android:showAsAction="ifRoom|withText"/>

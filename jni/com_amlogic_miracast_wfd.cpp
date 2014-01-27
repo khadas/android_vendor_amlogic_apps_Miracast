@@ -163,6 +163,16 @@ static void connect_to_rtsp_uri(JNIEnv* env, jclass clazz, jstring juri) {
     env->ReleaseStringUTFChars(juri, ip);
 }
 
+static void resolutionSettings(JNIEnv * env, jclass clazz, jboolean isHD) {
+    unsigned char b = isHD;
+    ALOGI("\n c-boolean: %lu  ", b);
+    if(b){
+        mSink->setResolution(WifiDisplaySink::High);
+    }else {
+        mSink->setResolution(WifiDisplaySink::Normal);
+    }
+}
+
 static void disconnectSink(JNIEnv* env, jclass clazz) {
     ALOGI("disconnect sink mStart:%d\n", mStart);
 
@@ -222,6 +232,8 @@ static JNINativeMethod gMethods[] = {
     //        (void*) connect_to_rtsp_uri },
   { "nativeDisconnectSink", "()V",
             (void*) disconnectSink },
+  {"nativeResolutionSettings", "(Z)V",
+            (void*) resolutionSettings},
   //{ "nativeSourceStart", "(Ljava/lang/String;)V",
     //        (void*) run_as_source },
   //{ "nativeSourceStop", "()V",
