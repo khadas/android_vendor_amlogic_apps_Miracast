@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.amlogic.mediaboxlauncher"
+    android:versionCode="1"
+    android:versionName="1.0" 
+    android:sharedUserId="android.uid.system">
+
+    	<uses-permission android:name="android.permission.INTERNET"></uses-permission>  
+	    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"></uses-permission>
+	    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/> 
+		<uses-permission android:name="android.permission.MOUNT_UNMOUNT_FILESYSTEMS"/>    
+	    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"></uses-permission>  
+	    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"></uses-permission>
+		<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+	    <uses-permission android:name="android.permission.MOUNT_UNMOUNT_FILESYSTEMS"/>
+	    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />  
+		<uses-permission android:name="android.permission.READ_PHONE_STATE" />
+		<uses-permission android:name="android.permission.BROADCAST_STICKY" />
+
+    <application
+        android:icon="@drawable/ic_launcher"
+        android:label="@string/app_name"
+        android:largeHeap="true"
+        android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
+        <activity
+            android:label="@string/app_name"
+            android:name=".Launcher"
+            android:launchMode="singleTask"
+            android:clearTaskOnLaunch="true"
+            android:stateNotNeeded="true">
+            <intent-filter >
+  				 <action android:name="android.intent.action.MAIN" />
+                 <category android:name="android.intent.category.HOME" /> 
+ 				 <category android:name="android.intent.category.DEFAULT" /> 
+  				 <category android:name="android.intent.category.MONKEY" /> 
+            </intent-filter>
+        </activity>
+		<activity android:name=".CustomAppsActivity"
+		      	 android:theme="@android:style/Theme.Translucent">
+		</activity>
+    </application>
+
+</manifest>

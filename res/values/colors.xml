@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>	
+	<drawable name="trans">#00000000</drawable>
+	
+	<color name="btn_text_color">#FFFFFFFF</color>	
+	<color name="path_bar_text_color">#FFFFFFFF</color>	
+	<color name="path_bar_bg_color">#FF8C8A8C</color>	
+	<color name="btn_bar_bg_color">#FF3A6EA5</color>
+	<color name="item_text_color">#FFFFFFFF</color>	
+	<color name="dialog_text_color">#FFFFFFFF</color>	
+	<color name="path_focus_color">#FFFFFF00</color>	
+	<color name="path_press_color">#FFFF0000</color>	
+
+  <color name="transparent_background">#00000000</color>
+</resources>

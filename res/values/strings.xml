@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="hello">Hello World</string>
+    <string name="app_name">MediaBox launcher</string>
+    <string name="str_video">Online Video </string>
+    <string name="str_recommend">My recommend</string>
+    <string name="str_setting">Setting</string>
+    <string name="str_app">My Apps</string>
+    <string name="str_music">Music</string>
+    <string name="str_local">Local</string>
+    <string name="str_nospace">Shortcuts no space!</string>
+	<string name="str_day">日</string>
+    <string name="str_add">Add</string>
+    <string name="str_exit">Exit</string>
+</resources>
