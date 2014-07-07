@@ -272,7 +272,11 @@ public class Launcher extends Activity{
 
                 popWindow_top = rect.top - 10;
                 popWindow_bottom = rect.bottom + 10;
-                setPopWindow(popWindow_top, popWindow_bottom);
+                new Thread( new Runnable() {     
+                    public void run() {
+            		    mHandler.sendEmptyMessage(1);
+            	    }            
+    		    }).start();
                 Intent intent = new Intent();
                 intent.putExtra("top", popWindow_top);
                 intent.putExtra("bottom", popWindow_bottom);
