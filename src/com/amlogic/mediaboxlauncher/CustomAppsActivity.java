@@ -80,7 +80,9 @@ public class CustomAppsActivity extends Activity {
     public final static String LOCAL_SHORTCUT_HEAD = "Local_Shortcut:";
     public static  int CONTENT_HEIGHT;
     private int homeShortcutCount;
-    private TranslateAnimation exitTransAnim;         
+    private TranslateAnimation exitTransAnim;
+
+    final static Object mLock = new Object[0];
 	
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -102,7 +104,7 @@ public class CustomAppsActivity extends Activity {
             public void onItemClick(AdapterView<?> parent, View view, int pos, long id) {
                 Map<String, Object> item = (Map<String, Object>)parent.getItemAtPosition(pos);
 
-                synchronized(str_custom_apps){
+                synchronized(mLock){
                 
                     Launcher.ifChangedShortcut = true;
 
