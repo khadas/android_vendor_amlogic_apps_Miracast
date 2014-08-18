@@ -176,7 +176,7 @@ public class Launcher extends Activity{
         IntentFilter filter = new IntentFilter();
 		filter.addAction(Intent.ACTION_MEDIA_EJECT);
 		filter.addAction(Intent.ACTION_MEDIA_UNMOUNTED);
-		filter.addAction(Intent.ACTION_MEDIA_MOUNTED);
+		filter.addAction(Intent.ACTION_MEDIA_MOUNTED);       
 		filter.addDataScheme("file");
 		registerReceiver(mediaReceiver, filter);
 
@@ -187,6 +187,8 @@ public class Launcher extends Activity{
 		filter.addAction(Intent.ACTION_TIME_TICK);	
         filter.addAction(weather_receive_action);
         filter.addAction(outputmode_change_action);
+        filter.addAction(Intent.ACTION_EXTERNAL_APPLICATIONS_AVAILABLE);    
+        filter.addAction(Intent.ACTION_EXTERNAL_APPLICATIONS_UNAVAILABLE);
 		registerReceiver(netReceiver, filter);
 
         filter = new IntentFilter(Intent.ACTION_PACKAGE_ADDED);
@@ -1172,6 +1174,43 @@ public class Launcher extends Activity{
         }).start();  
    }
 
+    private void updateAppList(Intent intent){
+        final boolean replacing = intent.getBooleanExtra(Intent.EXTRA_REPLACING, false);
+        boolean isShortcutIndex = false;
+        String packageName = null;
+        
+        if (intent.getData() != null){
+            packageName = intent.getData().getSchemeSpecificPart();
+            if (packageName == null || packageName.length() == 0) {
+                // they sent us a bad intent
+                return;
+            }
+            if (packageName.equals("com.android.provision"))
+                return;
+        }
+        if (getCurrentFocus()!=null && getCurrentFocus().getParent() instanceof MyGridLayout){
+            int parentId = ((MyGridLayout)getCurrentFocus().getParent()).getId();
+            dontRunAnim = true;
+            if (parentId != View.NO_ID) {
+                String name = getResources().getResourceEntryName(parentId);
+                if (name.equals("gv_shortcut")) {
+                    numberInGridOfShortcut = ((MyGridLayout)getCurrentFocus().getParent()).indexOfChild(getCurrentFocus());
+                    isShortcutIndex = true;
+                }
+            }
+            if (!isShortcutIndex) {
+                numberInGrid = ((MyGridLayout)getCurrentFocus().getParent()).indexOfChild(getCurrentFocus());
+            }
+        } else {
+            numberInGrid = -1;
+        }
+
+        updateAllShortcut = true;
+        ifChangedShortcut = true;
+        displayShortcuts();  
+
+   }
+
     private Handler mHandler = new Handler() {
 		public void handleMessage(Message msg) {
 			switch(msg.what) {
@@ -1248,7 +1287,7 @@ public class Launcher extends Activity{
 			if(action == null)
 				return;
 
-			//Log.d(TAG, "netReceiver         action = " + action);
+			Log.d(TAG, "netReceiver         action = " + action);
 			
 			if(action.equals(outputmode_change_action)){
                 setHeight();
@@ -1266,8 +1305,10 @@ public class Launcher extends Activity{
 			    String weatherInfo = intent.getExtras().getString("weather_today");
                 //Log.d(TAG, "@@@@@@@@@@@@@@@@@@@@@@@@@@ receive " + action + " weather:" + weatherInfo);
                 setWeatherView(weatherInfo);
-            } 
-            else {
+            } else if(Intent.ACTION_EXTERNAL_APPLICATIONS_AVAILABLE.equals(action)
+                    || Intent.ACTION_EXTERNAL_APPLICATIONS_UNAVAILABLE.equals(action)){
+                updateAppList(intent);
+            }else {
 				displayStatus();
 				updateStatus();
 			}
@@ -1284,37 +1325,7 @@ public class Launcher extends Activity{
                     || Intent.ACTION_PACKAGE_REMOVED.equals(action)
                     || Intent.ACTION_PACKAGE_ADDED.equals(action)) {
                 	   	
-                final String packageName = intent.getData().getSchemeSpecificPart();
-                final boolean replacing = intent.getBooleanExtra(Intent.EXTRA_REPLACING, false);
-                boolean isShortcutIndex = false;
-
-                if (packageName == null || packageName.length() == 0) {
-                    // they sent us a bad intent
-                    return;
-                }
-                if (packageName.equals("com.android.provision"))
-                    return;
-
-                if (getCurrentFocus()!=null && getCurrentFocus().getParent() instanceof MyGridLayout){
-                    int parentId = ((MyGridLayout)getCurrentFocus().getParent()).getId();
-                    dontRunAnim = true;
-                    if (parentId != View.NO_ID) {
-                        String name = getResources().getResourceEntryName(parentId);
-                        if (name.equals("gv_shortcut")) {
-                            numberInGridOfShortcut = ((MyGridLayout)getCurrentFocus().getParent()).indexOfChild(getCurrentFocus());
-                            isShortcutIndex = true;
-                        }
-                    }
-                    if (!isShortcutIndex) {
-                        numberInGrid = ((MyGridLayout)getCurrentFocus().getParent()).indexOfChild(getCurrentFocus());
-                    }
-                } else {
-                    numberInGrid = -1;
-                }
-
-                updateAllShortcut = true;
-                ifChangedShortcut = true;
-                displayShortcuts();  
+                updateAppList(intent);
 	        }        
     	}	
 	};
