@@ -367,16 +367,9 @@ public class Launcher extends Activity{
 		return super.onKeyDown(keyCode, event);
 	}
 
-  	private void displayStatus() {
-		WifiManager mWifiManager = (WifiManager)getSystemService(WIFI_SERVICE);
-        WifiInfo mWifiInfo = mWifiManager.getConnectionInfo();
-        int wifi_rssi = mWifiInfo.getRssi();
-		int wifi_level = WifiManager.calculateSignalLevel(
-                        wifi_rssi, 5);
-	
-	 
+  	private void displayStatus() { 
 		 LocalAdapter ad = new LocalAdapter(Launcher.this,
-						 getStatusData(wifi_level, isEthernetOn()),
+						 getStatusData(getWifiLevel(), isEthernetOn()),
 						 R.layout.homelist_item, 			 
 									 new String[] {"item_type", "item_name", "item_sel"},
 									 new int[] {R.id.item_type, 0, 0});
@@ -522,27 +515,29 @@ public class Launcher extends Activity{
   	public  List<Map<String, Object>> getStatusData(int wifi_level, boolean is_ethernet_on) {	 
 		List<Map<String, Object>> list = new ArrayList<Map<String, Object>>();  
 		Map<String, Object> map = new HashMap<String, Object>();
-		
-		switch (wifi_level) {
-			case 0:
-			 	map.put("item_type", R.drawable.wifi1);				
-				break;
-			case 1:
-				map.put("item_type", R.drawable.wifi2);;
-				break;
-			case 2:
-			 	map.put("item_type", R.drawable.wifi3);
-				break;
-			case 3:
-			 	map.put("item_type", R.drawable.wifi4);
-				break;
-			case 4:
-			 	map.put("item_type", R.drawable.wifi5);
-				break;
-			default:
-				break;
-		}
-		list.add(map);
+
+        if (wifi_level != -1){
+    		switch (wifi_level + 1) {
+    			//case 0:
+    			 //	map.put("item_type", R.drawable.wifi1);				
+    			//	break;
+    			case 1:
+    				map.put("item_type", R.drawable.wifi2);;
+    				break;
+    			case 2:
+    			 	map.put("item_type", R.drawable.wifi3);
+    				break;
+    			case 3:
+    			 	map.put("item_type", R.drawable.wifi4);
+    				break;
+    			case 4:
+    			 	map.put("item_type", R.drawable.wifi5);
+    				break;
+    			default:
+    				break;
+    		}
+    		list.add(map);
+        }
 
 		 if(isSdcardExists() == true){
 		 	map = new HashMap<String, Object>();
@@ -593,7 +588,21 @@ public class Launcher extends Activity{
 		}
 		return false;
 	}
-
+    
+	private int getWifiLevel(){
+		ConnectivityManager connectivity = (ConnectivityManager)this.getSystemService(Context.CONNECTIVITY_SERVICE);
+		NetworkInfo mWifi = connectivity.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+	
+		if (mWifi.isConnected()){
+            WifiManager mWifiManager = (WifiManager)getSystemService(WIFI_SERVICE);
+            WifiInfo mWifiInfo = mWifiManager.getConnectionInfo();
+            int wifi_rssi = mWifiInfo.getRssi();
+            
+    		return WifiManager.calculateSignalLevel(wifi_rssi, 4);
+		} else {
+			return -1;
+		}
+	}
 	private boolean isEthernetOn(){
 		ConnectivityManager connectivity = (ConnectivityManager)this.getSystemService(Context.CONNECTIVITY_SERVICE);
 		NetworkInfo info = connectivity.getNetworkInfo(ConnectivityManager.TYPE_ETHERNET);
