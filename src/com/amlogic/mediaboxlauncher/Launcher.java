@@ -620,7 +620,7 @@ public class Launcher extends Activity{
 		int minute = c.get(Calendar.MINUTE);
 
         is24hFormart = DateFormat.is24HourFormat(this); 
-        if (!is24hFormart && hour >= 12) {
+        if (!is24hFormart && hour > 12) {
             hour = hour - 12;
         }       
 
