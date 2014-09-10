@@ -1296,7 +1296,7 @@ public class Launcher extends Activity{
 			if(action == null)
 				return;
 
-			Log.d(TAG, "netReceiver         action = " + action);
+			//Log.d(TAG, "netReceiver         action = " + action);
 			
 			if(action.equals(outputmode_change_action)){
                 setHeight();
