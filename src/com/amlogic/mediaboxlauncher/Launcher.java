@@ -682,7 +682,14 @@ public class Launcher extends Activity{
         
         BufferedReader br = null;
 		try {
-            br = new BufferedReader(new FileReader(mFile));
+            if (mFile.length() > 10){
+                br = new BufferedReader(new FileReader(mFile));
+            } else {
+                //copying file error, avoid this error
+                br = new BufferedReader(new FileReader(default_file));
+                getShortcutFromDefault(CustomAppsActivity.DEFAULT_SHORTCUR_PATH, CustomAppsActivity.SHORTCUT_PATH);
+            }
+            
             String str = null;
             while( (str=br.readLine()) != null ){
                 if (str.startsWith(CustomAppsActivity.HOME_SHORTCUT_HEAD)){                  
@@ -715,7 +722,7 @@ public class Launcher extends Activity{
         }
 	}
      
-    public void getShortcutFromDefault(String srcPath, String desPath){     
+    public static void getShortcutFromDefault(String srcPath, String desPath){     
         File srcFile = new File(srcPath);
         File desFile = new File(desPath);
         if(!srcFile.exists()) {

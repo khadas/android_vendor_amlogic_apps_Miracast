@@ -276,14 +276,11 @@ public class CustomAppsActivity extends Activity {
         Collections.sort(apps, new ResolveInfo.DisplayNameComparator(manager));
 
 		str_custom_apps = loadCustomApps(SHORTCUT_PATH, Launcher.current_shortcutHead);
-
-		/*map = new HashMap<String, Object>(); 
-		map.put("item_name",getString(R.string.str_exit));   
-		map.put("file_path", null); 	
-		map.put("item_type", R.drawable.item_img_exit);
-		map.put("item_sel", R.drawable.item_img_unsel);	
-		list.add(map);*/
-
+        if (str_custom_apps == null || str_custom_apps.length() == 0){
+            str_custom_apps = loadCustomApps(DEFAULT_SHORTCUR_PATH, Launcher.current_shortcutHead);
+            Launcher.getShortcutFromDefault(DEFAULT_SHORTCUR_PATH, SHORTCUT_PATH);
+        }
+        
         //delete the packages are not exist
         list_custom_apps = str_custom_apps.split(";");
         if(list_custom_apps != null){
