@@ -185,6 +185,7 @@ public class Launcher extends Activity{
 		filter.addAction(wifi_signal_action);
 		filter.addAction(WifiManager.WIFI_AP_STATE_CHANGED_ACTION);
 		filter.addAction(Intent.ACTION_TIME_TICK);	
+		filter.addAction(Intent.ACTION_TIME_CHANGED);
         filter.addAction(weather_receive_action);
         filter.addAction(outputmode_change_action);
         filter.addAction(Intent.ACTION_EXTERNAL_APPLICATIONS_AVAILABLE);    
@@ -1308,7 +1309,9 @@ public class Launcher extends Activity{
 			if(action.equals(outputmode_change_action)){
                 setHeight();
             }
-
+			if (action.equals(Intent.ACTION_TIME_CHANGED)){
+				displayDate();
+			}
 			if (action.equals(Intent.ACTION_TIME_TICK)){
 				displayDate();	
                 
