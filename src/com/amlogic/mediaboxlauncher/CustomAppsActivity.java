@@ -275,10 +275,13 @@ public class CustomAppsActivity extends Activity {
         final List<ResolveInfo> apps = manager.queryIntentActivities(mainIntent, 0);
         Collections.sort(apps, new ResolveInfo.DisplayNameComparator(manager));
 
-		str_custom_apps = loadCustomApps(SHORTCUT_PATH, Launcher.current_shortcutHead);
-        if (str_custom_apps == null || str_custom_apps.length() == 0){
+        mFile = new File(SHORTCUT_PATH);
+        if (mFile.length() > 10){
+		    str_custom_apps = loadCustomApps(SHORTCUT_PATH, Launcher.current_shortcutHead);
+        }else{
             str_custom_apps = loadCustomApps(DEFAULT_SHORTCUR_PATH, Launcher.current_shortcutHead);
             Launcher.getShortcutFromDefault(DEFAULT_SHORTCUR_PATH, SHORTCUT_PATH);
+            Launcher.ifChangedShortcut = true;
         }
         
         //delete the packages are not exist
