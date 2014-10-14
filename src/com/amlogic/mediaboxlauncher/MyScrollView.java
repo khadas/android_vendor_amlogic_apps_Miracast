@@ -34,11 +34,11 @@ public class MyScrollView extends ScrollView{
         return false;       
     }
 
-    @Override
+/*    @Override
     public boolean onGenericMotionEvent(MotionEvent event)
 	{
         Launcher.layoutScaleShadow.setVisibility(View.INVISIBLE);
         Launcher.frameView.setVisibility(View.INVISIBLE);
 		return super.onGenericMotionEvent(event);
-	}
+	}*/
 }

@@ -82,7 +82,7 @@ public class MyRelativeLayout extends RelativeLayout{
            // Log.d(TAG, "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ touch ="+ this + " startX=" + event.getX());  
             Launcher.startX = -1f;
 
-            setSurface();
+           // setSurface();
             
             if (this.getChildAt(0) instanceof ImageView){
                 ImageView img = (ImageView)this.getChildAt(0);    
