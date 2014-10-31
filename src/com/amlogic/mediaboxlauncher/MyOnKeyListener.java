@@ -13,12 +13,8 @@ import android.widget.ImageView;
 import android.util.Log;
 
 import android.view.animation.Animation;
-import android.view.animation.AnimationSet;
 import android.view.animation.ScaleAnimation;
-import android.view.animation.TranslateAnimation;
-import android.view.animation.AnimationUtils;
 import android.view.animation.Animation.AnimationListener;
-import android.graphics.Bitmap;  
 import android.graphics.Rect;
 
 public class MyOnKeyListener implements OnKeyListener{
@@ -85,10 +81,7 @@ public class MyOnKeyListener implements OnKeyListener{
                         Launcher.IntoApps = true;
                     }
                 }                 
-        }else if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT && !Launcher.isShowHomePage){
-            ImageView img = (ImageView)((ViewGroup)view).getChildAt(0);
-            String path  = img.getResources().getResourceName(img.getId()); 
-            String vName = path.substring(path.indexOf("/")+1);
+        }else if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT && !Launcher.isShowHomePage){; 
 
             if (checkNextFocusedIsNull(view, View.FOCUS_LEFT)){
                 Launcher.accessBoundaryCount = 0;
@@ -103,9 +96,6 @@ public class MyOnKeyListener implements OnKeyListener{
             }    
             
         }else if (keyCode == KeyEvent.KEYCODE_DPAD_RIGHT && !Launcher.isShowHomePage){
-            ImageView img = (ImageView)((ViewGroup)view).getChildAt(0);
-            String path  = img.getResources().getResourceName(img.getId()); 
-            String vName = path.substring(path.indexOf("/")+1); 
 
             if(checkNextFocusedIsNull(view,View.FOCUS_RIGHT)){
                 Launcher.accessBoundaryCount = 0;  

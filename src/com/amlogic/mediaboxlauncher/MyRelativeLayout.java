@@ -4,8 +4,6 @@
 package com.amlogic.mediaboxlauncher;
 
 import android.content.Context;
-import android.content.Intent;
-import android.os.SystemProperties;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.ImageView;
@@ -13,25 +11,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.MotionEvent;
 import android.view.animation.Animation;
-import android.view.animation.AnimationSet;
 import android.view.animation.ScaleAnimation;
-import android.view.animation.TranslateAnimation;
-import android.view.animation.AnimationUtils;
 import android.view.animation.Animation.AnimationListener;
 import android.graphics.Bitmap;  
 import android.graphics.BitmapFactory;  
-import android.graphics.Canvas;  
-import android.graphics.Color;  
-import android.graphics.Paint;
-import android.graphics.Paint.Style;
+import android.graphics.Canvas;    
 import android.graphics.Rect;
 import android.graphics.Matrix;
-import android.graphics.Paint.Align;
-import android.graphics.Paint.FontMetrics;
-import android.graphics.PorterDuff.Mode;
-import android.graphics.drawable.Drawable;
-import android.graphics.drawable.BitmapDrawable;
-import android.util.Log;
 import android.util.AttributeSet;
 
 import java.lang.Character;
@@ -88,7 +74,7 @@ public class MyRelativeLayout extends RelativeLayout{
                 ImageView img = (ImageView)this.getChildAt(0);    
               //  Log.d(TAG, "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ img ="+ img + "img.getDrawable()="+ img.getDrawable());
                 if(img != null && img.getDrawable() != null &&
-                            img.getDrawable().getConstantState().equals(mContext.getResources().getDrawable(R.drawable.item_img_add).getConstantState())){
+                            img.getContentDescription() != null && img.getContentDescription().equals("img_add")){
                     //Log.d(TAG, "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ touch add");
                     Launcher.isAddButtonBeTouched = true;
                     Launcher.pressedAddButton = this;
@@ -335,13 +321,6 @@ public class MyRelativeLayout extends RelativeLayout{
         }
         Launcher.layoutScaleShadow.setBackgroundResource(getShadow(mView.getChildAt(0), screen_mode));
         setViewPosition(Launcher.layoutScaleShadow, layoutRect);  
-    }
-
-    private void setTextWidth(TextView text, int width){
-        android.view.ViewGroup.LayoutParams para;
-        para = text.getLayoutParams();
-        para.width = width;
-        text.setLayoutParams(para);
     }
 
     private void setTextMarginAndSize(TextView text, int screen_mode){

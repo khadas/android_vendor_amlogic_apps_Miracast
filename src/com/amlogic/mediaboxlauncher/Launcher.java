@@ -2,13 +2,9 @@ package com.amlogic.mediaboxlauncher;
 
 import android.app.SearchManager;
 import android.os.Environment;
-import android.os.SystemProperties;
 import android.os.Handler;
 import android.os.Message;
-import android.os.ServiceManager;
-import android.os.RemoteException;
 import android.content.Context;
-import android.content.ComponentName;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.BroadcastReceiver;
@@ -17,39 +13,27 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.ComponentName;
 import android.app.Activity;
-import android.app.Instrumentation;
 import android.graphics.Bitmap;
-import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
-import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.KeyEvent;
-import android.view.View.OnClickListener;
 import android.view.View.OnTouchListener;
-import android.view.View.OnFocusChangeListener;
-import android.view.SurfaceHolder;  
 import android.view.Display; 
-import android.view.IWindowManager;
 
-import android.widget.Button;
 import android.widget.RelativeLayout;
-import android.widget.RelativeLayout.LayoutParams;
 import android.widget.TextView;
 import android.widget.ImageView;
 import android.widget.GridView;
 import android.widget.BaseAdapter;
-import android.widget.AdapterView;
 import android.net.wifi.WifiManager;
 import android.net.wifi.WifiInfo;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.graphics.PixelFormat;
 import android.graphics.Typeface;
 import android.graphics.Rect;
-import android.graphics.drawable.Drawable;
 import android.text.format.DateFormat;
 import android.graphics.Point;
     
@@ -59,6 +43,7 @@ import java.io.BufferedReader;
 import java.io.FileWriter;
 import java.io.BufferedWriter;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -69,7 +54,6 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.Calendar;
 import java.util.Collections;
-import android.app.SystemWriteManager;
 
 public class Launcher extends Activity{
 	
@@ -146,9 +130,9 @@ public class Launcher extends Activity{
     private int popWindow_bottom = -1;
     public static float startX;
     private static boolean updateAllShortcut;
-    private static boolean checkOobe = true;
     private int numberInGrid = -1;
     private int numberInGridOfShortcut = -1;
+    private SystemControlManager mSystemControlManager;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -159,11 +143,7 @@ public class Launcher extends Activity{
         if (DesUtils.isAmlogicChip() == false){
             finish();
         }
-        IWindowManager mWindowManager = IWindowManager.Stub.asInterface(ServiceManager.getService("window"));
-        try{
-            mWindowManager.setAnimationScale(1, 0.0f);
-        } catch (RemoteException e) {
-        }
+        mSystemControlManager = new SystemControlManager(this);
         
         initStaticVariable();
         initChildViews();   
@@ -183,7 +163,6 @@ public class Launcher extends Activity{
 		filter = new IntentFilter();
 		filter.addAction(net_change_action);
 		filter.addAction(wifi_signal_action);
-		filter.addAction(WifiManager.WIFI_AP_STATE_CHANGED_ACTION);
 		filter.addAction(Intent.ACTION_TIME_TICK);	
 		filter.addAction(Intent.ACTION_TIME_CHANGED);
         filter.addAction(weather_receive_action);
@@ -204,9 +183,9 @@ public class Launcher extends Activity{
 		super.onResume();
 		Log.d(TAG, "------onResume");
 
-        if(SystemProperties.getBoolean("ro.platform.has.mbxuimode", false)){
-            if(SystemProperties.getBoolean("ubootenv.var.has.accelerometer", true)
-                            && SystemProperties.getBoolean("sys.keeplauncher.landcape", false))
+        if(mSystemControlManager.getPropertyBoolean("ro.platform.has.mbxuimode", false)){
+            if(mSystemControlManager.getPropertyBoolean("ubootenv.var.has.accelerometer", true)
+                            && mSystemControlManager.getPropertyBoolean("sys.keeplauncher.landcape", false))
                 setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
             else
                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
@@ -272,14 +251,10 @@ public class Launcher extends Activity{
             if (pressedAddButton != null && isAddButtonBeTouched && !IntoCustomActivity){
                 Rect rect = new Rect();
                 pressedAddButton.getGlobalVisibleRect(rect);
-
+  
                 popWindow_top = rect.top - 10;
                 popWindow_bottom = rect.bottom + 10;
-                new Thread( new Runnable() {     
-                    public void run() {
-            		    mHandler.sendEmptyMessage(1);
-            	    }            
-    		    }).start();
+                //setPopWindow(popWindow_top, popWindow_bottom);
                 Intent intent = new Intent();
                 intent.putExtra("top", popWindow_top);
                 intent.putExtra("bottom", popWindow_bottom);
@@ -287,6 +262,7 @@ public class Launcher extends Activity{
                 intent.putExtra("right", rect.right);
     			intent.setClass(this, CustomAppsActivity.class);
     			startActivity(intent);
+                pressedAddButton = null;
                 IntoCustomActivity = true;
                 isAddButtonBeTouched = false;
             }
@@ -329,7 +305,7 @@ public class Launcher extends Activity{
             if (view.getChildAt(0) instanceof ImageView){
                 ImageView img = (ImageView)view.getChildAt(0);    
                 if(img != null &&
-                        img.getDrawable().getConstantState().equals(getResources().getDrawable(R.drawable.item_img_add).getConstantState())){ 
+                        img.getContentDescription() != null && img.getContentDescription().equals("img_add")){ 
                     Rect rect = new Rect();
                     view.getGlobalVisibleRect(rect);
 
@@ -581,7 +557,7 @@ public class Launcher extends Activity{
 	}
 
 	public  boolean isSdcardExists(){
-		if(Environment.getExternalStorage2State().startsWith(Environment.MEDIA_MOUNTED)) {
+		if(Environment.getExternalStorageState().startsWith(Environment.MEDIA_MOUNTED)) {
 			File dir = new File(SD_PATH);  
 			if (dir.exists() && dir.isDirectory()) {
 				return true;
@@ -608,7 +584,7 @@ public class Launcher extends Activity{
 		ConnectivityManager connectivity = (ConnectivityManager)this.getSystemService(Context.CONNECTIVITY_SERVICE);
 		NetworkInfo info = connectivity.getNetworkInfo(ConnectivityManager.TYPE_ETHERNET);
 	
-		if (info.isConnected()){
+		if (info != null && info.isConnected()){
 			return true;
 		} else {
 			return false;
@@ -664,11 +640,10 @@ public class Launcher extends Activity{
 
 	 private void loadCustomApps(String path){	
         File mFile = new File(path);
-        File default_file = new File(CustomAppsActivity.DEFAULT_SHORTCUR_PATH);
         
 		if(!mFile.exists()) {
-		    mFile = default_file;
             getShortcutFromDefault(CustomAppsActivity.DEFAULT_SHORTCUR_PATH, CustomAppsActivity.SHORTCUT_PATH);
+            mFile = new File(path);
 		} else{
 		    try {
                 BufferedReader b = new BufferedReader(new FileReader(mFile));
@@ -687,7 +662,7 @@ public class Launcher extends Activity{
                 br = new BufferedReader(new FileReader(mFile));
             } else {
                 //copying file error, avoid this error
-                br = new BufferedReader(new FileReader(default_file));
+                br = new BufferedReader(new InputStreamReader(getResources().openRawResource(R.raw.default_shortcut)));
                 getShortcutFromDefault(CustomAppsActivity.DEFAULT_SHORTCUR_PATH, CustomAppsActivity.SHORTCUT_PATH);
             }
             
@@ -723,12 +698,8 @@ public class Launcher extends Activity{
         }
 	}
      
-    public static void getShortcutFromDefault(String srcPath, String desPath){     
-        File srcFile = new File(srcPath);
+    public  void getShortcutFromDefault(int srcPath, String desPath){     
         File desFile = new File(desPath);
-        if(!srcFile.exists()) {
-		    return;
-		}
         if(!desFile.exists()) {
 			try {
 				desFile.createNewFile();
@@ -741,7 +712,7 @@ public class Launcher extends Activity{
         BufferedReader br = null;
         BufferedWriter bw = null;
 		try {
-            br = new BufferedReader(new FileReader(srcFile));
+            br = new BufferedReader(new InputStreamReader(getResources().openRawResource(srcPath)));
             String str = null;
             List list = new ArrayList();
             
@@ -781,12 +752,12 @@ public class Launcher extends Activity{
            if (!oldfile.exists()) {
                InputStream inStream = new FileInputStream(oldPath); 
                FileOutputStream fs = new FileOutputStream(newPath);   
-               byte[] buffer = new byte[1444];   
-               int length;   
+               byte[] buffer = new byte[1444];    
                while ( (byteread = inStream.read(buffer)) != -1) {   
                    bytesum += byteread;
                    System.out.println(bytesum);   
                    fs.write(buffer, 0, byteread);   
+                   fs.close();
                }   
                inStream.close();   
            }   
@@ -973,10 +944,10 @@ public class Launcher extends Activity{
 	}
 
     private void setHeight() {
-        String outputmode = SystemProperties.get("ubootenv.var.outputmode", "1080p");
-        isRealOutputMode = SystemProperties.getBoolean("ro.platform.has.realoutputmode", false);
-        isNative4k2k = SystemProperties.getBoolean("ro.platform.has.native4k2k", false);
-        isNative720 = SystemProperties.getBoolean("ro.platform.has.native720", false);
+        String outputmode = mSystemControlManager.getPropertyString("ubootenv.var.outputmode", "1080p");
+        isRealOutputMode = mSystemControlManager.getPropertyBoolean("ro.platform.has.realoutputmode", false);
+        isNative4k2k = mSystemControlManager.getPropertyBoolean("ro.platform.has.native4k2k", false);
+        isNative720 = mSystemControlManager.getPropertyBoolean("ro.platform.has.native720", false);
         if (isNative4k2k && outputmode.startsWith("4k2k")) {
             REAL_OUTPUT_MODE = "4k2knative";
             CustomAppsActivity.CONTENT_HEIGHT = 900; 
@@ -1163,19 +1134,6 @@ public class Launcher extends Activity{
         return -1;
     }
 
-    private void sendKeyCode(final int keyCode){  
-        new Thread () {  
-            public void run() {  
-                try {  
-                    Instrumentation inst = new Instrumentation();  
-                    inst.sendKeyDownUpSync(keyCode);  
-                } catch (Exception e) {  
-                    Log.e("Exception when sendPointerSync", e.toString());  
-                }  
-            }  
-        }.start();  
-    }  
-    
     private void resetShadow(){
         new Thread( new Runnable() {     
             public void run() {
@@ -1192,7 +1150,6 @@ public class Launcher extends Activity{
    }
 
     private void updateAppList(Intent intent){
-        final boolean replacing = intent.getBooleanExtra(Intent.EXTRA_REPLACING, false);
         boolean isShortcutIndex = false;
         String packageName = null;
         

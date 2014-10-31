@@ -7,23 +7,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.MotionEvent;
 import android.view.View.OnTouchListener;
-import android.view.KeyEvent;
-import android.view.FocusFinder;
-import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
-import android.util.Log;
-
-import android.view.animation.Animation;
-import android.view.animation.AnimationSet;
-import android.view.animation.ScaleAnimation;
-import android.view.animation.TranslateAnimation;
-import android.view.animation.AnimationUtils;
-import android.view.animation.Animation.AnimationListener;
-import android.graphics.Bitmap;  
 import android.graphics.Rect;
-import android.graphics.Canvas; 
-import android.graphics.Color;
-import android.graphics.PorterDuff.Mode;
 
 public class MyOnTouchListener implements OnTouchListener{
     private final static String TAG = "MyOnTouchListener";
@@ -106,15 +91,6 @@ public class MyOnTouchListener implements OnTouchListener{
          Launcher.viewMenu.setDisplayedChild(num);
          Launcher.viewMenu.setFocusableInTouchMode(true);
     }
-
-    private float getPiovtX(Rect rect){
-        return (float)((rect.left + rect.width() / 2));
-    }
-
-    private float getPiovtY(Rect rect){
-        return (float)((rect.top + rect.height() / 2));
-    }
-    
     
 }
 

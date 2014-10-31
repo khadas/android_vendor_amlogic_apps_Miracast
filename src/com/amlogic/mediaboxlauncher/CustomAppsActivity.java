@@ -4,16 +4,12 @@ import android.app.Activity;
 import android.app.SearchManager;
 import android.content.Intent;
 import android.content.ComponentName;
-import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.Context;
 import android.os.Bundle;
-import android.os.SystemProperties;
-
 
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.Window;
 import android.view.KeyEvent;
 import android.view.WindowManager;
@@ -21,22 +17,16 @@ import android.view.WindowManager.LayoutParams;
 
 
 import android.widget.BaseAdapter;
-import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.TextView;
 import android.widget.GridView;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
-import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.Toast;
 
 import android.view.animation.Animation;
-import android.view.animation.AnimationSet;
-import android.view.animation.ScaleAnimation;
 import android.view.animation.TranslateAnimation;
 import android.view.animation.AnimationUtils;
 import android.view.animation.Animation.AnimationListener;
-import android.graphics.Bitmap;  
 import android.util.Log;
 
 
@@ -45,6 +35,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.InputStreamReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -60,7 +51,6 @@ public class CustomAppsActivity extends Activity {
 	
 	private ImageView img_screen_shot = null;
     private ImageView img_screen_shot_keep = null;
-    private ImageView img_arrow = null;
     private ImageView img_dim = null;
 	private GridView gv = null;
     private Context mContext = null;
@@ -72,7 +62,7 @@ public class CustomAppsActivity extends Activity {
 	private String str_custom_apps;
    
     public final static String SHORTCUT_PATH = "/data/data/com.amlogic.mediaboxlauncher/shortcut.cfg";
-    public final static String DEFAULT_SHORTCUR_PATH = "/system/etc/default_shortcut.cfg";
+    public final static int DEFAULT_SHORTCUR_PATH = R.raw.default_shortcut;
 	public final static String HOME_SHORTCUT_HEAD = "Home_Shortcut:";
     public final static String VIDEO_SHORTCUT_HEAD = "Video_Shortcut:";
     public final static String RECOMMEND_SHORTCUT_HEAD = "Recommend_Shortcut:";
@@ -143,7 +133,6 @@ public class CustomAppsActivity extends Activity {
         mContext = this;
         img_screen_shot = (ImageView)findViewById(R.id.img_screenshot);
         img_screen_shot_keep = (ImageView)findViewById(R.id.img_screenshot_keep);
-        img_arrow = (ImageView)findViewById(R.id.img_arrow);
         img_dim = (ImageView)findViewById(R.id.img_dim);
 		//img_screen_shot.setVisibility(View.INVISIBLE); 
 		//displayView();
@@ -279,8 +268,8 @@ public class CustomAppsActivity extends Activity {
         if (mFile.length() > 10){
 		    str_custom_apps = loadCustomApps(SHORTCUT_PATH, Launcher.current_shortcutHead);
         }else{
-            str_custom_apps = loadCustomApps(DEFAULT_SHORTCUR_PATH, Launcher.current_shortcutHead);
-            Launcher.getShortcutFromDefault(DEFAULT_SHORTCUR_PATH, SHORTCUT_PATH);
+            str_custom_apps = loadCustomAppsRes(DEFAULT_SHORTCUR_PATH, Launcher.current_shortcutHead);
+            getShortcutFromDefault(DEFAULT_SHORTCUR_PATH, SHORTCUT_PATH);
             Launcher.ifChangedShortcut = true;
         }
         
@@ -398,21 +387,8 @@ public class CustomAppsActivity extends Activity {
         img_screen_shot.startAnimation(translateAnimation);       
     }
 
-   private void setArrowPosition(int top, int x_center, int flag){
-        android.widget.AbsoluteLayout.LayoutParams lp2 = new android.widget.AbsoluteLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT, 0, 0); 
-        lp2.x = x_center - 13;
-        if (flag == 0){
-            lp2.y = top + CONTENT_HEIGHT -4;
-            img_arrow.setImageResource(R.drawable.arrow_down);
-        } else {
-            lp2.y = top - 15 + 4;
-            img_arrow.setImageResource(R.drawable.arrow_up);
-        }
-        img_arrow.setLayoutParams(lp2);
-   }
 
     private String loadCustomApps(String path, String shortcut_head){
-		String[] list_custom_apps;		
 		mFile = new File(path);
         
 		if(!mFile.exists()) {
@@ -430,8 +406,32 @@ public class CustomAppsActivity extends Activity {
                 } 
             }
             str_custom_apps = str.replaceAll(shortcut_head, "");
-			//list_custom_apps = str_custom_apps.split(";");
-            //homeShortcutCount = list_custom_apps.length;
+		}
+		catch (Exception e) {
+			return null;
+		} finally {
+            try {
+                if (br != null)
+                    br.close();
+            } catch (IOException e) {
+            }
+        }
+		return str_custom_apps;
+
+	}
+
+    private String loadCustomAppsRes(int resId, String shortcut_head){	
+        BufferedReader br = null;
+		try {
+            br = new BufferedReader(new InputStreamReader(getResources().openRawResource(resId)));
+            String str = null;
+            while( (str=br.readLine()) != null ){
+                if (str.startsWith(shortcut_head)){                  
+                    //Log.d(TAG, "@@@@@@@@@@@@@@@@@@ get CustomApps" + str);
+                    break;
+                } 
+            }
+            str_custom_apps = str.replaceAll(shortcut_head, "");
 		}
 		catch (Exception e) {
 			return null;
@@ -509,24 +509,28 @@ public class CustomAppsActivity extends Activity {
         }
     }
 
-    public void getShortcutFromDefault(String srcPath, String desPath){     
-        File srcFile = new File(srcPath);
+    public  void getShortcutFromDefault(int srcPath, String desPath){     
         File desFile = new File(desPath);
-        if(!srcFile.exists()) {
-		    return;
+        if(!desFile.exists()) {
+			try {
+				desFile.createNewFile();
+			}
+			catch (Exception e) {
+				Log.e(TAG, e.getMessage().toString());
+			}
 		}
-		
+        
         BufferedReader br = null;
         BufferedWriter bw = null;
 		try {
-            br = new BufferedReader(new FileReader(srcFile));
+            br = new BufferedReader(new InputStreamReader(getResources().openRawResource(srcPath)));
             String str = null;
             List list = new ArrayList();
             
             while( (str=br.readLine()) != null ){
                 list.add(str);
             }
-            bw = new BufferedWriter(new FileWriter(mFile));
+            bw = new BufferedWriter(new FileWriter(desFile));
             for( int i = 0;i < list.size(); i++ ){ 
                  bw.write(list.get(i).toString());
                  bw.newLine();
@@ -549,6 +553,7 @@ public class CustomAppsActivity extends Activity {
             }
         }
     }
+
       
     private class MyAnimationListener implements AnimationListener { 
        private int mTop;

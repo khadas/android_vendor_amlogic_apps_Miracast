@@ -4,8 +4,8 @@
     android:layout_height="match_parent"
     android:descendantFocusability="afterDescendants"
     >
-	
 	<ImageView
+	    android:contentDescription="@string/img_desc"
 		android:layout_width="46dp"
 		android:layout_height="46dp"   
 		android:layout_marginTop="52dp"
@@ -18,7 +18,7 @@
 		android:layout_marginTop="60dp"
 		android:layout_marginLeft="230dp"
 		android:text="@string/str_local"
-		android:textSize="30dp"
+		android:textSize="30sp"
 	/>
 	<TextView
 		android:id="@+id/tx_local_allcount"
@@ -27,7 +27,7 @@
 		android:layout_alignParentRight="true"
 		android:layout_marginTop="80dp"
 		android:layout_marginRight="192dp"
-		android:textSize="20dp"
+		android:textSize="20sp"
 	/>	
 	<TextView
 		android:id="@+id/tx_local_count"
@@ -35,7 +35,7 @@
 		android:layout_height="wrap_content" 
 		android:layout_marginTop="80dp"
 		android:layout_toLeftOf="@+id/tx_local_allcount"
-		android:textSize="20dp"
+		android:textSize="20sp"
 		android:textColor="#3495D9" 
 	/>
     <com.amlogic.mediaboxlauncher.MyScrollView
@@ -58,6 +58,7 @@
     </com.amlogic.mediaboxlauncher.MyScrollView>
     
     <ImageView
+        android:contentDescription="@string/img_desc"
 		android:layout_width="262dp"
 		android:layout_height="52dp"   
 		android:layout_marginTop="638dp"

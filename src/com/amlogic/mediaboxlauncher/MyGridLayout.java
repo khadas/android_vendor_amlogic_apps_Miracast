@@ -7,19 +7,16 @@ import android.content.Context;
 import android.content.ComponentName;
 import android.widget.GridLayout;
 import android.widget.TextView;
-import android.widget.ImageView;;
+import android.widget.ImageView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.graphics.drawable.Drawable;
 import android.graphics.Canvas;
-import android.graphics.Rect;
 import android.util.Log;
 import android.util.AttributeSet;
 
 import java.util.List;
-import java.util.ArrayList;
 import java.util.Map;
-import java.util.HashMap;
 
 public class MyGridLayout extends GridLayout{
     private final static String TAG="MyGridLayout";
@@ -79,7 +76,7 @@ public class MyGridLayout extends GridLayout{
                 }  
             } else {
                 img_bg.setImageResource(R.drawable.item_img_add);
-
+                img_bg.setContentDescription("img_add"); 
             }
             view.setOnKeyListener(new MyOnKeyListener(mContext, m.get("file_path")));
             view.setOnTouchListener(new MyOnTouchListener(mContext, m.get("file_path")));
