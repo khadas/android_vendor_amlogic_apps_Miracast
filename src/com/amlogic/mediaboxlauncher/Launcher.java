@@ -13,6 +13,7 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.ComponentName;
 import android.app.Activity;
+import android.app.Instrumentation;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.util.Log;
@@ -250,20 +251,10 @@ public class Launcher extends Activity{
             //Log.d(TAG, "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ touch ="+ this);
             if (pressedAddButton != null && isAddButtonBeTouched && !IntoCustomActivity){
                 Rect rect = new Rect();
-                pressedAddButton.getGlobalVisibleRect(rect);
+                pressedAddButton.requestFocus();
+                sendKeyCode(KeyEvent.KEYCODE_DPAD_CENTER);
   
-                popWindow_top = rect.top - 10;
-                popWindow_bottom = rect.bottom + 10;
-                //setPopWindow(popWindow_top, popWindow_bottom);
-                Intent intent = new Intent();
-                intent.putExtra("top", popWindow_top);
-                intent.putExtra("bottom", popWindow_bottom);
-                intent.putExtra("left", rect.left);
-                intent.putExtra("right", rect.right);
-    			intent.setClass(this, CustomAppsActivity.class);
-    			startActivity(intent);
                 pressedAddButton = null;
-                IntoCustomActivity = true;
                 isAddButtonBeTouched = false;
             }
             else if (!isShowHomePage){
@@ -1134,6 +1125,19 @@ public class Launcher extends Activity{
         return -1;
     }
 
+    private void sendKeyCode(final int keyCode){  
+        new Thread () {  
+            public void run() {  
+                try {  
+                    Instrumentation inst = new Instrumentation();  
+                    inst.sendKeyDownUpSync(keyCode);  
+                } catch (Exception e) {  
+                    Log.e("Exception when sendPointerSync", e.toString());  
+                }  
+            }  
+        }.start();  
+    }  
+    
     private void resetShadow(){
         new Thread( new Runnable() {     
             public void run() {

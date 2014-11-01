@@ -28,6 +28,8 @@ public class MyOnTouchListener implements OnTouchListener{
     }
     public boolean onTouch (View view, MotionEvent event)  {
         // TODO Auto-generated method stub
+		Launcher.layoutScaleShadow.setVisibility(View.INVISIBLE);
+		Launcher.frameView.setVisibility(View.INVISIBLE);
         Launcher.isInTouchMode = true;
         if (event.getAction() == MotionEvent.ACTION_UP) {
             ImageView img = (ImageView)((ViewGroup)view).getChildAt(0);
