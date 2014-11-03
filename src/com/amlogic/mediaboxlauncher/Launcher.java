@@ -185,11 +185,11 @@ public class Launcher extends Activity{
 		Log.d(TAG, "------onResume");
 
         if(mSystemControlManager.getPropertyBoolean("ro.platform.has.mbxuimode", false)){
-            if(mSystemControlManager.getPropertyBoolean("ubootenv.var.has.accelerometer", true)
-                            && mSystemControlManager.getPropertyBoolean("sys.keeplauncher.landcape", false))
+           // if(mSystemControlManager.getPropertyBoolean("ubootenv.var.has.accelerometer", true)
+           //                 && mSystemControlManager.getPropertyBoolean("sys.keeplauncher.landcape", false))
                 setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-            else
-               setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
+          //  else
+          //     setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
          }
         
         if (isInTouchMode || (IntoCustomActivity && isShowHomePage && ifChangedShortcut)){
