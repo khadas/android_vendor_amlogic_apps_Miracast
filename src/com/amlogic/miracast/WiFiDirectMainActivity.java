@@ -125,6 +125,23 @@ public class WiFiDirectMainActivity extends Activity implements
     private SharedPreferences.Editor mEditor;
     private MenuItem mDisplayResolution;
 
+    private final Runnable startSearchRunnable = new Runnable(){
+    @Override
+        public void run() {
+            startSearch();
+        }
+    };
+
+    public void startSearchTimer(){
+        if(DEBUG) Log.d(TAG, " startSearchTimer 3s");
+        mHandler.postDelayed(startSearchRunnable, 3000);
+    }
+    
+    public void cancelSearchTimer(){
+        if(DEBUG) Log.d(TAG, " cancelSearchTimer");
+        mHandler.removeCallbacks(startSearchRunnable);
+    }
+    
     @Override
     public void onContentChanged() {
         super.onContentChanged();
@@ -186,8 +203,10 @@ public class WiFiDirectMainActivity extends Activity implements
             if(mDeviceNameShow != null)
                 mDeviceNameShow.setText(mSavedDeviceName);
         }
+        if(WifiP2pDevice.CONNECTED == mDevice.status)
+		        cancelSearchTimer();
         if (DEBUG)
-            Log.d(TAG, "mDevice.status" + mDevice.status);
+            Log.d(TAG, "localDevice name:" + mDevice.deviceName + ", status:" + mDevice.status + " (0-CONNECTED,3-AVAILABLE)");
     }
 
     public void startSearch() {
@@ -431,6 +450,7 @@ public class WiFiDirectMainActivity extends Activity implements
         freshView();
 		for (int i = 0; i < peers.size(); i++) {
 			list += peers.get(i).deviceName + " ";
+			if(DEBUG) Log.d(TAG, "onPeersAvailable peerDevice:" + peers.get(i).deviceName+ ", status:" + peers.get(i).status + " (0-CONNECTED,3-AVAILABLE)");
 		}
 		mPeerList.setText(list);
     }
