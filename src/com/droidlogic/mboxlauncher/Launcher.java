@@ -1,4 +1,4 @@
-package com.amlogic.mediaboxlauncher;
+package com.droidlogic.mboxlauncher;
 
 import android.app.SearchManager;
 import android.os.Environment;
@@ -37,6 +37,8 @@ import android.graphics.Typeface;
 import android.graphics.Rect;
 import android.text.format.DateFormat;
 import android.graphics.Point;
+
+import com.droidlogic.app.SystemControlManager;
     
 import java.io.File;
 import java.io.FileReader;

@@ -10,7 +10,7 @@
     	android:layout_width="wrap_content"
     	android:layout_centerInParent="true"> 
     </ImageView> 
-    <com.amlogic.mediaboxlauncher.MyTextView 
+    <com.droidlogic.mboxlauncher.MyTextView 
     	android:id="@+id/tx_focus_unit"  
     	android:layout_height="wrap_content" 
     	android:layout_width="wrap_content"
@@ -21,5 +21,5 @@
 	    android:ellipsize="marquee" 
 	    android:layout_centerHorizontal="true"
 	    android:layout_alignBottom="@+id/img_focus_unit">    
-   </com.amlogic.mediaboxlauncher.MyTextView> 
+   </com.droidlogic.mboxlauncher.MyTextView> 
 </RelativeLayout> 

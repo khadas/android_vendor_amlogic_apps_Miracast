@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.amlogic.mediaboxlauncher"
+    package="com.droidlogic.mboxlauncher"
     android:versionCode="1"
     android:versionName="1.0" 
     android:sharedUserId="android.uid.system">
@@ -16,12 +16,14 @@
 	    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />  
 		<uses-permission android:name="android.permission.READ_PHONE_STATE" />
 		<uses-permission android:name="android.permission.BROADCAST_STICKY" />
+		<uses-permission android:name="android.permission.SYSTEM_CONTROL" />
 
     <application
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:largeHeap="true"
         android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
+
         <activity
             android:label="@string/app_name"
             android:name=".Launcher"

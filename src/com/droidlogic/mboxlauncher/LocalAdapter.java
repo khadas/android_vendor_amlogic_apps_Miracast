@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.amlogic.mediaboxlauncher;
+package com.droidlogic.mboxlauncher;
 
 import android.content.Context;
 import android.view.View;

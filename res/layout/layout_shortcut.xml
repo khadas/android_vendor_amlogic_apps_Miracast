@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     >
 
-	<com.amlogic.mediaboxlauncher.MyGridLayout
+	<com.droidlogic.mboxlauncher.MyGridLayout
 			android:id="@+id/gv_shortcut"
 	        android:layout_width="967dp"
 	        android:layout_height="500dp"

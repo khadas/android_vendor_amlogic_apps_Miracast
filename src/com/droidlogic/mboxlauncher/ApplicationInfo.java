@@ -1,4 +1,4 @@
-package com.amlogic.mediaboxlauncher;
+package com.droidlogic.mboxlauncher;
 
 import android.content.ComponentName;
 import android.content.Intent;

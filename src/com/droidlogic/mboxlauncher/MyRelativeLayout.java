@@ -1,7 +1,7 @@
 /*-------------------------------------------------------------------------
     
 -------------------------------------------------------------------------*/
-package com.amlogic.mediaboxlauncher;
+package com.droidlogic.mboxlauncher;
 
 import android.content.Context;
 import android.widget.RelativeLayout;

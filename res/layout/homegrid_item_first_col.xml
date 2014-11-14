@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>   
-<com.amlogic.mediaboxlauncher.MyRelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"  
+<com.droidlogic.mboxlauncher.MyRelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"  
     android:layout_width="117dp" 
     android:layout_height="137dp"
     android:layout_centerHorizontal="true"
@@ -15,4 +15,4 @@
     	    android:layout_marginLeft="20dp">  
     	</ImageView> 
   
-</com.amlogic.mediaboxlauncher.MyRelativeLayout> 
+</com.droidlogic.mboxlauncher.MyRelativeLayout> 

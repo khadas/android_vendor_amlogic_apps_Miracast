@@ -14,7 +14,7 @@
  *  @note If you inherit anything from this class, you're doomed.
  */
  
-package com.amlogic.mediaboxlauncher;
+package com.droidlogic.mboxlauncher;
 
 
 import java.io.File;

@@ -37,14 +37,14 @@
 		android:textSize="20dp"
 		android:textColor="#3495D9" 
 	/>
-    <com.amlogic.mediaboxlauncher.MyScrollView
+    <com.droidlogic.mboxlauncher.MyScrollView
 	    android:layout_width="976dp"
         android:layout_height="460dp"
         android:layout_marginLeft="170dp"
 	    android:layout_marginTop="116dp" 
 	    android:descendantFocusability="afterDescendants">
 
-		<com.amlogic.mediaboxlauncher.MyGridLayout
+		<com.droidlogic.mboxlauncher.MyGridLayout
 			android:id="@+id/gv_shortcut_video"
 		    android:layout_width="wrap_content" 
 		    android:layout_height="wrap_content"
@@ -53,7 +53,7 @@
 		    android:rowCount="20"
 		    android:layout_centerHorizontal="true" 
 	    />
-    </com.amlogic.mediaboxlauncher.MyScrollView>
+    </com.droidlogic.mboxlauncher.MyScrollView>
     
     <ImageView
 		android:layout_width="262dp"

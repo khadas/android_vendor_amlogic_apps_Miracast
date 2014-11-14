@@ -1,4 +1,4 @@
-package com.amlogic.mediaboxlauncher;
+package com.droidlogic.mboxlauncher;
 
 import android.app.Activity;
 import android.app.SearchManager;
@@ -61,7 +61,7 @@ public class CustomAppsActivity extends Activity {
 	private String[] list_custom_apps;
 	private String str_custom_apps;
    
-    public final static String SHORTCUT_PATH = "/data/data/com.amlogic.mediaboxlauncher/shortcut.cfg";
+    public final static String SHORTCUT_PATH = "/data/data/com.droidlogic.mboxlauncher/shortcut.cfg";
     public final static int DEFAULT_SHORTCUR_PATH = R.raw.default_shortcut;
 	public final static String HOME_SHORTCUT_HEAD = "Home_Shortcut:";
     public final static String VIDEO_SHORTCUT_HEAD = "Video_Shortcut:";
