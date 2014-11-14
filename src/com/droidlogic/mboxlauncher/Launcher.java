@@ -1119,7 +1119,7 @@ public class Launcher extends Activity{
             return R.drawable.icon_pppoe;
         } else if (packageName.equals("com.android.service.remotecontrol")){
             return R.drawable.icon_remotecontrol;
-        } else if (packageName.equals("com.mbx.settingsmbox")){
+        } else if (packageName.equals("com.droidlogic.mboxsettings")){
             return R.drawable.icon_setting;
         } else if (packageName.equals("com.android.music")){
             return R.drawable.icon_music;

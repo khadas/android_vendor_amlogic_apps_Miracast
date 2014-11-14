@@ -53,7 +53,7 @@ public class MyOnKeyListener implements OnKeyListener{
                 if (vName.equals("img_setting")){
                     Launcher.saveHomeFocusView = view;
                     Intent intent = new Intent();
-                    intent .setComponent(new ComponentName("com.mbx.settingsmbox", "com.mbx.settingsmbox.SettingsMboxActivity"));     
+                    intent .setComponent(new ComponentName("com.droidlogic.mboxsettings", "com.droidlogic.mboxsettings.SettingsMboxActivity"));     
 				    mContext.startActivity(intent);
                     Launcher.IntoApps = true;
                     return true;

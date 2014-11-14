@@ -41,7 +41,7 @@ public class MyOnTouchListener implements OnTouchListener{
             // Log.d(TAG, "@@@@@@@@@@@@@@@@@@@@ viewname=" + vName);
             if (vName.equals("img_setting")){
                 Intent intent = new Intent();
-                intent .setComponent(new ComponentName("com.mbx.settingsmbox", "com.mbx.settingsmbox.SettingsMboxActivity"));     
+                intent .setComponent(new ComponentName("com.droidlogic.mboxsettings", "com.driodlogic.mboxsettings.SettingsMboxActivity"));     
 				mContext.startActivity(intent);
             } else if (vName.equals("img_video")){
                 showMenuView(NUM_VIDEO, view);
