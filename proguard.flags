@@ -18,7 +18,7 @@
 #-keepclassmembers class fqcn.of.javascript.interface.for.webview {
 #   public *;
 #}
--keepclassmembers class com.amlogic.miracast.SinkActivity {
+-keepclassmembers class com.droidlogic.miracast.SinkActivity {
     private void notifyRtspError();
     private void notifyRtpNopacket();
 }

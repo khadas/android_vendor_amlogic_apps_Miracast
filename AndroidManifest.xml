@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.amlogic.miracast"
+    package="com.droidlogic.miracast"
     android:sharedUserId="android.uid.system"
     android:versionCode="20140127"
     android:versionName="1.3.201401271346" >
@@ -15,6 +15,7 @@
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.net.wifi.p2p.DISCOVERY_STATE_CHANGE"/>
+    <uses-permission android:name="droidlogic.permission.SYSTEM_CONTROL" />
 
     <!-- Google Play filtering -->
     <uses-feature

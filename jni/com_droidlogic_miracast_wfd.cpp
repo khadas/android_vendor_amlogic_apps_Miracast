@@ -44,16 +44,18 @@ sp<WifiDisplaySink> mSink;
 bool mStart = false;
 bool mInit = false;
 
-struct SinkHandler : public AHandler {
-	SinkHandler() {};
+struct SinkHandler : public AHandler
+{
+    SinkHandler() {};
 protected:
-	virtual ~SinkHandler() {};
+    virtual ~SinkHandler() {};
     virtual void onMessageReceived(const sp<AMessage> &msg);
 
 private:
-	enum {
-		kWhatSinkNotify,
-	};
+    enum
+    {
+        kWhatSinkNotify,
+    };
 };
 
 sp<SinkHandler> mHandler;
@@ -61,38 +63,46 @@ static jmethodID notifyRtspError;
 static jmethodID notifyRtpNopacket;
 static jobject sinkObject;
 
-static void report_rtsp_error(void) {
-    JNIEnv* env = AndroidRuntime::getJNIEnv();
-	env->CallVoidMethod(sinkObject, notifyRtspError);
+static void report_rtsp_error(void)
+{
+    JNIEnv *env = AndroidRuntime::getJNIEnv();
+    env->CallVoidMethod(sinkObject, notifyRtspError);
 }
-static void report_rtp_nopacket(void) {
-    JNIEnv* env = AndroidRuntime::getJNIEnv();
-        env->CallVoidMethod(sinkObject, notifyRtpNopacket);
+static void report_rtp_nopacket(void)
+{
+    JNIEnv *env = AndroidRuntime::getJNIEnv();
+    env->CallVoidMethod(sinkObject, notifyRtpNopacket);
 }
 
-void SinkHandler::onMessageReceived(const sp<AMessage> &msg) {
-    switch (msg->what()) {
-		case kWhatSinkNotify:
-		{
-			AString reason;
-			msg->findString("reason", &reason);
-			ALOGI("SinkHandler received : %s\n", reason.c_str());
-			if (strncmp(reason.c_str(), "RTSP_ERROR", 10) == 0) {
-				ALOGI("libstagefright_wfd reports RTSP_ERROR");
-				report_rtsp_error();
-			}else if (strncmp(reason.c_str(),"RTP_NO_PACKET", 13) == 0) {
-                                ALOGI("libstagefright_wfd reports no packets");
-				if(mStart)
-                                report_rtp_nopacket();
-                        }
-			break;
-		}
-        default:
-            TRESPASS();
+void SinkHandler::onMessageReceived(const sp<AMessage> &msg)
+{
+    switch (msg->what())
+    {
+    case kWhatSinkNotify:
+    {
+        AString reason;
+        msg->findString("reason", &reason);
+        ALOGI("SinkHandler received : %s\n", reason.c_str());
+        if (strncmp(reason.c_str(), "RTSP_ERROR", 10) == 0)
+        {
+            ALOGI("libstagefright_wfd reports RTSP_ERROR");
+            report_rtsp_error();
+        }
+        else if (strncmp(reason.c_str(), "RTP_NO_PACKET", 13) == 0)
+        {
+            ALOGI("libstagefright_wfd reports no packets");
+            if (mStart)
+                report_rtp_nopacket();
+        }
+        break;
+    }
+    default:
+        TRESPASS();
     }
 }
 
-static int connect(const char *sourceHost, int32_t sourcePort) {
+static int connect(const char *sourceHost, int32_t sourcePort)
+{
     /*
     ProcessState::self()->startThreadPool();
     DataSource::RegisterDefaultSniffers();
@@ -117,21 +127,25 @@ static int connect(const char *sourceHost, int32_t sourcePort) {
 
     mSession->start();
 
-    if(!mInit){
-    mInit = true;
-    mSink = new WifiDisplaySink(mSession);
-	mHandler = new SinkHandler();
-    
+    if (!mInit)
+    {
+        mInit = true;
+        mSink = new WifiDisplaySink(mSession);
+        mHandler = new SinkHandler();
 
-    mSinkLooper->registerHandler(mSink);
-    mSinkLooper->registerHandler(mHandler);
 
-    mSink->setHandlerId(mHandler->id());
+        mSinkLooper->registerHandler(mSink);
+        mSinkLooper->registerHandler(mHandler);
+
+        mSink->setHandlerId(mHandler->id());
     }
     ALOGI("SinkHandler mSink=%d, mHandler=%d", mSink->id(), mHandler->id());
-    if (sourcePort >= 0) {
+    if (sourcePort >= 0)
+    {
         mSink->start(sourceHost, sourcePort);
-    } else {
+    }
+    else
+    {
         mSink->start(sourceHost);
     }
 
@@ -142,19 +156,21 @@ static int connect(const char *sourceHost, int32_t sourcePort) {
     return 0;
 }
 
-static void connect_to_wifi_source(JNIEnv* env, jclass clazz, jobject sinkobj, jstring jip, jint jport) {
+static void connect_to_wifi_source(JNIEnv *env, jclass clazz, jobject sinkobj, jstring jip, jint jport)
+{
     const char *ip = env->GetStringUTFChars(jip, NULL);
-	
-	ALOGI("ref sinkobj");
-	sinkObject = env->NewGlobalRef(sinkobj);
-	
+
+    ALOGI("ref sinkobj");
+    sinkObject = env->NewGlobalRef(sinkobj);
+
     ALOGI("connect to wifi source %s:%d\n", ip, jport);
 
     connect(ip, jport);
     env->ReleaseStringUTFChars(jip, ip);
 }
 
-static void connect_to_rtsp_uri(JNIEnv* env, jclass clazz, jstring juri) {
+static void connect_to_rtsp_uri(JNIEnv *env, jclass clazz, jstring juri)
+{
     const char *ip = env->GetStringUTFChars(juri, NULL);
 
     ALOGI("connect to rtsp uri %s\n", ip);
@@ -163,24 +179,30 @@ static void connect_to_rtsp_uri(JNIEnv* env, jclass clazz, jstring juri) {
     env->ReleaseStringUTFChars(juri, ip);
 }
 
-static void resolutionSettings(JNIEnv * env, jclass clazz, jboolean isHD) {
+static void resolutionSettings(JNIEnv *env, jclass clazz, jboolean isHD)
+{
     unsigned char b = isHD;
     ALOGI("\n c-boolean: %lu  ", b);
-    if(b){
+    if (b)
+    {
         mSink->setResolution(WifiDisplaySink::High);
-    }else {
+    }
+    else
+    {
         mSink->setResolution(WifiDisplaySink::Normal);
     }
 }
 
-static void disconnectSink(JNIEnv* env, jclass clazz) {
+static void disconnectSink(JNIEnv *env, jclass clazz)
+{
     ALOGI("disconnect sink mStart:%d\n", mStart);
 
-	ALOGI("deref sinkobj");
-	env->DeleteGlobalRef(sinkObject);
-	
-    if(mStart){
-	ALOGI("stop WifiDisplaySink");
+    ALOGI("deref sinkobj");
+    env->DeleteGlobalRef(sinkObject);
+
+    if (mStart)
+    {
+        ALOGI("stop WifiDisplaySink");
         mSink->stop();
         mSession->stop();
         //mSinkLooper->unregisterHandler(mSink->id());
@@ -218,25 +240,32 @@ static void run_as_source(JNIEnv* env, jclass clazz, jstring jip) {
   const char *ip = env->GetStringUTFChars(jip, NULL);
 
   ALOGI("run as source %s\n", ip);
-  
+
     source_start(ip);
     env->ReleaseStringUTFChars(jip, ip);
 }
 */
 
 // ----------------------------------------------------------------------------
-static JNINativeMethod gMethods[] = {
-    { "nativeConnectWifiSource", "(Lcom/amlogic/miracast/SinkActivity;Ljava/lang/String;I)V",
-            (void*) connect_to_wifi_source },
+static JNINativeMethod gMethods[] =
+{
+    {
+        "nativeConnectWifiSource", "(Lcom/droidlogic/miracast/SinkActivity;Ljava/lang/String;I)V",
+        (void *) connect_to_wifi_source
+    },
     //{ "nativeConnectRTSPUri", "(Ljava/lang/String;)V",
     //        (void*) connect_to_rtsp_uri },
-  { "nativeDisconnectSink", "()V",
-            (void*) disconnectSink },
-  {"nativeResolutionSettings", "(Z)V",
-            (void*) resolutionSettings},
-  //{ "nativeSourceStart", "(Ljava/lang/String;)V",
+    {
+        "nativeDisconnectSink", "()V",
+        (void *) disconnectSink
+    },
+    {
+        "nativeResolutionSettings", "(Z)V",
+        (void *) resolutionSettings
+    },
+    //{ "nativeSourceStart", "(Ljava/lang/String;)V",
     //        (void*) run_as_source },
-  //{ "nativeSourceStop", "()V",
+    //{ "nativeSourceStop", "()V",
     //        (void*) source_stop },
 };
 
@@ -248,32 +277,35 @@ static JNINativeMethod gMethods[] = {
         var = env->GetMethodID(clazz, methodName, methodDescriptor); \
         LOG_FATAL_IF(! var, "Unable to find method " methodName);
 
-int register_com_amlogic_miracast_WiFiDirectActivity(JNIEnv *env) {
-    static const char* const kClassPathName = "com/amlogic/miracast/SinkActivity";
-	jclass clazz;
-	FIND_CLASS(clazz, kClassPathName);
-	GET_METHOD_ID(notifyRtspError, clazz, "notifyRtspError", "()V"); 
-	 GET_METHOD_ID(notifyRtpNopacket, clazz, "notifyRtpNopacket", "()V");
+int register_com_droidlogic_miracast_WiFiDirectActivity(JNIEnv *env)
+{
+    static const char *const kClassPathName = "com/droidlogic/miracast/SinkActivity";
+    jclass clazz;
+    FIND_CLASS(clazz, kClassPathName);
+    GET_METHOD_ID(notifyRtspError, clazz, "notifyRtspError", "()V");
+    GET_METHOD_ID(notifyRtpNopacket, clazz, "notifyRtpNopacket", "()V");
     return jniRegisterNativeMethods(env, kClassPathName, gMethods, sizeof(gMethods) / sizeof(gMethods[0]));
 }
-jint JNI_OnLoad(JavaVM* vm, void* reserved)
+jint JNI_OnLoad(JavaVM *vm, void *reserved)
 {
-    JNIEnv* env = NULL;
+    JNIEnv *env = NULL;
     jint result = -1;
 
-    if (vm->GetEnv((void**) &env, JNI_VERSION_1_4) != JNI_OK) {
+    if (vm->GetEnv((void **) &env, JNI_VERSION_1_4) != JNI_OK)
+    {
         ALOGI("ERROR: GetEnv failed\n");
         goto bail;
     }
     assert(env != NULL);
 
-  /*
-    if (AndroidRuntime::registerNativeMethods(env, "com/android/server/am/ActivityStack", gMethods, NELEM(gMethods)) < 0){
-        LOGE("Can't register ActivityStack");
-        goto bail;
-    }*/
+    /*
+      if (AndroidRuntime::registerNativeMethods(env, "com/android/server/am/ActivityStack", gMethods, NELEM(gMethods)) < 0) {
+          LOGE("Can't register ActivityStack");
+          goto bail;
+      }*/
 
-    if(register_com_amlogic_miracast_WiFiDirectActivity(env) < 0){
+    if (register_com_droidlogic_miracast_WiFiDirectActivity(env) < 0)
+    {
         ALOGE("Can't register WiFiDirectActivity");
         goto bail;
     }

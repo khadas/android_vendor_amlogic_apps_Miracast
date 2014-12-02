@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-#ifndef __COM_AMLOGIC_MIRACAST_WFD_H__
-#define __COM_AMLOGIC_MIRACAST_WFD_H__
+#ifndef __COM_DROIDLOGIC_MIRACAST_WFD_H__
+#define __COM_DROIDLOGIC_MIRACAST_WFD_H__
 
 namespace android {} // namespace android
 
-#endif/*__COM_AMLOGIC_MIRACAST_WFD_H__*/
+#endif/*__COM_DROIDLOGIC_MIRACAST_WFD_H__*/
