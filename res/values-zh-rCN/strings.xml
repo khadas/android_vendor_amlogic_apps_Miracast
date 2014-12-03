@@ -10,7 +10,7 @@
     <string name="no">"否"</string>
     <string name="client_text">"本设备将作为客户端，点击图库按钮来选择本地文件"</string>
     <string name="empty_message">"未发现远程设备.打开P2P并从状态栏按钮通过Wifi-Direct进入搜索P2P设备"</string>
-    <string name="p2p_off_warning">"在系统settings应用的状态栏按钮进入打开P2P功能"</string>
+    <string name="p2p_off_warning">"使用无线传屏功能需要打开wifi功能"</string>
     <string name="group_owner_text">"该设备是群主所有者吗？"</string>
     <string name="label_me">"本设备"</string>
     <string name="label_peers">"远程设备"</string>

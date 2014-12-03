@@ -190,7 +190,7 @@ public class WiFiDirectMainActivity extends Activity implements
             public void onClick (View v)
             {
                 WiFiDirectMainActivity.this.startActivity (new Intent (
-                            Settings.ACTION_WIRELESS_SETTINGS) );
+                            Settings.ACTION_WIFI_SETTINGS) );
             }
         });
         if (!isNetAvailiable() )
