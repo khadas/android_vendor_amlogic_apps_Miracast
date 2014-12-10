@@ -101,7 +101,7 @@ public class SinkActivity extends Activity
 
     private View mRootView;
 
-    private SystemControlManager mSystemControl = null;
+    private SystemControlManager mSystemControl = new SystemControlManager (this);
 
     static
     {
@@ -175,7 +175,6 @@ public class SinkActivity extends Activity
                 catch (InterruptedException e) {}
             }
         }
-        SystemControlManager mSystemControl = new SystemControlManager (this);
     }
 
     /** register the BroadcastReceiver with the intent values to be matched */

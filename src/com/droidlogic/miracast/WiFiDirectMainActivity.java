@@ -45,6 +45,9 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.PowerManager;
 import android.os.Message;
+import android.os.FileObserver;
+import android.os.FileUtils;
+import android.os.UserHandle;
 import android.preference.PreferenceManager;
 import android.text.TextUtils;
 
@@ -60,7 +63,12 @@ import android.widget.EditText;
 import android.provider.Settings;
 import android.graphics.drawable.AnimationDrawable;
 
+import java.io.File;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.io.InputStream;
+import java.util.StringTokenizer;
 import org.apache.http.util.EncodingUtils;
 
 /**
@@ -77,10 +85,9 @@ public class WiFiDirectMainActivity extends Activity implements
     public static final String       TAG                    = "amlWifiDirect";
     public static final boolean      DEBUG                  = false;
     public static final String       HRESOLUTION_DISPLAY     = "display_resolution_hd";
-    public static final String       DNSMASQ_IP_ADDR_ACTION = "android.net.dnsmasq.IP_ADDR";
-    public static final String       DNSMASQ_MAC_EXTRA      = "MAC_EXTRA";
-    public static final String       DNSMASQ_IP_EXTRA       = "IP_EXTRA";
-    public static final String       DNSMASQ_PORT_EXTRA     = "PORT_EXTRA";
+    public static final String       WIFI_P2P_IP_ADDR_CHANGED_ACTION = "com.droidlogic.miracast.IP_ADDR_CHANGED";
+    public static final String       WIFI_P2P_PEER_IP_EXTRA       = "IP_EXTRA";
+    public static final String       WIFI_P2P_PEER_MAC_EXTRA       = "MAC_EXTRA";
     private static final String      MIRACAST_PREF          = "miracast_prefences";
     private static final String      IP_ADDR                = "ip_addr";
     private final String             FB0_BLANK              = "/sys/class/graphics/fb0/blank";
@@ -100,7 +107,7 @@ public class WiFiDirectMainActivity extends Activity implements
     private String                   mPort;
     private String                   mIP;
     private Handler                  mHandler               = new Handler();
-    private static final int         MAX_DELAY_MS           = 0;
+    private static final int         MAX_DELAY_MS           = 500;
     private static final int DIALOG_RENAME = 3;
     private final IntentFilter       intentFilter           = new IntentFilter();
     private Channel                  channel;
@@ -126,6 +133,78 @@ public class WiFiDirectMainActivity extends Activity implements
     private SharedPreferences.Editor mEditor;
     private MenuItem mDisplayResolution;
 
+    private File mFolder = new File("/data/misc/dhcp");
+    private FileObserver mAddrObserver = new FileObserver(mFolder.getPath(), FileObserver.MODIFY | FileObserver.CREATE)
+    {
+        public void onEvent(int event, String path) {
+            Log.d(TAG, "WFD : File changed : path=" + path + " event=" + event);
+            if (null == path)
+            {
+                return;
+            }
+
+            if (path.equals(new String("dnsmasq.leases")))
+            {
+                File ipFile = new File(mFolder, path);
+                String fullName = ipFile.getPath();
+                parseDnsmasqAddr(fullName);
+            }
+        }
+    };
+
+    private boolean parseDnsmasqAddr(String fileName)
+    {
+        File file = new File(fileName);
+        BufferedReader reader = null;
+        String info = new String();
+        try {
+            reader = new BufferedReader(new FileReader(file));
+            info = reader.readLine();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (reader != null)
+            {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                if (info == null)
+                {
+                    Log.d (TAG, "parseDnsmasqAddr info is NULL");
+                    return false;
+                }
+                else
+                {
+                    StringTokenizer strToke = new StringTokenizer(info," ");
+                    if (strToke.hasMoreElements())
+                    {
+                        strToke.nextToken();
+                        if (strToke.hasMoreElements())
+                        {
+                            String mac = strToke.nextToken();
+                            if (strToke.hasMoreElements())
+                            {
+                                String ip = strToke.nextToken();
+                                Log.d (TAG, "Sending WIFI_P2P_IP_ADDR_CHANGED_ACTION broadcast : ip=" + ip + " mac=" + mac);
+                                Intent intent = new Intent(WIFI_P2P_IP_ADDR_CHANGED_ACTION);
+                                intent.putExtra(WIFI_P2P_PEER_IP_EXTRA, ip);
+                                intent.putExtra(WIFI_P2P_PEER_MAC_EXTRA, mac);
+                                sendBroadcastAsUser(intent, UserHandle.ALL);
+                                return true;
+                            }
+                        }
+                    }
+                    return false;
+                }
+            }
+            else
+                return false;
+        }
+    }
+
     private final Runnable startSearchRunnable = new Runnable()
     {
         @Override
@@ -139,9 +218,9 @@ public class WiFiDirectMainActivity extends Activity implements
     {
         if (DEBUG)
         {
-            Log.d (TAG, " startSearchTimer 3s");
+            Log.d (TAG, " startSearchTimer 6s");
         }
-        mHandler.postDelayed (startSearchRunnable, 3000);
+        mHandler.postDelayed (startSearchRunnable, 6000);
     }
 
     public void cancelSearchTimer()
@@ -172,6 +251,7 @@ public class WiFiDirectMainActivity extends Activity implements
                                     | PowerManager.ON_AFTER_RELEASE, TAG);
         mWakeLock.acquire();
         registerReceiver (mReceiver, intentFilter);
+        mAddrObserver.startWatching();
         if (DEBUG)
         {
             Log.d (TAG, "onResume()");
@@ -213,11 +293,6 @@ public class WiFiDirectMainActivity extends Activity implements
             mDeviceTitle.setVisibility (View.INVISIBLE);
         }
         resetData();
-    }
-
-    public WifiP2pDevice getDevice()
-    {
-        return mDevice;
     }
 
     public void setDevice (WifiP2pDevice device)
@@ -310,6 +385,7 @@ public class WiFiDirectMainActivity extends Activity implements
     public void onPause()
     {
         super.onPause();
+        mAddrObserver.stopWatching();
         unregisterReceiver (mReceiver);
         mWakeLock.release();
         changeRole (true);
@@ -437,7 +513,7 @@ public class WiFiDirectMainActivity extends Activity implements
         intentFilter.addAction (WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
         intentFilter.addAction (WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
         intentFilter.addAction (WifiP2pManager.WIFI_P2P_DISCOVERY_CHANGED_ACTION);
-        intentFilter.addAction (DNSMASQ_IP_ADDR_ACTION);
+        intentFilter.addAction (WIFI_P2P_IP_ADDR_CHANGED_ACTION);
         manager = (WifiP2pManager) getSystemService (Context.WIFI_P2P_SERVICE);
         channel = manager.initialize (this, getMainLooper(), null);
         mRenameListener = new OnClickListener()

@@ -33,6 +33,10 @@ import android.util.Log;
  */
 public class WiFiDirectBroadcastReceiver extends BroadcastReceiver
 {
+    private String mWfdIp;
+    private String mWfdPort;
+    private boolean mWfdIsConnected = false;
+    private boolean mWfdIpReceived = false;
 
     private WifiP2pManager manager;
     private Channel channel;
@@ -122,19 +126,40 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver
                 Log.d (WiFiDirectMainActivity.TAG, "p2pGroup=" + p2pGroup);
                 Log.d (WiFiDirectMainActivity.TAG, "===================");
             }
-            //if (manager != null)
-            //{
-            //    manager.requestGroupInfo (channel, (GroupInfoListener) activity);
-            //}
-            if (networkInfo.isConnected() )
+
+            if (networkInfo.isConnected())
             {
-                // we are connected with the other device, request connection
-                // info to find group owner IP
-                //manager.requestConnectionInfo (channel, activity);
-                activity.startMiracast (p2pInfo.groupOwnerAddress.getHostAddress(), String.valueOf (activity.getDevice().wfdInfo.getControlPort() ) );
+                mWfdIsConnected = true;
+                if (p2pGroup.isGroupOwner() == true)
+                {
+                     Log.d (WiFiDirectMainActivity.TAG, "I am GO");
+                     WifiP2pDevice device = null;
+                     for (WifiP2pDevice c : p2pGroup.getClientList())
+                     {
+                         device = c;
+                         break;
+                     }
+                     if (device != null && device.wfdInfo != null)
+                     {
+                         mWfdPort = String.valueOf(device.wfdInfo.getControlPort());
+                     }
+
+                     if (mWfdIpReceived)
+                         activity.startMiracast (mWfdIp, mWfdPort);
+                }
+                else
+                {
+                    Log.d (WiFiDirectMainActivity.TAG, "I am GC");
+                    WifiP2pDevice device = p2pGroup.getOwner();
+                    if (device != null && device.wfdInfo != null)
+                        mWfdPort = String.valueOf(device.wfdInfo.getControlPort());
+                    activity.startMiracast (p2pInfo.groupOwnerAddress.getHostAddress(), mWfdPort);
+                }
             }
             else
             {
+                mWfdIsConnected = false;
+                mWfdIpReceived = false;
                 // It's a disconnect
                 activity.resetData();
                 activity.stopMiracast (false);
@@ -167,20 +192,17 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver
                 Log.d (WiFiDirectMainActivity.TAG, "Discovery state changed: " + discoveryState + " ->1:stop, 2:start");
             }
         }
-        /*
-            else if (WiFiDirectMainActivity.DNSMASQ_IP_ADDR_ACTION.equals (action) )
-            {
-                String mac = intent.getStringExtra (WiFiDirectMainActivity.DNSMASQ_MAC_EXTRA);
-                String ip = intent.getStringExtra (WiFiDirectMainActivity.DNSMASQ_IP_EXTRA);
-                String port = intent.getStringExtra (WiFiDirectMainActivity.DNSMASQ_PORT_EXTRA);
+        else if (WiFiDirectMainActivity.WIFI_P2P_IP_ADDR_CHANGED_ACTION.equals (action) )
+        {
+            mWfdIp = intent.getStringExtra (WiFiDirectMainActivity.WIFI_P2P_PEER_IP_EXTRA);
 
-                if (WiFiDirectMainActivity.DEBUG)
-                {
-                    Log.d (WiFiDirectMainActivity.TAG, "mac:" + mac + " IP:" + ip + " port:" + port);
-                }
+            if (mWfdIpReceived)
+                return;
 
-                activity.startMiracast (ip, port);
-            }
-            */
+            mWfdIpReceived = true;
+
+            if (mWfdIsConnected)
+                activity.startMiracast (mWfdIp, mWfdPort);
+        }
     }
 }
