@@ -39,6 +39,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.os.Looper;
 import android.os.PowerManager;
+import android.os.SystemProperties;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -392,15 +393,27 @@ public class SinkActivity extends Activity
         }
         else
         {
+            StringBuilder b = new StringBuilder(60);
+            String vfmdefmap = SystemProperties.get("media.decoder.vfm.defmap");
+            if (vfmdefmap == null)
+            {
+                b.append("add default decoder ppmgr amvideo");
+            }
+            else
+            {
+                b.append("add default ");
+                b.append(vfmdefmap);
+            }
+
             if (null != mSystemControl)
             {
                 mSystemControl.writeSysFs ("/sys/class/vfm/map", "rm default");
-                mSystemControl.writeSysFs ("/sys/class/vfm/map", "add default decoder ppmgr amvideo");
+                mSystemControl.writeSysFs ("/sys/class/vfm/map", b.toString());
             }
             else
             {
                 writeSysfs ("/sys/class/vfm/map", "rm default");
-                writeSysfs ("/sys/class/vfm/map", "add default decoder ppmgr amvideo");
+                writeSysfs ("/sys/class/vfm/map", b.toString());
             }
 
         }
