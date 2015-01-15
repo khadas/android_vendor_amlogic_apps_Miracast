@@ -32,8 +32,6 @@
     <string name="channel_close">"连接可能永久消失，请重新关闭后打开P2P选项."</string>
     <string name="close_dlg">"我知道了"</string>
     <string name="change_name">"重命名设备"</string>
-    <string name="find_progress">"返回键退出查找"</string>
-    <string name="find_title">"查找设备"</string>
     <string name="wifi_p2p_failed_rename_message">"设备重命名失败"</string>
     <!-- Manage applications, individual application screen, confirmation dialog button. Displays when user selects to "Clear data". Goes through with the clearing of the data. -->
     <string name="dlg_ok">"确定"</string>

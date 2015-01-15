@@ -91,6 +91,9 @@ public class SinkActivity extends Activity
     //private static final int MAX_DELAY_MS         = 3000;
 
     private final int MSG_CLOSE_OSD             = 2;
+    private String mCueEnable;
+    private String mBypassDynamic;
+    private String mBypassProg;
 
     private String mIP;
     private String mPort;
@@ -319,6 +322,38 @@ public class SinkActivity extends Activity
         }
     }
 
+    private String readSysfs(String path) {
+        if (!new File(path).exists()) {
+            Log.e(TAG, "File not found: " + path);
+            return null;
+        }
+
+        String str = null;
+        StringBuilder value = new StringBuilder();
+
+        try {
+            FileReader fr = new FileReader(path);
+            BufferedReader br = new BufferedReader(fr);
+            try {
+                while ((str = br.readLine()) != null) {
+                    if (str != null)
+                        value.append(str);
+                }
+                fr.close();
+                br.close();
+                if (value != null)
+                    return value.toString();
+                return null;
+            } catch (IOException e) {
+                e.printStackTrace();
+                return null;
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
     private void exitMiracastDialog()
     {
         new AlertDialog.Builder (this)
@@ -376,46 +411,89 @@ public class SinkActivity extends Activity
         }
     }
 
+    private void waitForVideoUnreg() {
+        int retry = 20;
+        String count;
+        if (null != mSystemControl)
+            count = mSystemControl.readSysFs("/sys/module/amvideo/parameters/new_frame_count");
+        else
+            count = readSysfs("/sys/module/amvideo/parameters/new_frame_count");
+
+        while (count != null && !count.equals("0") && retry > 0) {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            retry--;
+            if (null != mSystemControl)
+                count = mSystemControl.readSysFs("/sys/module/amvideo/parameters/new_frame_count");
+            else
+                count = readSysfs("/sys/module/amvideo/parameters/new_frame_count");
+        }
+    }
+
     public void setSinkParameters (boolean start)
     {
         if (start)
         {
             if (null != mSystemControl)
             {
-                mSystemControl.writeSysFs ("/sys/class/vfm/map", "rm default");
-                mSystemControl.writeSysFs ("/sys/class/vfm/map", "add default decoder amvideo");
+                mCueEnable = mSystemControl.readSysFs("/sys/module/di/parameters/cue_enable");
+                mBypassDynamic = mSystemControl.readSysFs("/sys/module/di/parameters/bypass_dynamic");
+                mBypassProg = mSystemControl.readSysFs("/sys/module/di/parameters/bypass_prog");
+
+                mSystemControl.writeSysFs("/sys/module/di/parameters/cue_enable", "0");
+                mSystemControl.writeSysFs("/sys/module/di/parameters/bypass_dynamic", "0");
+                mSystemControl.writeSysFs("/sys/module/di/parameters/bypass_prog", "1");
+
+                mSystemControl.writeSysFs("/sys/class/vfm/map", "rm default");
+                mSystemControl.writeSysFs("/sys/class/vfm/map", "add default decoder deinterlace amvideo");
             }
             else
             {
-                writeSysfs ("/sys/class/vfm/map", "rm default");
-                writeSysfs ("/sys/class/vfm/map", "add default decoder amvideo");
+                mCueEnable = readSysfs("/sys/module/di/parameters/cue_enable");
+                mBypassDynamic = readSysfs("/sys/module/di/parameters/bypass_dynamic");
+                mBypassProg = readSysfs("/sys/module/di/parameters/bypass_prog");
+
+                writeSysfs("/sys/module/di/parameters/cue_enable", "0");
+                writeSysfs("/sys/module/di/parameters/bypass_dynamic", "0");
+                writeSysfs("/sys/module/di/parameters/bypass_prog", "1");
+
+                writeSysfs("/sys/class/vfm/map", "rm default");
+                writeSysfs("/sys/class/vfm/map", "add default decoder deinterlace amvideo");
             }
         }
         else
         {
+            String model = readSysfs("/sys/class/graphics/fb0/freescale_mode");
+            if (model != null && model.equals("free_scale_mode:default"))
+                waitForVideoUnreg();
             StringBuilder b = new StringBuilder(60);
             String vfmdefmap = SystemProperties.get("media.decoder.vfm.defmap");
-            if (vfmdefmap == null)
-            {
+            if (vfmdefmap == null) {
                 b.append("add default decoder ppmgr amvideo");
             }
-            else
-            {
+            else {
                 b.append("add default ");
                 b.append(vfmdefmap);
             }
 
-            if (null != mSystemControl)
-            {
-                mSystemControl.writeSysFs ("/sys/class/vfm/map", "rm default");
-                mSystemControl.writeSysFs ("/sys/class/vfm/map", b.toString());
-            }
-            else
-            {
-                writeSysfs ("/sys/class/vfm/map", "rm default");
-                writeSysfs ("/sys/class/vfm/map", b.toString());
-            }
+            if (null != mSystemControl) {
+                mSystemControl.writeSysFs("/sys/module/di/parameters/cue_enable", mCueEnable);
+                mSystemControl.writeSysFs("/sys/module/di/parameters/bypass_dynamic", mBypassDynamic);
+                mSystemControl.writeSysFs("/sys/module/di/parameters/bypass_prog", mBypassProg);
 
+                mSystemControl.writeSysFs("/sys/class/vfm/map", "rm default");
+                mSystemControl.writeSysFs("/sys/class/vfm/map", b.toString());
+            } else {
+                writeSysfs("/sys/module/di/parameters/cue_enable", mCueEnable);
+                writeSysfs("/sys/module/di/parameters/bypass_dynamic", mBypassDynamic);
+                writeSysfs("/sys/module/di/parameters/bypass_prog", mBypassProg);
+
+                writeSysfs("/sys/class/vfm/map", "rm default");
+                writeSysfs("/sys/class/vfm/map", b.toString());
+            }
         }
     }
     private native void nativeConnectWifiSource (SinkActivity sink, String ip, int port);

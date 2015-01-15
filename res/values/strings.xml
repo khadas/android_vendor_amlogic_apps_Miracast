@@ -34,8 +34,6 @@
     <string name="channel_close">Severe! Channel is probably lost premanently. Try Disable/Re-Enable P2P.</string>
     <string name="close_dlg">Close</string>
     <string name="change_name">Rename Device</string>
-    <string name="find_progress">Press back to cancel</string>
-    <string name="find_title">finding peers</string>
     <string name="wifi_p2p_failed_rename_message">Failed to rename device.</string>
     <!-- Manage applications, individual application screen, confirmation dialog button. Displays when user selects to "Clear data". Goes through with the clearing of the data. -->
     <string name="dlg_ok">OK</string>

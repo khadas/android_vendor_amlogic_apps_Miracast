@@ -243,6 +243,17 @@ public class WiFiDirectMainActivity extends Activity implements
     public void onResume()
     {
         super.onResume();
+        manager.removeGroup(channel, new WifiP2pManager.ActionListener() {
+            @Override
+            public void onSuccess() {
+                Log.d(TAG, "removeGroup Success");
+            }
+
+            @Override
+            public void onFailure(int reasonCode) {
+                Log.d(TAG, "removeGroup Failure");
+            }
+        });
         changeRole (false);
         /* enable backlight */
         mReceiver = new WiFiDirectBroadcastReceiver (manager, channel, this);
@@ -338,7 +349,6 @@ public class WiFiDirectMainActivity extends Activity implements
             }
             return;
         }
-        onInitiateDiscovery();
         manager.discoverPeers (channel, new WifiP2pManager.ActionListener()
         {
             @Override
@@ -755,44 +765,6 @@ public class WiFiDirectMainActivity extends Activity implements
         {
             Log.d (TAG, "onConnectionInfoAvailable info:" + info);
         }
-    }
-
-    public void onInitiateDiscovery()
-    {
-        if (progressDialog != null && progressDialog.isShowing() )
-        {
-            progressDialog.dismiss();
-        }
-        progressDialog = ProgressDialog.show (this, getResources().getString (R.string.find_title), getResources().getString (R.string.find_progress), true,
-                                              true, new DialogInterface.OnCancelListener()
-        {
-
-            @Override
-            public void onCancel (DialogInterface dialog)
-            {
-                manager.stopPeerDiscovery (channel, new WifiP2pManager.ActionListener()
-                {
-                    public void onSuccess()
-                    {
-                        if (mDeviceNameText != null)
-                        {
-                            mSavedDeviceName = mDeviceNameText.getText().toString();
-                            mDeviceNameShow.setText (mSavedDeviceName);
-                        }
-                        if (DEBUG)
-                        {
-                            Log.d (TAG, " device rename success");
-                        }
-                    }
-                    public void onFailure (int reason)
-                    {
-                        Toast.makeText (WiFiDirectMainActivity.this,
-                                        R.string.wifi_p2p_failed_rename_message,
-                                        Toast.LENGTH_LONG).show();
-                    }
-                });
-            }
-        });
     }
 
     @Override
