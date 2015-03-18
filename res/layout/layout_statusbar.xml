@@ -22,7 +22,7 @@
 	        android:paddingLeft="0dp"
 	        android:paddingRight="0dp"
 	        android:focusable="false"
-	        android:layout_marginTop="35dp"
+	        android:layout_marginTop="5dp"
 	        android:layout_marginLeft="153dp"
 		/>
 
@@ -39,7 +39,7 @@
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
 			android:layout_toRightOf="@+id/img_weather"
-			android:layout_marginTop="45dp"
+			android:layout_marginTop="15dp"
 			android:textSize="30dp"
 		/>
 		<TextView
@@ -47,7 +47,7 @@
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
 			android:layout_toRightOf="@+id/tx_temp"
-			android:layout_marginTop="50dp"
+			android:layout_marginTop="20dp"
 			android:textSize="20dp"
 		/>
 		
@@ -55,7 +55,7 @@
 			android:id="@+id/tx_time"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
-			android:layout_marginTop="45dp"
+			android:layout_marginTop="15dp"
 			android:layout_toLeftOf="@+id/tx_date"
 			android:layout_marginRight="20dp"
 			android:textSize="30dp"
@@ -65,7 +65,7 @@
 			android:id="@+id/tx_date"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
-			android:layout_marginTop="50dp"
+			android:layout_marginTop="20dp"
 			android:layout_marginRight="160dp"
 			android:layout_alignParentRight="true"
 			android:textSize="20dp"

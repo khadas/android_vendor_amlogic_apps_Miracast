@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.droidlogic.mboxlauncher"
-    android:versionCode="1"
-    android:versionName="1.0" 
     android:sharedUserId="android.uid.system">
 
     	<uses-permission android:name="android.permission.INTERNET"></uses-permission>  
@@ -16,7 +14,7 @@
 	    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />  
 		<uses-permission android:name="android.permission.READ_PHONE_STATE" />
 		<uses-permission android:name="android.permission.BROADCAST_STICKY" />
-		<uses-permission android:name="android.permission.SYSTEM_CONTROL" />
+		<uses-permission android:name="droidlogic.permission.SYSTEM_CONTROL" />
 
     <application
         android:icon="@drawable/ic_launcher"
@@ -35,7 +33,6 @@
                  <category android:name="android.intent.category.HOME" /> 
  				 <category android:name="android.intent.category.DEFAULT" /> 
   				 <category android:name="android.intent.category.MONKEY" /> 
-				 <category android:name="android.intent.category.LAUNCHER" />^
             </intent-filter>
         </activity>
 		<activity android:name=".CustomAppsActivity"

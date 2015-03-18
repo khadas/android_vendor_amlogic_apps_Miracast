@@ -68,7 +68,7 @@ public class MyGridLayout extends GridLayout{
                 int resId = Launcher.parseItemIcon(((ComponentName)m.get("item_symbol")).getPackageName());
 
                 if(m.get("file_path").toString().contains(strCameraApp)){
-                    img_bg.setImageResource(R.drawable.icon_camera);
+                    //img_bg.setImageResource(R.drawable.icon_camera);
                 } else if (resId != -1){
                     img_bg.setImageResource(resId);
                 } else {
@@ -91,51 +91,9 @@ public class MyGridLayout extends GridLayout{
 
     private int  parseItemBackground(int num, int flag){
         if (flag == FLAG_HOME){
-            switch (num % 10 + 1){
-                case 1:
-                    return R.drawable.item_1;
-                case 2:
-                    return R.drawable.item_2;
-                case 3:
-                    return R.drawable.item_3;
-                case 4:
-                    return R.drawable.item_4;
-                case 5:
-                    return R.drawable.item_5;
-                case 6:
-                    return R.drawable.item_6;
-                case 7:
-                    return R.drawable.item_7;
-                case 8:
-                    return R.drawable.item_8;
-                case 9:
-                    return R.drawable.item_9;
-                case 10:
-                    return R.drawable.item_10;
-                default:
-                    return R.drawable.item_1;
-           }
+            return R.drawable.item_1;
         }else {
-             switch (num % 8 + 1){
-                case 1:
-                    return R.drawable.item_child_1;
-                case 2:
-                    return R.drawable.item_child_2;
-                case 3:
-                    return R.drawable.item_child_3;
-                case 4:
-                    return R.drawable.item_child_4;
-                case 5:
-                    return R.drawable.item_child_5;
-                case 6:
-                    return R.drawable.item_child_6;
-                case 7:
-                    return R.drawable.item_child_7;
-                case 8:
-                    return R.drawable.item_child_8;
-                default:
-                    return R.drawable.item_child_1;
-           }
+            return R.drawable.item_child_1;
         }
     }
     

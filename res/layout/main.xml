@@ -1,42 +1,54 @@
 <?xml version="1.0" encoding="utf-8"?>
 <AbsoluteLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    android:background="@drawable/bg">
+android:layout_width="fill_parent"
+android:layout_height="fill_parent"
+android:background="@drawable/bg">
 
 
-	<RelativeLayout
-		android:id="@+id/layout_homepage"
-	    android:layout_width="match_parent"
-	    android:layout_height="match_parent"
-	    android:descendantFocusability="afterDescendants"
-	>
-		<include layout="@layout/layout_statusbar" />
-		<include layout="@layout/layout_rect_group" />
-		<include layout="@layout/layout_shortcut" />
-	</RelativeLayout>
-
-	<include layout="@layout/layout_view_flipper" />
-
-	
-	<ImageView
-	    android:contentDescription="@string/img_desc"
-		android:id="@+id/img_trans_frame"
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
-		android:scaleType="fitCenter" 
-		android:background="@drawable/frame"
-		android:visibility="invisible"
+<RelativeLayout
+	android:id="@+id/layout_homepage"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:descendantFocusability="afterDescendants"
+>
+	<View
+	android:layout_width="fill_parent"
+	android:layout_height="14dp"
+	android:layout_marginTop="65dp"
+	android:background="@drawable/line"
 	/>
-	
-	<include layout="@layout/layout_focus_unit" />
-
-	<ImageView
-	    android:contentDescription="@string/img_desc"
-		android:id="@+id/img_frame"
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
-		android:scaleType="fitCenter" 
-		android:background="@drawable/frame"
+	<include layout="@layout/layout_statusbar" />
+	<include layout="@layout/layout_rect_group" />
+	<View
+	android:layout_width="fill_parent"
+	android:layout_height="14dp"
+	android:layout_marginTop="546dp"
+	android:background="@drawable/line"
 	/>
+	<include layout="@layout/layout_shortcut" />
+</RelativeLayout>
+
+<include layout="@layout/layout_view_flipper" />
+
+<ImageView
+	android:contentDescription="@string/img_desc"
+	android:id="@+id/img_trans_frame"
+	android:layout_width="wrap_content"
+	android:layout_height="wrap_content"
+	android:scaleType="fitCenter"
+	android:background="@drawable/frame"
+	android:visibility="invisible"
+/>
+
+<include layout="@layout/layout_focus_unit" />
+
+<ImageView
+	android:contentDescription="@string/img_desc"
+	android:id="@+id/img_frame"
+	android:layout_width="wrap_content"
+	android:layout_height="wrap_content"
+	android:scaleType="fitCenter"
+	android:background="@drawable/frame"
+	android:visibility="gone"
+/>
 </AbsoluteLayout>

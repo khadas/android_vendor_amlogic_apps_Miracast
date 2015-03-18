@@ -1,28 +1,28 @@
-<?xml version="1.0" encoding="utf-8"?>   
-<com.droidlogic.mboxlauncher.MyRelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"  
-    android:layout_width="wrap_content" 
+<?xml version="1.0" encoding="utf-8"?>
+<com.droidlogic.mboxlauncher.MyRelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:focusable="true"
-	android:descendantFocusability="beforeDescendants"
-    >
-    	<ImageView 
-    		android:id="@+id/item_bg"  
-    	    android:layout_height="154dp" 
-    	    android:layout_width="154dp"
-    	    android:paddingTop="22dp"
-    	    android:paddingLeft="37dp"
-    	    android:paddingBottom="52dp"
-    	    android:paddingRight="37dp">   
-    	</ImageView> 
-    	<TextView 
-    		android:id="@+id/item_name"  
-    	    android:layout_height="wrap_content" 
-    	    android:layout_width="120dp"
-    	    android:layout_marginTop="110dp"
-    	    android:layout_centerHorizontal="true" 
-    	    android:gravity="center"  
-    	    android:textSize="25dp"
-    	    android:singleLine="true" >    
-    	</TextView> 
-  
-</com.droidlogic.mboxlauncher.MyRelativeLayout> 
+    android:descendantFocusability="beforeDescendants"
+>
+<ImageView
+    android:id="@+id/item_bg"
+    android:layout_height="174dp"
+    android:layout_width="174dp"
+    android:paddingTop="17dp"
+    android:paddingLeft="32dp"
+    android:paddingBottom="47dp"
+    android:paddingRight="32dp">
+</ImageView>
+<TextView
+    android:id="@+id/item_name"
+    android:layout_height="wrap_content"
+    android:layout_width="150dp"
+    android:layout_marginTop="140dp"
+    android:layout_centerHorizontal="true"
+    android:gravity="center"
+    android:textSize="23dp"
+    android:singleLine="true" >
+</TextView>
+
+</com.droidlogic.mboxlauncher.MyRelativeLayout>
