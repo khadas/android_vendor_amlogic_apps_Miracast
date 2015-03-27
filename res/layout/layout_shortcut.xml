@@ -7,13 +7,13 @@
 
 	<com.droidlogic.mboxlauncher.MyGridLayout
 			android:id="@+id/gv_shortcut"
-	        android:layout_width="977dp"
-	        android:layout_height="500dp"
+	        android:layout_width="1040dp"
+	        android:layout_height="200dp"
 	       	android:orientation="horizontal"
-	        android:columnCount="10"
+	        android:columnCount="11"
 	        android:rowCount="1"
-	        android:layout_marginLeft="160dp"
-	        android:layout_marginTop="586dp"
+	        android:layout_marginLeft="120dp"
+	        android:layout_marginTop="582dp"
 	       	android:layout_centerHorizontal="true" 
 	        android:descendantFocusability="afterDescendants"
 	/>

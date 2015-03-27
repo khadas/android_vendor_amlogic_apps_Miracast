@@ -3,6 +3,7 @@
     android:layout_width="fill_parent"
 	android:layout_height="wrap_content"
 	android:background="@color/transparent_background"
+	android:layout_marginTop="18dp"
 	android:descendantFocusability="blocksDescendants"	
 	>
 		<GridView
@@ -23,7 +24,7 @@
 	        android:paddingRight="0dp"
 	        android:focusable="false"
 	        android:layout_marginTop="5dp"
-	        android:layout_marginLeft="153dp"
+	        android:layout_marginLeft="106dp"
 		/>
 
 		<ImageView
@@ -66,7 +67,7 @@
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
 			android:layout_marginTop="20dp"
-			android:layout_marginRight="160dp"
+			android:layout_marginRight="106dp"
 			android:layout_alignParentRight="true"
 			android:textSize="20dp"
 		/>

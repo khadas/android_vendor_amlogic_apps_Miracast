@@ -9,16 +9,16 @@ android:descendantFocusability="afterDescendants"
     android:layout_width="100dp"
     android:layout_height="70dp"
     android:layout_marginTop="5dp"
-    android:layout_marginLeft="172dp"
+    android:layout_marginLeft="100dp"
     android:src="@drawable/music"
 />
 <TextView
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:layout_marginTop="25dp"
-    android:layout_marginLeft="280dp"
+    android:layout_marginLeft="208dp"
     android:text="@string/str_music"
-    android:textSize="30dp"
+    android:textSize="28dp"
 />
 <TextView
     android:id="@+id/tx_music_allcount"
@@ -28,6 +28,7 @@ android:descendantFocusability="afterDescendants"
     android:layout_marginTop="40dp"
     android:layout_marginRight="192dp"
     android:textSize="20dp"
+    android:visibility="gone"
 />
 <TextView
     android:id="@+id/tx_music_count"
@@ -37,10 +38,11 @@ android:descendantFocusability="afterDescendants"
     android:layout_toLeftOf="@+id/tx_music_allcount"
     android:textSize="20dp"
     android:textColor="#3495D9"
+    android:visibility="gone"
 />
 <com.droidlogic.mboxlauncher.MyScrollView
-    android:layout_width="1044dp"
-    android:layout_height="522dp"
+    android:layout_width="1026dp"
+    android:layout_height="513dp"
     android:layout_marginLeft="118dp"
     android:layout_marginTop="85dp"
     android:descendantFocusability="afterDescendants">
@@ -59,19 +61,13 @@ android:descendantFocusability="afterDescendants"
 
 <View
     android:layout_width="fill_parent"
-    android:layout_height="14dp"
-    android:layout_marginTop="65dp"
-    android:background="@drawable/line"
-/>
-<View
-    android:layout_width="fill_parent"
-    android:layout_height="14dp"
-    android:layout_marginTop="605dp"
+    android:layout_height="5dp"
+    android:layout_marginTop="620dp"
     android:background="@drawable/line"
 />
 
 <ImageView
-    android:layout_width="536dp"
+    android:layout_width="414dp"
     android:layout_height="104dp"
     android:layout_marginTop="616dp"
     android:layout_centerHorizontal="true"

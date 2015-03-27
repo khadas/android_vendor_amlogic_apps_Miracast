@@ -103,7 +103,7 @@ public class Launcher extends Activity{
     public static boolean cantGetDrawingCache;
     public static int accessBoundaryCount = 0;
     public static int preDec;
-    public static int HOME_SHORTCUT_COUNT = 9;
+    public static int HOME_SHORTCUT_COUNT = 10;
     public static View saveHomeFocusView = null;
     public static MyGridLayout homeShortcutView = null;
     public static MyGridLayout videoShortcutView = null;
@@ -1111,8 +1111,6 @@ public class Launcher extends Activity{
                 return R.drawable.icon_miracast;
             } else if (packageName.equals("com.droidlogic.PPPoE")) {
                 return R.drawable.icon_pppoe;
-            } else if (packageName.equals("com.droidlogic.mboxsettings")) {
-                return R.drawable.icon_setting;
             } else if (packageName.equals("com.android.music")) {
                 return R.drawable.icon_music;
             }

@@ -7,21 +7,22 @@
 >
 <ImageView
     android:id="@+id/item_bg"
-    android:layout_height="174dp"
-    android:layout_width="174dp"
-    android:paddingTop="17dp"
-    android:paddingLeft="32dp"
-    android:paddingBottom="47dp"
-    android:paddingRight="32dp">
+    android:layout_height="171dp"
+    android:layout_width="171dp"
+    android:paddingTop="5dp"
+    android:paddingLeft="15dp"
+    android:paddingBottom="25dp"
+    android:paddingRight="15dp">
 </ImageView>
 <TextView
     android:id="@+id/item_name"
     android:layout_height="wrap_content"
     android:layout_width="150dp"
-    android:layout_marginTop="140dp"
+    android:layout_marginTop="138dp"
     android:layout_centerHorizontal="true"
     android:gravity="center"
     android:textSize="23dp"
+    android:textColor="@color/btn_text_color"
     android:singleLine="true" >
 </TextView>
 

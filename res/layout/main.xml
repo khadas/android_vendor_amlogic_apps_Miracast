@@ -11,20 +11,8 @@ android:background="@drawable/bg">
 	android:layout_height="match_parent"
 	android:descendantFocusability="afterDescendants"
 >
-	<View
-	android:layout_width="fill_parent"
-	android:layout_height="14dp"
-	android:layout_marginTop="65dp"
-	android:background="@drawable/line"
-	/>
 	<include layout="@layout/layout_statusbar" />
 	<include layout="@layout/layout_rect_group" />
-	<View
-	android:layout_width="fill_parent"
-	android:layout_height="14dp"
-	android:layout_marginTop="546dp"
-	android:background="@drawable/line"
-	/>
 	<include layout="@layout/layout_shortcut" />
 </RelativeLayout>
 

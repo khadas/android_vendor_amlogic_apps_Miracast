@@ -311,6 +311,7 @@ public class MyRelativeLayout extends RelativeLayout{
         int layout_height = (shadowBitmap.getHeight() - imgRect.height()) / 2;
         layoutRect = new Rect(imgRect.left-layout_width, imgRect.top-layout_height, imgRect.right+layout_width, imgRect.bottom+layout_height);
 
+        Launcher.layoutScaleShadow.setBackgroundResource(0); //clear background
         if (screen_mode == MODE_HOME_RECT) {
             scaleImage.setImageResource(getFocusImage(mView.getChildAt(0)));
         } else {
@@ -334,24 +335,26 @@ public class MyRelativeLayout extends RelativeLayout{
     private void setTextMarginAndSize(TextView text, int screen_mode){
         android.widget.RelativeLayout.LayoutParams para;
         para = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-        para.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
-        para.addRule(RelativeLayout.CENTER_HORIZONTAL);
+
+        text.setTextColor(mContext.getResources().getInteger(R.color.btn_text_color));
         if (screen_mode == MODE_HOME_RECT) {
             if (Launcher.REAL_OUTPUT_MODE.equals("4k2knative")) {
-                para.setMargins(0, 0, 0, 100);
+                para.setMargins(0, 0, 0, 0);
             } else if (Launcher.REAL_OUTPUT_MODE.equals("720p"))
-                para.setMargins(0, 0, 0, 34);
+                para.setMargins(0, 0, 0, 0);
             else
-                para.setMargins(0, 0, 0, 50);
+                para.setMargins(100, 85, 0, 0);
             text.setLayoutParams(para);
-            text.setTextSize(30);
+            text.setTextSize(28);
         } else {
+            para.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+            para.addRule(RelativeLayout.CENTER_HORIZONTAL);
             if (Launcher.REAL_OUTPUT_MODE.equals("4k2knative")) {
                 para.setMargins(100, 0, 150, 80);
             }else if (Launcher.REAL_OUTPUT_MODE.equals("720p"))
                 para.setMargins(34, 0, 34, 20);
             else
-                para.setMargins(50, 0, 50, 40);
+                para.setMargins(65, 0, 65, 50);
             text.setLayoutParams(para);
             text.setTextSize(26);
         }
