@@ -253,10 +253,10 @@ public class Launcher extends Activity{
 
     @Override
         public boolean onTouchEvent (MotionEvent event){
+            layoutScaleShadow.setVisibility(View.INVISIBLE);
             if (event.getAction() == MotionEvent.ACTION_DOWN) {
                 startX = event.getX();
             } else if (event.getAction() == MotionEvent.ACTION_UP) {
-                //Log.d(TAG, "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ touch ="+ this);
                 if (pressedAddButton != null && isAddButtonBeTouched && !IntoCustomActivity) {
                     Rect rect = new Rect();
                     pressedAddButton.requestFocus();
@@ -266,7 +266,6 @@ public class Launcher extends Activity{
                     isAddButtonBeTouched = false;
                 }
                 else if (!isShowHomePage) {
-                    // Log.d(TAG, "@@@@@@@@@@@@@@@@@@@@@ getX = " +event.getX() + " startX = " + startX);
                     if (event.getX() + 20 < startX && startX != -1f) {
                         viewMenu.setInAnimation(this, R.anim.push_right_in);
                         viewMenu.setOutAnimation(this, R.anim.push_right_out);
@@ -283,7 +282,6 @@ public class Launcher extends Activity{
 
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
-            // Log.d(TAG, "@@@@@@@@@@@@@@@@@@@@@@@@@@@@ KEYCODE_BACK");
             if (!isShowHomePage && !animIsRun){
                 viewMenu.setVisibility(View.GONE);
                 viewMenu.clearFocus();
@@ -321,9 +319,6 @@ public class Launcher extends Activity{
                     intent.setClass(this, CustomAppsActivity.class);
                     startActivity(intent);
                     IntoCustomActivity = true;
-                    //                    if (saveHomeFocusView != null){
-                    //                        saveHomeFocusView.clearFocus();
-                    //                    }
                 }
             }
         }else if (keyCode == KeyEvent.KEYCODE_SEARCH) {
@@ -556,11 +551,8 @@ public class Launcher extends Activity{
         }
 
         public  boolean isSdcardExists(){
-            if (Environment.getExternalStorageState().startsWith(Environment.MEDIA_MOUNTED)) {
-                File dir = new File(SD_PATH);
-                if (dir.exists() && dir.isDirectory()) {
-                    return true;
-                }
+            if (Environment.getExternalStorageState(new File(SD_PATH)).equals(Environment.MEDIA_MOUNTED)) {
+                return true;
             }
             return false;
         }
@@ -1113,6 +1105,8 @@ public class Launcher extends Activity{
                 return R.drawable.icon_pppoe;
             } else if (packageName.equals("com.android.music")) {
                 return R.drawable.icon_music;
+            } else if (packageName.equals("com.android.camera2")) {
+                return R.drawable.icon_camera;
             }
             return -1;
         }

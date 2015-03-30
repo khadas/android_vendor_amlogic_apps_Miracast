@@ -1,5 +1,5 @@
-Home_Shortcut:com.meson.videoplayer;com.android.music;com.gsoft.appinstall;tv.tv9ikan.app;com.fanshi.tvbrowser;
+Home_Shortcut:com.droidlogic.videoplayer;com.android.music;com.droidlogic.appinstall;
 Video_Shortcut:com.moretv.android;com.qiyi.video;com.togic.livevideo;com.sohutv.tv;com.youku.tv;net.myvst.v2;com.elinkway.tvlive2;
 Recommend_Shortcut:com.droidlogic.mediacenter;com.droidlogic.miracast;
 Music_shortcut:com.moretv.mv;com.android.music;com.hycstv.android;
-Local_Shortcut:com.android.gallery3d;com.meson.videoplayer;com.fb.FileBrower;
+Local_Shortcut:com.android.gallery3d;com.droidlogic.videoplayer;com.droidlogic.FileBrower;

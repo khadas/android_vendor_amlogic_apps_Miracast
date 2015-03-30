@@ -23,7 +23,6 @@ public class MyGridLayout extends GridLayout{
     private Context mContext;
     private final static int FLAG_HOME = 0;
     private final static int FLAG_CHILD_VIEW = 1;
-    private final String strCameraApp = "com.android.camera.CameraLauncher";
 
     public MyGridLayout(Context context){
         super(context);
@@ -67,9 +66,7 @@ public class MyGridLayout extends GridLayout{
             if (m.get("item_type") instanceof Drawable) {
                 int resId = Launcher.parseItemIcon(((ComponentName)m.get("item_symbol")).getPackageName());
 
-                if (m.get("file_path").toString().contains(strCameraApp)) {
-                    //img_bg.setImageResource(R.drawable.icon_camera);
-                } else if (resId != -1) {
+                if (resId != -1) {
                     img_bg.setImageResource(resId);
                 } else {
                     img_bg.setImageDrawable((Drawable)(m.get("item_type")));

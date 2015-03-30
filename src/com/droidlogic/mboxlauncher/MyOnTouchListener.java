@@ -27,17 +27,12 @@ public class MyOnTouchListener implements OnTouchListener{
 
     public boolean onTouch (View view, MotionEvent event)  {
         // TODO Auto-generated method stub
-        Launcher.layoutScaleShadow.setVisibility(View.INVISIBLE);
-            //Launcher.frameView.setVisibility(View.INVISIBLE);
             Launcher.isInTouchMode = true;
             if (event.getAction() == MotionEvent.ACTION_UP) {
                 ImageView img = (ImageView)((ViewGroup)view).getChildAt(0);
                     String path  = img.getResources().getResourceName(img.getId());
                     String vName = path.substring(path.indexOf("/")+1);
 
-                    // Log.d(TAG, "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ ACTION_UP");
-
-                    // Log.d(TAG, "@@@@@@@@@@@@@@@@@@@@ viewname=" + vName);
                     if (vName.equals("img_setting")) {
                         Intent intent = new Intent();
                             intent .setComponent(new ComponentName("com.android.tv.settings", "com.android.tv.settings.MainSettings"));
@@ -76,14 +71,10 @@ public class MyOnTouchListener implements OnTouchListener{
         Launcher.saveHomeFocusView = view;
         Launcher.isShowHomePage = false;
         Launcher.layoutScaleShadow.setVisibility(View.INVISIBLE);
-        //Launcher.frameView.setVisibility(View.INVISIBLE);
 
         Rect rect = new Rect();
         view.getGlobalVisibleRect(rect);
-        // ScaleAnimation scaleAnimationIn = new ScaleAnimation(0.0f, 1.0f, 0.0f, 1.0f, getPiovtX(rect), getPiovtY(rect));
-        // ScaleAnimation scaleAnimationOut = new ScaleAnimation(1.0f, 0.0f, 1.0f, 0.0f, getPiovtX(rect), getPiovtY(rect));
-        //scaleAnimationIn.setDuration(400);
-        // scaleAnimationOut.setDuration(400);
+
         Launcher.viewMenu.setInAnimation(null);
         Launcher.viewMenu.setOutAnimation(null);
 
