@@ -66,23 +66,19 @@ public class MyRelativeLayout extends RelativeLayout{
             setAddShortcutHead();
             setNumberOfScreen();
             if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                // Log.d(TAG, "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ touch ="+ this + " startX=" + event.getX());
                 Launcher.startX = -1f;
 
                 // setSurface();
 
                 if (this.getChildAt(0) instanceof ImageView) {
                     ImageView img = (ImageView)this.getChildAt(0);
-                    //  Log.d(TAG, "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ img ="+ img + "img.getDrawable()="+ img.getDrawable());
                     if (img != null && img.getDrawable() != null &&
                             img.getContentDescription() != null && img.getContentDescription().equals("img_add")) {
-                        //Log.d(TAG, "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ touch add");
                         Launcher.isAddButtonBeTouched = true;
                         Launcher.pressedAddButton = this;
                     }
                 }
             } else if (event.getAction() == MotionEvent.ACTION_UP) {
-                //Log.d(TAG, "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ ACTION_UP");
                 return false;
             }
             return true;
@@ -90,24 +86,14 @@ public class MyRelativeLayout extends RelativeLayout{
 
     @Override
         protected void onFocusChanged (boolean gainFocus, int direction, Rect previouslyFocusedRect){
-            // Log.d(" MyRelativeLayout", "gainFocus=" + gainFocus + "   direction=" + direction + "  previouslyFocusedRect=" + previouslyFocusedRect);
-            // Log.d(" MyRelativeLayout", "child 0="+ getChildAt(0) + " id =" +getChildAt(0).getId());
-            //Log.d(" MyRelativeLayout", "child 1="+ getChildAt(1));
-
             setAddShortcutHead();
 
             if (gainFocus == true && !Launcher.isInTouchMode && !Launcher.dontDrawFocus) {
                 setNumberOfScreen();
-                //Log.d(TAG, "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ getfocus ="+ this);
-                //   Log.d(TAG, "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ getParent="+ this.getParent());
 
                 if (Launcher.prevFocusedView != null && (isParentSame(this,Launcher.prevFocusedView)
                             || Launcher.isShowHomePage)) {
-                    //Log.d(TAG, "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ isShowHomePage ="+ Launcher.isShowHomePage + " isParentSame="+isParentSame(this, Launcher.prevFocusedView));
-
                     if (!Launcher.dontRunAnim && !Launcher.IntoCustomActivity) {
-                        //Log.d(TAG, "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ dontRunAnim ="+ Launcher.dontRunAnim + " IntoCustomActivity="+Launcher.IntoCustomActivity);
-                        //Launcher.frameView.setVisibility(View.INVISIBLE);
                         Launcher.layoutScaleShadow.setVisibility(View.INVISIBLE);
 
                         Rect preRect = new Rect();
@@ -119,10 +105,7 @@ public class MyRelativeLayout extends RelativeLayout{
                         Launcher.dontRunAnim = false;
                         setSurface();
                     }
-
                 } else{
-                    //Log.d(TAG, "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ isShowHomePage ="+ Launcher.isShowHomePage + " dontRunAnim="+Launcher.dontRunAnim +
-                    //                                        " IntoCustomActivity=" + Launcher.IntoCustomActivity);
                     if (Launcher.isShowHomePage || Launcher.dontRunAnim || Launcher.IntoCustomActivity) {
                         Launcher.IntoCustomActivity = false;
                         setSurface();
@@ -132,7 +115,7 @@ public class MyRelativeLayout extends RelativeLayout{
             else if (!Launcher.isInTouchMode) {
                 Launcher.prevFocusedView = this;
                 if (!Launcher.dontRunAnim) {
-                    ScaleAnimation anim = new ScaleAnimation(1.1f, 1f, 1.1f, 1f,Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
+                    ScaleAnimation anim = new ScaleAnimation(1.07f, 1f, 1.07f, 1f,Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
                     anim.setZAdjustment(Animation.ZORDER_TOP);
                     anim.setDuration(animDuration);
                     anim.setStartTime(animDelay);
@@ -140,9 +123,6 @@ public class MyRelativeLayout extends RelativeLayout{
                         this.bringToFront();
                         ((View)this.getParent()).bringToFront();
                         Launcher.viewHomePage.bringToFront();
-                        // Launcher.layoutScaleShadow.bringToFront();
-                        // Launcher.frameView.bringToFront();
-                        // Launcher.trans_frameView.bringToFront();
                     }
                     this.startAnimation(anim);
                 }

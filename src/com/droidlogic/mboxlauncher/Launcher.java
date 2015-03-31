@@ -66,8 +66,9 @@ public class Launcher extends Activity{
     private final static String TAG="MediaBoxLauncher";
 
     private GridView lv_status;
-    private final String SD_PATH = "/storage/external_storage/sdcard1";
-    private final String USB_PATH ="/storage/external_storage";
+    private final String STORAGE_PATH ="/storage";
+    private final String SDCARD_FILE_NAME ="sdcard";
+    private final String UDISK_FILE_NAME ="udisk";
     private final String net_change_action = "android.net.conn.CONNECTIVITY_CHANGE";
     private final String wifi_signal_action = "android.net.wifi.RSSI_CHANGED";
     private final String weather_request_action = "android.amlogic.launcher.REQUEST_WEATHER";
@@ -510,13 +511,13 @@ public class Launcher extends Activity{
             list.add(map);
         }
 
-        if (isSdcardExists() == true) {
+        if (isExternelStorageExists(SDCARD_FILE_NAME) == true) {
             map = new HashMap<String, Object>();
             map.put("item_type", R.drawable.img_status_sdcard);
             list.add(map);
         }
 
-        if (isUsbExists() == true) {
+        if (isExternelStorageExists(UDISK_FILE_NAME) == true) {
             map = new HashMap<String, Object>();
             map.put("item_type", R.drawable.img_status_usb);
             list.add(map);
@@ -531,318 +532,236 @@ public class Launcher extends Activity{
         return list;
     }
 
-    public boolean isUsbExists(){
-        File dir = new File(USB_PATH);
-        if (dir.exists() && dir.isDirectory()) {
-            if (dir.listFiles() != null) {
-                if (dir.listFiles().length > 0) {
-                    for (File file : dir.listFiles()) {
-                        String path = file.getAbsolutePath();
-                        if (path.startsWith(USB_PATH+"/sd")&&!path.equals(SD_PATH)) {
-                            //	if (path.startsWith("/mnt/sd[a-z]")){
-                            return true;
-                        }
-                        }
+    public boolean isExternelStorageExists(String media_name){
+        File storage_file = new File(STORAGE_PATH);
+
+        if (storage_file.exists() && storage_file.isDirectory()) {
+            if (storage_file.listFiles() != null &&  storage_file.listFiles().length > 0) {
+                for (File file : storage_file.listFiles()) {
+                    String path = file.getAbsolutePath();
+                    if (path.startsWith(STORAGE_PATH + "/" + media_name)
+                        && Environment.getExternalStorageState(file).equals(Environment.MEDIA_MOUNTED)) {
+                        return true;
                     }
                 }
             }
+        }
 
+        return false;
+    }
+
+    private int getWifiLevel(){
+        ConnectivityManager connectivity = (ConnectivityManager)this.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo mWifi = connectivity.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+
+        if (mWifi.isConnected()) {
+            WifiManager mWifiManager = (WifiManager)getSystemService(WIFI_SERVICE);
+            WifiInfo mWifiInfo = mWifiManager.getConnectionInfo();
+            int wifi_rssi = mWifiInfo.getRssi();
+
+            return WifiManager.calculateSignalLevel(wifi_rssi, 4);
+        } else {
+            return -1;
+        }
+    }
+    private boolean isEthernetOn(){
+        ConnectivityManager connectivity = (ConnectivityManager)this.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo info = connectivity.getNetworkInfo(ConnectivityManager.TYPE_ETHERNET);
+
+        if (info != null && info.isConnected()) {
+            return true;
+        } else {
             return false;
         }
+    }
 
-        public  boolean isSdcardExists(){
-            if (Environment.getExternalStorageState(new File(SD_PATH)).equals(Environment.MEDIA_MOUNTED)) {
-                return true;
-            }
-            return false;
+    public  String getTime(){
+        final Calendar c = Calendar.getInstance();
+        int hour = c.get(Calendar.HOUR_OF_DAY);
+        int minute = c.get(Calendar.MINUTE);
+
+        is24hFormart = DateFormat.is24HourFormat(this);
+        if (!is24hFormart && hour > 12) {
+            hour = hour - 12;
         }
 
-        private int getWifiLevel(){
-            ConnectivityManager connectivity = (ConnectivityManager)this.getSystemService(Context.CONNECTIVITY_SERVICE);
-            NetworkInfo mWifi = connectivity.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-
-            if (mWifi.isConnected()) {
-                WifiManager mWifiManager = (WifiManager)getSystemService(WIFI_SERVICE);
-                WifiInfo mWifiInfo = mWifiManager.getConnectionInfo();
-                int wifi_rssi = mWifiInfo.getRssi();
-
-                return WifiManager.calculateSignalLevel(wifi_rssi, 4);
-            } else {
-                return -1;
-            }
+        String time = "";
+        if (hour >= 10) {
+            time +=  Integer.toString(hour);
+        }else {
+            time += "0" + Integer.toString(hour);
         }
-        private boolean isEthernetOn(){
-            ConnectivityManager connectivity = (ConnectivityManager)this.getSystemService(Context.CONNECTIVITY_SERVICE);
-            NetworkInfo info = connectivity.getNetworkInfo(ConnectivityManager.TYPE_ETHERNET);
+        time += ":";
 
-            if (info != null && info.isConnected()) {
-                return true;
-            } else {
-                return false;
-            }
+        if (minute >= 10) {
+            time +=  Integer.toString(minute);
+        }else {
+            time += "0" +  Integer.toString(minute);
         }
 
-        public  String getTime(){
-            final Calendar c = Calendar.getInstance();
-            int hour = c.get(Calendar.HOUR_OF_DAY);
-            int minute = c.get(Calendar.MINUTE);
+        return time;
+    }
 
-            is24hFormart = DateFormat.is24HourFormat(this);
-            if (!is24hFormart && hour > 12) {
-                hour = hour - 12;
-            }
+    private String getDate(){
+        final Calendar c = Calendar.getInstance();
+        int int_Month = c.get(Calendar.MONTH);
+        String mDay = Integer.toString(c.get(Calendar.DAY_OF_MONTH));
+        int int_Week = c.get(Calendar.DAY_OF_WEEK) -1;
+        String str_week =  this.getResources().getStringArray(R.array.week)[int_Week];
+        String mMonth =  this.getResources().getStringArray(R.array.month)[int_Month];
 
-            String time = "";
-            if (hour >= 10) {
-                time +=  Integer.toString(hour);
-            }else {
-                time += "0" + Integer.toString(hour);
-            }
-            time += ":";
-
-            if (minute >= 10) {
-                time +=  Integer.toString(minute);
-            }else {
-                time += "0" +  Integer.toString(minute);
-            }
-
-            return time;
+        String date;
+        if (Locale.getDefault().getLanguage().equals("zh")) {
+            date = str_week + ", " + mMonth + " " + mDay + this.getResources().getString(R.string.str_day);
+        }else {
+            date = str_week + ", " + mMonth + " " + mDay;
         }
 
-        private String getDate(){
-            final Calendar c = Calendar.getInstance();
-            int int_Month = c.get(Calendar.MONTH);
-            String mDay = Integer.toString(c.get(Calendar.DAY_OF_MONTH));
-            int int_Week = c.get(Calendar.DAY_OF_WEEK) -1;
-            String str_week =  this.getResources().getStringArray(R.array.week)[int_Week];
-            String mMonth =  this.getResources().getStringArray(R.array.month)[int_Month];
-
-            String date;
-            if (Locale.getDefault().getLanguage().equals("zh")) {
-                date = str_week + ", " + mMonth + " " + mDay + this.getResources().getString(R.string.str_day);
-            }else {
-                date = str_week + ", " + mMonth + " " + mDay;
-            }
-
-            //Log.d(TAG, "@@@@@@@@@@@@@@@@@@@ "+ date  + "week = " +int_Week);
-            return date;
-        }
+        //Log.d(TAG, "@@@@@@@@@@@@@@@@@@@ "+ date  + "week = " +int_Week);
+        return date;
+    }
 
 
-        private void loadCustomApps(String path){
-            File mFile = new File(path);
+    private void loadCustomApps(String path){
+        File mFile = new File(path);
 
-            if (!mFile.exists()) {
-                getShortcutFromDefault(CustomAppsActivity.DEFAULT_SHORTCUR_PATH, CustomAppsActivity.SHORTCUT_PATH);
-                mFile = new File(path);
-            } else{
-                try {
-                    BufferedReader b = new BufferedReader(new FileReader(mFile));
-                    if (b.read() == -1) {
-                        getShortcutFromDefault(CustomAppsActivity.DEFAULT_SHORTCUR_PATH, CustomAppsActivity.SHORTCUT_PATH);
-                    }
-                    if (b != null)
-                        b.close();
-                } catch (IOException e) {
-                }
-            }
-
-            BufferedReader br = null;
+        if (!mFile.exists()) {
+            getShortcutFromDefault(CustomAppsActivity.DEFAULT_SHORTCUR_PATH, CustomAppsActivity.SHORTCUT_PATH);
+            mFile = new File(path);
+        } else{
             try {
-                if (mFile.length() > 10) {
-                    br = new BufferedReader(new FileReader(mFile));
-                } else {
-                    //copying file error, avoid this error
-                    br = new BufferedReader(new InputStreamReader(getResources().openRawResource(R.raw.default_shortcut)));
+                BufferedReader b = new BufferedReader(new FileReader(mFile));
+                if (b.read() == -1) {
                     getShortcutFromDefault(CustomAppsActivity.DEFAULT_SHORTCUR_PATH, CustomAppsActivity.SHORTCUT_PATH);
                 }
-
-                String str = null;
-                while ((str=br.readLine()) != null ) {
-                    if (str.startsWith(CustomAppsActivity.HOME_SHORTCUT_HEAD)) {
-                        str = str.replaceAll(CustomAppsActivity.HOME_SHORTCUT_HEAD, "");
-                        list_homeShortcut = str.split(";");
-                    } else if (str.startsWith(CustomAppsActivity.VIDEO_SHORTCUT_HEAD)) {
-                        str = str.replaceAll(CustomAppsActivity.VIDEO_SHORTCUT_HEAD, "");
-                        list_videoShortcut = str.split(";");
-                    }  else if (str.startsWith(CustomAppsActivity.RECOMMEND_SHORTCUT_HEAD)) {
-                        str = str.replaceAll(CustomAppsActivity.RECOMMEND_SHORTCUT_HEAD, "");
-                        list_recommendShortcut = str.split(";");
-                    }  else if (str.startsWith(CustomAppsActivity.MUSIC_SHORTCUT_HEAD)) {
-                        str = str.replaceAll(CustomAppsActivity.MUSIC_SHORTCUT_HEAD, "");
-                        list_musicShortcut = str.split(";");
-                    }  else if (str.startsWith(CustomAppsActivity.LOCAL_SHORTCUT_HEAD)) {
-                        str = str.replaceAll(CustomAppsActivity.LOCAL_SHORTCUT_HEAD, "");
-                        list_localShortcut = str.split(";");
-                    }
-                }
-
-            }
-            catch (Exception e) {
-                Log.d(TAG,""+e);
-            } finally {
-                try {
-                    if (br != null)
-                        br.close();
-                } catch (IOException e) {
-                }
+                if (b != null)
+                    b.close();
+            } catch (IOException e) {
             }
         }
 
-        public  void getShortcutFromDefault(int srcPath, String desPath){
-            File desFile = new File(desPath);
-            if (!desFile.exists()) {
-                try {
-                    desFile.createNewFile();
-                }
-                catch (Exception e) {
-                    Log.e(TAG, e.getMessage().toString());
+        BufferedReader br = null;
+        try {
+            if (mFile.length() > 10) {
+                br = new BufferedReader(new FileReader(mFile));
+            } else {
+                //copying file error, avoid this error
+                br = new BufferedReader(new InputStreamReader(getResources().openRawResource(R.raw.default_shortcut)));
+                getShortcutFromDefault(CustomAppsActivity.DEFAULT_SHORTCUR_PATH, CustomAppsActivity.SHORTCUT_PATH);
+            }
+
+            String str = null;
+            while ((str=br.readLine()) != null ) {
+                if (str.startsWith(CustomAppsActivity.HOME_SHORTCUT_HEAD)) {
+                    str = str.replaceAll(CustomAppsActivity.HOME_SHORTCUT_HEAD, "");
+                    list_homeShortcut = str.split(";");
+                } else if (str.startsWith(CustomAppsActivity.VIDEO_SHORTCUT_HEAD)) {
+                    str = str.replaceAll(CustomAppsActivity.VIDEO_SHORTCUT_HEAD, "");
+                    list_videoShortcut = str.split(";");
+                }  else if (str.startsWith(CustomAppsActivity.RECOMMEND_SHORTCUT_HEAD)) {
+                    str = str.replaceAll(CustomAppsActivity.RECOMMEND_SHORTCUT_HEAD, "");
+                    list_recommendShortcut = str.split(";");
+                }  else if (str.startsWith(CustomAppsActivity.MUSIC_SHORTCUT_HEAD)) {
+                    str = str.replaceAll(CustomAppsActivity.MUSIC_SHORTCUT_HEAD, "");
+                    list_musicShortcut = str.split(";");
+                }  else if (str.startsWith(CustomAppsActivity.LOCAL_SHORTCUT_HEAD)) {
+                    str = str.replaceAll(CustomAppsActivity.LOCAL_SHORTCUT_HEAD, "");
+                    list_localShortcut = str.split(";");
                 }
             }
 
-            BufferedReader br = null;
-            BufferedWriter bw = null;
+        }
+        catch (Exception e) {
+            Log.d(TAG,""+e);
+        } finally {
             try {
-                br = new BufferedReader(new InputStreamReader(getResources().openRawResource(srcPath)));
-                String str = null;
-                List list = new ArrayList();
-
-                while ((str=br.readLine()) != null ) {
-                    list.add(str);
-                }
-                bw = new BufferedWriter(new FileWriter(desFile));
-                for ( int i = 0;i < list.size(); i++ ) {
-                    bw.write(list.get(i).toString());
-                    bw.newLine();
-                }
-                bw.flush();
-                bw.close();
-            }
-            catch (Exception e) {
-                Log.d(TAG, "   " + e);
-            } finally {
-                try {
-                    if (br != null)
-                        br.close();
-                } catch (IOException e) {
-                }
-                try {
-                    if (bw != null)
-                        bw.close();
-                } catch (IOException e) {
-                }
+                if (br != null)
+                    br.close();
+            } catch (IOException e) {
             }
         }
+    }
 
-        public void copyFile(String oldPath, String newPath) {
+    public  void getShortcutFromDefault(int srcPath, String desPath){
+        File desFile = new File(desPath);
+        if (!desFile.exists()) {
             try {
-                int bytesum = 0;
-                int byteread = 0;
-                File oldfile = new File(oldPath);
-                //   Log.d(TAG, "@@@@@@@@@@@@@@@@@@@@@@@ copy file");
-                if (!oldfile.exists()) {
-                    InputStream inStream = new FileInputStream(oldPath);
-                    FileOutputStream fs = new FileOutputStream(newPath);
-                    byte[] buffer = new byte[1444];
-                    while ((byteread = inStream.read(buffer)) != -1) {
-                        bytesum += byteread;
-                        System.out.println(bytesum);
-                        fs.write(buffer, 0, byteread);
-                        fs.close();
-                    }
-                    inStream.close();
-                }
+                desFile.createNewFile();
             }
             catch (Exception e) {
-                e.printStackTrace();
+                Log.e(TAG, e.getMessage().toString());
             }
         }
 
-        private List<Map<String, Object>> loadShortcutList(PackageManager manager, final List<ResolveInfo> apps, String[] list_custom_apps) {
-            Map<String, Object> map = null;
-            List<Map<String, Object>> list = new ArrayList<Map<String, Object>>();
+        BufferedReader br = null;
+        BufferedWriter bw = null;
+        try {
+            br = new BufferedReader(new InputStreamReader(getResources().openRawResource(srcPath)));
+            String str = null;
+            List list = new ArrayList();
 
-            if (list_custom_apps != null) {
-                for (int i = 0; i < list_custom_apps.length; i++) {
-                    if (apps != null) {
-                        final int count = apps.size();
-                        for (int j = 0; j < count; j++) {
-                            ApplicationInfo application = new ApplicationInfo();
-                            ResolveInfo info = apps.get(j);
+            while ((str=br.readLine()) != null ) {
+                list.add(str);
+            }
+            bw = new BufferedWriter(new FileWriter(desFile));
+            for ( int i = 0;i < list.size(); i++ ) {
+                bw.write(list.get(i).toString());
+                bw.newLine();
+            }
+            bw.flush();
+            bw.close();
+        }
+        catch (Exception e) {
+            Log.d(TAG, "   " + e);
+        } finally {
+            try {
+                if (br != null)
+                    br.close();
+            } catch (IOException e) {
+            }
+            try {
+                if (bw != null)
+                    bw.close();
+            } catch (IOException e) {
+            }
+        }
+    }
 
-                            application.title = info.loadLabel(manager);
-                            application.setActivity(new ComponentName(
-                                        info.activityInfo.applicationInfo.packageName,
-                                        info.activityInfo.name),
-                                    Intent.FLAG_ACTIVITY_NEW_TASK
-                                    | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
-                            application.icon = info.activityInfo.loadIcon(manager);
-                            if (application.componentName.getPackageName().equals(list_custom_apps[i])) {
-                                if (application.componentName.getPackageName().equals("com.android.gallery3d") &&
-                                        application.intent.toString().contains("camera"))
-                                    continue;
-
-                                map = new HashMap<String, Object>();
-                                map.put("item_name", application.title.toString());
-                                map.put("file_path", application.intent);
-                                map.put("item_type", application.icon);
-                                map.put("item_symbol", application.componentName);
-                                list.add(map);
-                                break;
-                            }
-                        }
-                    }
+    public void copyFile(String oldPath, String newPath) {
+        try {
+            int bytesum = 0;
+            int byteread = 0;
+            File oldfile = new File(oldPath);
+            //   Log.d(TAG, "@@@@@@@@@@@@@@@@@@@@@@@ copy file");
+            if (!oldfile.exists()) {
+                InputStream inStream = new FileInputStream(oldPath);
+                FileOutputStream fs = new FileOutputStream(newPath);
+                byte[] buffer = new byte[1444];
+                while ((byteread = inStream.read(buffer)) != -1) {
+                    bytesum += byteread;
+                    System.out.println(bytesum);
+                    fs.write(buffer, 0, byteread);
+                    fs.close();
                 }
+                inStream.close();
             }
-
-            return list;
         }
-
-        private Map<String, Object> getAddMap(){
-            Map<String, Object> map = new HashMap<String, Object>();
-            map.put("item_name", this.getResources().getString(R.string.str_add));
-            map.put("file_path", null);
-            map.put("item_type", R.drawable.item_img_add);
-
-            return map;
+        catch (Exception e) {
+            e.printStackTrace();
         }
+    }
 
-        private void loadApplications() {
-            List<Map<String, Object>> HomeShortCutList = new ArrayList<Map<String, Object>>();
-            List<Map<String, Object>> videoShortCutList = new ArrayList<Map<String, Object>>();
-            List<Map<String, Object>> recommendShortCutList = new ArrayList<Map<String, Object>>();
-            List<Map<String, Object>> appShortCutList = new ArrayList<Map<String, Object>>();
-            List<Map<String, Object>> musicShortCutList = new ArrayList<Map<String, Object>>();
-            List<Map<String, Object>> localShortCutList = new ArrayList<Map<String, Object>>();
+    private List<Map<String, Object>> loadShortcutList(PackageManager manager, final List<ResolveInfo> apps, String[] list_custom_apps) {
+        Map<String, Object> map = null;
+        List<Map<String, Object>> list = new ArrayList<Map<String, Object>>();
 
-            PackageManager manager = getPackageManager();
-            Intent mainIntent = new Intent(Intent.ACTION_MAIN, null);
-            mainIntent.addCategory(Intent.CATEGORY_LAUNCHER);
-
-            final List<ResolveInfo> apps = manager.queryIntentActivities(mainIntent, 0);
-            Collections.sort(apps, new ResolveInfo.DisplayNameComparator(manager));
-
-            HomeShortCutList.clear();
-            videoShortCutList.clear();
-            recommendShortCutList.clear();
-            appShortCutList.clear();
-            musicShortCutList.clear();
-            localShortCutList.clear();
-
-            loadCustomApps(CustomAppsActivity.SHORTCUT_PATH);
-
-            if (updateAllShortcut == true) {
-                HomeShortCutList = loadShortcutList(manager, apps, list_homeShortcut);
-                videoShortCutList = loadShortcutList(manager, apps, list_videoShortcut);
-                recommendShortCutList = loadShortcutList(manager, apps, list_recommendShortcut);
-                musicShortCutList = loadShortcutList(manager, apps, list_musicShortcut);
-                localShortCutList = loadShortcutList(manager, apps, list_localShortcut);
-
+        if (list_custom_apps != null) {
+            for (int i = 0; i < list_custom_apps.length; i++) {
                 if (apps != null) {
                     final int count = apps.size();
-                    for (int i = 0; i < count; i++) {
+                    for (int j = 0; j < count; j++) {
                         ApplicationInfo application = new ApplicationInfo();
-                        ResolveInfo info = apps.get(i);
+                        ResolveInfo info = apps.get(j);
 
                         application.title = info.loadLabel(manager);
                         application.setActivity(new ComponentName(
@@ -851,329 +770,403 @@ public class Launcher extends Activity{
                                 Intent.FLAG_ACTIVITY_NEW_TASK
                                 | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
                         application.icon = info.activityInfo.loadIcon(manager);
+                        if (application.componentName.getPackageName().equals(list_custom_apps[i])) {
+                            if (application.componentName.getPackageName().equals("com.android.gallery3d") &&
+                                    application.intent.toString().contains("camera"))
+                                continue;
 
-                        Map<String, Object> map = new HashMap<String, Object>();
-                        map.put("item_name", application.title.toString());
-                        map.put("file_path", application.intent);
-                        map.put("item_type", application.icon);
-                        map.put("item_symbol", application.componentName);
-                        //Log.d(TAG, ""+ application.componentName.getPackageName() + " path="+application.intent);
-                        appShortCutList.add(map);
+                            map = new HashMap<String, Object>();
+                            map.put("item_name", application.title.toString());
+                            map.put("file_path", application.intent);
+                            map.put("item_type", application.icon);
+                            map.put("item_symbol", application.componentName);
+                            list.add(map);
+                            break;
+                        }
                     }
                 }
-
-                Map<String, Object> map = getAddMap();
-                HomeShortCutList.add(map);
-                videoShortCutList.add(map);
-                musicShortCutList.add(map);
-                localShortCutList.add(map);
-
-                homeShortcutView.setLayoutView(HomeShortCutList, 0);
-                videoShortcutView.setLayoutView(videoShortCutList, 1);
-                recommendShortcutView.setLayoutView(recommendShortCutList, 1);
-                appShortcutView.setLayoutView(appShortCutList, 1);
-                musicShortcutView.setLayoutView(musicShortCutList, 1);
-                localShortcutView.setLayoutView(localShortCutList, 1);
-                tx_video_allcount.setText("/" + Integer.toString(videoShortCutList.size()));
-                tx_recommend_allcount.setText("/" + Integer.toString(recommendShortCutList.size()));
-                tx_app_allcount.setText("/" + Integer.toString(appShortCutList.size()));
-                tx_music_allcount.setText("/" + Integer.toString(musicShortCutList.size()));
-                tx_local_allcount.setText("/" + Integer.toString(localShortCutList.size()));
-
-                updateAllShortcut = false;
-            } else if (Launcher.current_shortcutHead.equals(CustomAppsActivity.VIDEO_SHORTCUT_HEAD)) {
-                videoShortCutList = loadShortcutList(manager, apps, list_videoShortcut);
-                Map<String, Object> map = getAddMap();
-                videoShortCutList.add(map);
-                videoShortcutView.setLayoutView(videoShortCutList, 1);
-                tx_video_allcount.setText("/" + Integer.toString(videoShortCutList.size()));
-            } else if (Launcher.current_shortcutHead.equals(CustomAppsActivity.RECOMMEND_SHORTCUT_HEAD)) {
-                recommendShortCutList = loadShortcutList(manager, apps, list_recommendShortcut);
-                recommendShortcutView.setLayoutView(recommendShortCutList, 1);
-                tx_recommend_allcount.setText("/" + Integer.toString(recommendShortCutList.size()));
-            } else if (Launcher.current_shortcutHead.equals(CustomAppsActivity.MUSIC_SHORTCUT_HEAD)) {
-                musicShortCutList = loadShortcutList(manager, apps, list_musicShortcut);
-                Map<String, Object> map = getAddMap();
-                musicShortCutList.add(map);
-                musicShortcutView.setLayoutView(musicShortCutList, 1);
-                tx_music_allcount.setText("/" + Integer.toString(musicShortCutList.size()));
-            } else if (Launcher.current_shortcutHead.equals(CustomAppsActivity.LOCAL_SHORTCUT_HEAD)) {
-                localShortCutList = loadShortcutList(manager, apps, list_localShortcut);
-                Map<String, Object> map = getAddMap();
-                localShortCutList.add(map);
-                localShortcutView.setLayoutView(localShortCutList, 1);
-                tx_local_allcount.setText("/" + Integer.toString(localShortCutList.size()));
-            } else{
-                HomeShortCutList = loadShortcutList(manager, apps, list_homeShortcut);
-                Map<String, Object> map = getAddMap();
-                HomeShortCutList.add(map);
-                homeShortcutView.setLayoutView(HomeShortCutList, 0);
             }
         }
 
-        private void setRectOnKeyListener(){
-            findViewById(R.id.layout_video).setOnKeyListener(new MyOnKeyListener(this, null));
-            findViewById(R.id.layout_recommend).setOnKeyListener(new MyOnKeyListener(this, null));
-            findViewById(R.id.layout_setting).setOnKeyListener(new MyOnKeyListener(this, null));
-            findViewById(R.id.layout_app).setOnKeyListener(new MyOnKeyListener(this, null));
-            findViewById(R.id.layout_music).setOnKeyListener(new MyOnKeyListener(this, null));
-            findViewById(R.id.layout_local).setOnKeyListener(new MyOnKeyListener(this, null));
+        return list;
+    }
 
-            findViewById(R.id.layout_video).setOnTouchListener(new MyOnTouchListener(this, null));
-            findViewById(R.id.layout_recommend).setOnTouchListener(new MyOnTouchListener(this, null));
-            findViewById(R.id.layout_setting).setOnTouchListener(new MyOnTouchListener(this, null));
-            findViewById(R.id.layout_app).setOnTouchListener(new MyOnTouchListener(this, null));
-            findViewById(R.id.layout_music).setOnTouchListener(new MyOnTouchListener(this, null));
-            findViewById(R.id.layout_local).setOnTouchListener(new MyOnTouchListener(this, null));
-        }
+    private Map<String, Object> getAddMap(){
+        Map<String, Object> map = new HashMap<String, Object>();
+        map.put("item_name", this.getResources().getString(R.string.str_add));
+        map.put("file_path", null);
+        map.put("item_type", R.drawable.item_img_add);
 
-        public static void playClickMusic() {
-            /* if (isSystemSoundOn == true) {
-               sp_button.stop(music_prio_button);
-               sp_button.play(music_prio_button, 1, 1, 0, 0, 1);
-               } */
-        }
+        return map;
+    }
 
-        private void setHeight() {
-            String outputmode = mSystemControlManager.getPropertyString("ubootenv.var.outputmode", "1080p");
-            isRealOutputMode = mSystemControlManager.getPropertyBoolean("ro.platform.has.realoutputmode", false);
-            isNative4k2k = mSystemControlManager.getPropertyBoolean("ro.platform.has.native4k2k", false);
-            isNative720 = mSystemControlManager.getPropertyBoolean("ro.platform.has.native720", false);
-            if (isNative4k2k && outputmode.startsWith("4k2k")) {
-                REAL_OUTPUT_MODE = "4k2knative";
-                CustomAppsActivity.CONTENT_HEIGHT = 900;
-            } else if (isRealOutputMode && !isNative720) {
-                REAL_OUTPUT_MODE = "1080p";
-                CustomAppsActivity.CONTENT_HEIGHT = 450;
-            } else {
-                REAL_OUTPUT_MODE = "720p";
-                CustomAppsActivity.CONTENT_HEIGHT = 300;
-            }
-            Display display = this.getWindowManager().getDefaultDisplay();
-            Point p = new Point();
-            display.getRealSize(p);
-            SCREEN_HEIGHT=p.y;
-            SCREEN_WIDTH=p.x;
-        }
+    private void loadApplications() {
+        List<Map<String, Object>> HomeShortCutList = new ArrayList<Map<String, Object>>();
+        List<Map<String, Object>> videoShortCutList = new ArrayList<Map<String, Object>>();
+        List<Map<String, Object>> recommendShortCutList = new ArrayList<Map<String, Object>>();
+        List<Map<String, Object>> appShortCutList = new ArrayList<Map<String, Object>>();
+        List<Map<String, Object>> musicShortCutList = new ArrayList<Map<String, Object>>();
+        List<Map<String, Object>> localShortCutList = new ArrayList<Map<String, Object>>();
 
-        public void setPopWindow(int top, int bottom){
-            View view = this.getWindow().getDecorView();
-            view.layout(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-            view.setDrawingCacheEnabled(true);
-            Bitmap bmp = Bitmap.createBitmap(view.getDrawingCache());
-            view.destroyDrawingCache();
+        PackageManager manager = getPackageManager();
+        Intent mainIntent = new Intent(Intent.ACTION_MAIN, null);
+        mainIntent.addCategory(Intent.CATEGORY_LAUNCHER);
 
-            screenShot = null;
-            screenShot_keep = null;
+        final List<ResolveInfo> apps = manager.queryIntentActivities(mainIntent, 0);
+        Collections.sort(apps, new ResolveInfo.DisplayNameComparator(manager));
 
-            if (bottom > SCREEN_HEIGHT/2) {
-                if (top+3-CustomAppsActivity.CONTENT_HEIGHT > 0) {
-                    screenShot = Bitmap.createBitmap(bmp, 0, 0,bmp.getWidth(), top);
-                    screenShot_keep = Bitmap.createBitmap(bmp, 0, CustomAppsActivity.CONTENT_HEIGHT,
-                            bmp.getWidth(), top +3-CustomAppsActivity.CONTENT_HEIGHT);
-                } else {
-                    screenShot = Bitmap.createBitmap(bmp, 0, 0,bmp.getWidth(), CustomAppsActivity.CONTENT_HEIGHT);
-                    screenShot_keep = null;
+        HomeShortCutList.clear();
+        videoShortCutList.clear();
+        recommendShortCutList.clear();
+        appShortCutList.clear();
+        musicShortCutList.clear();
+        localShortCutList.clear();
+
+        loadCustomApps(CustomAppsActivity.SHORTCUT_PATH);
+
+        if (updateAllShortcut == true) {
+            HomeShortCutList = loadShortcutList(manager, apps, list_homeShortcut);
+            videoShortCutList = loadShortcutList(manager, apps, list_videoShortcut);
+            recommendShortCutList = loadShortcutList(manager, apps, list_recommendShortcut);
+            musicShortCutList = loadShortcutList(manager, apps, list_musicShortcut);
+            localShortCutList = loadShortcutList(manager, apps, list_localShortcut);
+
+            if (apps != null) {
+                final int count = apps.size();
+                for (int i = 0; i < count; i++) {
+                    ApplicationInfo application = new ApplicationInfo();
+                    ResolveInfo info = apps.get(i);
+
+                    application.title = info.loadLabel(manager);
+                    application.setActivity(new ComponentName(
+                                info.activityInfo.applicationInfo.packageName,
+                                info.activityInfo.name),
+                            Intent.FLAG_ACTIVITY_NEW_TASK
+                            | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
+                    application.icon = info.activityInfo.loadIcon(manager);
+
+                    Map<String, Object> map = new HashMap<String, Object>();
+                    map.put("item_name", application.title.toString());
+                    map.put("file_path", application.intent);
+                    map.put("item_type", application.icon);
+                    map.put("item_symbol", application.componentName);
+                    //Log.d(TAG, ""+ application.componentName.getPackageName() + " path="+application.intent);
+                    appShortCutList.add(map);
                 }
-            } else {
-                screenShot = Bitmap.createBitmap(bmp, 0, bottom,bmp.getWidth(), SCREEN_HEIGHT-bottom);
-                screenShot_keep = Bitmap.createBitmap(bmp, 0, bottom,
-                        bmp.getWidth(), SCREEN_HEIGHT-(bottom+CustomAppsActivity.CONTENT_HEIGHT));
             }
+
+            Map<String, Object> map = getAddMap();
+            HomeShortCutList.add(map);
+            videoShortCutList.add(map);
+            musicShortCutList.add(map);
+            localShortCutList.add(map);
+
+            homeShortcutView.setLayoutView(HomeShortCutList, 0);
+            videoShortcutView.setLayoutView(videoShortCutList, 1);
+            recommendShortcutView.setLayoutView(recommendShortCutList, 1);
+            appShortcutView.setLayoutView(appShortCutList, 1);
+            musicShortcutView.setLayoutView(musicShortCutList, 1);
+            localShortcutView.setLayoutView(localShortCutList, 1);
+            tx_video_allcount.setText("/" + Integer.toString(videoShortCutList.size()));
+            tx_recommend_allcount.setText("/" + Integer.toString(recommendShortCutList.size()));
+            tx_app_allcount.setText("/" + Integer.toString(appShortCutList.size()));
+            tx_music_allcount.setText("/" + Integer.toString(musicShortCutList.size()));
+            tx_local_allcount.setText("/" + Integer.toString(localShortCutList.size()));
+
+            updateAllShortcut = false;
+        } else if (Launcher.current_shortcutHead.equals(CustomAppsActivity.VIDEO_SHORTCUT_HEAD)) {
+            videoShortCutList = loadShortcutList(manager, apps, list_videoShortcut);
+            Map<String, Object> map = getAddMap();
+            videoShortCutList.add(map);
+            videoShortcutView.setLayoutView(videoShortCutList, 1);
+            tx_video_allcount.setText("/" + Integer.toString(videoShortCutList.size()));
+        } else if (Launcher.current_shortcutHead.equals(CustomAppsActivity.RECOMMEND_SHORTCUT_HEAD)) {
+            recommendShortCutList = loadShortcutList(manager, apps, list_recommendShortcut);
+            recommendShortcutView.setLayoutView(recommendShortCutList, 1);
+            tx_recommend_allcount.setText("/" + Integer.toString(recommendShortCutList.size()));
+        } else if (Launcher.current_shortcutHead.equals(CustomAppsActivity.MUSIC_SHORTCUT_HEAD)) {
+            musicShortCutList = loadShortcutList(manager, apps, list_musicShortcut);
+            Map<String, Object> map = getAddMap();
+            musicShortCutList.add(map);
+            musicShortcutView.setLayoutView(musicShortCutList, 1);
+            tx_music_allcount.setText("/" + Integer.toString(musicShortCutList.size()));
+        } else if (Launcher.current_shortcutHead.equals(CustomAppsActivity.LOCAL_SHORTCUT_HEAD)) {
+            localShortCutList = loadShortcutList(manager, apps, list_localShortcut);
+            Map<String, Object> map = getAddMap();
+            localShortCutList.add(map);
+            localShortcutView.setLayoutView(localShortCutList, 1);
+            tx_local_allcount.setText("/" + Integer.toString(localShortCutList.size()));
+        } else{
+            HomeShortCutList = loadShortcutList(manager, apps, list_homeShortcut);
+            Map<String, Object> map = getAddMap();
+            HomeShortCutList.add(map);
+            homeShortcutView.setLayoutView(HomeShortCutList, 0);
+        }
+    }
+
+    private void setRectOnKeyListener(){
+        findViewById(R.id.layout_video).setOnKeyListener(new MyOnKeyListener(this, null));
+        findViewById(R.id.layout_recommend).setOnKeyListener(new MyOnKeyListener(this, null));
+        findViewById(R.id.layout_setting).setOnKeyListener(new MyOnKeyListener(this, null));
+        findViewById(R.id.layout_app).setOnKeyListener(new MyOnKeyListener(this, null));
+        findViewById(R.id.layout_music).setOnKeyListener(new MyOnKeyListener(this, null));
+        findViewById(R.id.layout_local).setOnKeyListener(new MyOnKeyListener(this, null));
+
+        findViewById(R.id.layout_video).setOnTouchListener(new MyOnTouchListener(this, null));
+        findViewById(R.id.layout_recommend).setOnTouchListener(new MyOnTouchListener(this, null));
+        findViewById(R.id.layout_setting).setOnTouchListener(new MyOnTouchListener(this, null));
+        findViewById(R.id.layout_app).setOnTouchListener(new MyOnTouchListener(this, null));
+        findViewById(R.id.layout_music).setOnTouchListener(new MyOnTouchListener(this, null));
+        findViewById(R.id.layout_local).setOnTouchListener(new MyOnTouchListener(this, null));
+    }
+
+    public static void playClickMusic() {
+        /* if (isSystemSoundOn == true) {
+           sp_button.stop(music_prio_button);
+           sp_button.play(music_prio_button, 1, 1, 0, 0, 1);
+           } */
+    }
+
+    private void setHeight() {
+        String outputmode = mSystemControlManager.getPropertyString("ubootenv.var.outputmode", "1080p");
+        isRealOutputMode = mSystemControlManager.getPropertyBoolean("ro.platform.has.realoutputmode", false);
+        isNative4k2k = mSystemControlManager.getPropertyBoolean("ro.platform.has.native4k2k", false);
+        isNative720 = mSystemControlManager.getPropertyBoolean("ro.platform.has.native720", false);
+        if (isNative4k2k && outputmode.startsWith("4k2k")) {
+            REAL_OUTPUT_MODE = "4k2knative";
+            CustomAppsActivity.CONTENT_HEIGHT = 900;
+        } else if (isRealOutputMode && !isNative720) {
+            REAL_OUTPUT_MODE = "1080p";
+            CustomAppsActivity.CONTENT_HEIGHT = 450;
+        } else {
+            REAL_OUTPUT_MODE = "720p";
+            CustomAppsActivity.CONTENT_HEIGHT = 300;
+        }
+        Display display = this.getWindowManager().getDefaultDisplay();
+        Point p = new Point();
+        display.getRealSize(p);
+        SCREEN_HEIGHT=p.y;
+        SCREEN_WIDTH=p.x;
+    }
+
+    public void setPopWindow(int top, int bottom){
+        View view = this.getWindow().getDecorView();
+        view.layout(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+        view.setDrawingCacheEnabled(true);
+        Bitmap bmp = Bitmap.createBitmap(view.getDrawingCache());
+        view.destroyDrawingCache();
+
+        screenShot = null;
+        screenShot_keep = null;
+
+        if (bottom > SCREEN_HEIGHT/2) {
+            if (top+3-CustomAppsActivity.CONTENT_HEIGHT > 0) {
+                screenShot = Bitmap.createBitmap(bmp, 0, 0,bmp.getWidth(), top);
+                screenShot_keep = Bitmap.createBitmap(bmp, 0, CustomAppsActivity.CONTENT_HEIGHT,
+                        bmp.getWidth(), top +3-CustomAppsActivity.CONTENT_HEIGHT);
+            } else {
+                screenShot = Bitmap.createBitmap(bmp, 0, 0,bmp.getWidth(), CustomAppsActivity.CONTENT_HEIGHT);
+                screenShot_keep = null;
+            }
+        } else {
+            screenShot = Bitmap.createBitmap(bmp, 0, bottom,bmp.getWidth(), SCREEN_HEIGHT-bottom);
+            screenShot_keep = Bitmap.createBitmap(bmp, 0, bottom,
+                    bmp.getWidth(), SCREEN_HEIGHT-(bottom+CustomAppsActivity.CONTENT_HEIGHT));
+        }
+    }
+
+    private void sendWeatherBroadcast(){
+        Intent intent =new Intent();
+        intent.setAction(weather_request_action);
+        sendBroadcast(intent);
+        // Log.d(TAG, "@@@@@@@@@@@@@@@@@@@@@@@@      send weather broadcast: "+weather_request_action);
+    }
+
+    private void setWeatherView(String str_weather){
+        if (str_weather == null || str_weather.length() == 0) {
+            return;
         }
 
-        private void sendWeatherBroadcast(){
-            Intent intent =new Intent();
-            intent.setAction(weather_request_action);
-            sendBroadcast(intent);
-            // Log.d(TAG, "@@@@@@@@@@@@@@@@@@@@@@@@      send weather broadcast: "+weather_request_action);
-        }
+        String[] list_data = str_weather.split(",");
+        ImageView img_weather = (ImageView)findViewById(R.id.img_weather);
+        if (list_data.length >= 3 && list_data[2] != null)
+            img_weather.setImageResource(parseIcon(list_data[2]));
 
-        private void setWeatherView(String str_weather){
-            if (str_weather == null || str_weather.length() == 0) {
+        String str_temp = list_data[1] + " ";
+        TextView tx_temp = (TextView)findViewById(R.id.tx_temp);
+        tx_temp.setTypeface(Typeface.DEFAULT_BOLD);
+        if (list_data.length >= 3 && str_temp.length() >= 1)
+            tx_temp.setText(str_temp);
+
+        String str_city = list_data[0];
+        TextView tx_city = (TextView)findViewById(R.id.tx_city);
+        if (list_data.length >= 3 && str_city.length() >= 1)
+            tx_city.setText(str_city);
+    }
+
+    private int parseIcon(String strIcon)
+    {
+        if (strIcon == null)
+            return -1;
+        if ("0.gif".equals(strIcon))
+            return R.drawable.sunny03;
+        if ("1.gif".equals(strIcon))
+            return R.drawable.cloudy03;
+        if ("2.gif".equals(strIcon))
+            return R.drawable.shade03;
+        if ("3.gif".equals(strIcon))
+            return R.drawable.shower01;
+        if ("4.gif".equals(strIcon))
+            return R.drawable.thunder_shower03;
+        if ("5.gif".equals(strIcon))
+            return R.drawable.rain_and_hail;
+        if ("6.gif".equals(strIcon))
+            return R.drawable.rain_and_snow;
+        if ("7.gif".equals(strIcon))
+            return R.drawable.s_rain03;
+        if ("8.gif".equals(strIcon))
+            return R.drawable.m_rain03;
+        if ("9.gif".equals(strIcon))
+            return R.drawable.l_rain03;
+        if ("10.gif".equals(strIcon))
+            return R.drawable.h_rain03;
+        if ("11.gif".equals(strIcon))
+            return R.drawable.hh_rain03;
+        if ("12.gif".equals(strIcon))
+            return R.drawable.hhh_rain03;
+        if ("13.gif".equals(strIcon))
+            return R.drawable.snow_shower03;
+        if ("14.gif".equals(strIcon))
+            return R.drawable.s_snow03;
+        if ("15.gif".equals(strIcon))
+            return R.drawable.m_snow03;
+        if ("16.gif".equals(strIcon))
+            return R.drawable.l_snow03;
+        if ("17.gif".equals(strIcon))
+            return R.drawable.h_snow03;
+        if ("18.gif".equals(strIcon))
+            return R.drawable.fog03;
+        if ("19.gif".equals(strIcon))
+            return R.drawable.ics_rain;
+        if ("20.gif".equals(strIcon))
+            return R.drawable.sand_storm02;
+        if ("21.gif".equals(strIcon))
+            return R.drawable.m_rain03;
+        if ("22.gif".equals(strIcon))
+            return R.drawable.l_rain03;
+        if ("23.gif".equals(strIcon))
+            return R.drawable.h_rain03;
+        if ("24.gif".equals(strIcon))
+            return R.drawable.hh_rain03;
+        if ("25.gif".equals(strIcon))
+            return R.drawable.hhh_rain03;
+        if ("26.gif".equals(strIcon))
+            return R.drawable.m_snow03;
+        if ("27.gif".equals(strIcon))
+            return R.drawable.l_snow03;
+        if ("28.gif".equals(strIcon))
+            return R.drawable.h_snow03;
+        if ("29.gif".equals(strIcon))
+            return R.drawable.smoke03;
+        if ("30.gif".equals(strIcon))
+            return R.drawable.sand_blowing03;
+        if ("31.gif".equals(strIcon))
+            return R.drawable.sand_storm03;
+        return 0;
+    }
+
+    public static int  parseItemIcon(String packageName){
+        if (packageName.equals("com.droidlogic.FileBrower")) {
+            return R.drawable.icon_filebrowser;
+        } else if (packageName.equals("com.android.browser")) {
+            return R.drawable.icon_browser;
+        } else if (packageName.equals("com.droidlogic.appinstall")) {
+            return R.drawable.icon_appinstaller;
+        } else if (packageName.equals("com.droidlogic.videoplayer")) {
+            return R.drawable.icon_videoplayer;
+        } else if (packageName.equals("com.android.tv.settings")) {
+            return R.drawable.icon_setting;
+        } else if (packageName.equals("com.droidlogic.mediacenter")){
+            return R.drawable.icon_mediacenter;
+        } else if (packageName.equals("com.droidlogic.otaupgrade")) {
+            return R.drawable.icon_backupandupgrade;
+        } else if (packageName.equals("com.android.gallery3d")) {
+            return R.drawable.icon_pictureplayer;
+        } else if (packageName.equals("com.droidlogic.miracast")) {
+            return R.drawable.icon_miracast;
+        } else if (packageName.equals("com.droidlogic.PPPoE")) {
+            return R.drawable.icon_pppoe;
+        } else if (packageName.equals("com.android.music")) {
+            return R.drawable.icon_music;
+        } else if (packageName.equals("com.android.camera2")) {
+            return R.drawable.icon_camera;
+        }
+        return -1;
+    }
+
+    private void sendKeyCode(final int keyCode){
+        new Thread () {
+            public void run() {
+                try {
+                    Instrumentation inst = new Instrumentation();
+                    inst.sendKeyDownUpSync(keyCode);
+                } catch (Exception e) {
+                    Log.e("Exception when sendPointerSync", e.toString());
+                }
+            }
+        }.start();
+    }
+
+    private void resetShadow(){
+        new Thread( new Runnable() {
+                public void run() {
+                try{
+                Thread.sleep(500);
+                } catch (Exception e) {
+                Log.d(TAG,""+e);
+                }
+                //Message msg = new Message();
+                //msg.what = 2;
+                mHandler.sendEmptyMessage(2);
+                }
+                }).start();
+    }
+
+    private void updateAppList(Intent intent){
+        boolean isShortcutIndex = false;
+        String packageName = null;
+
+        if (intent.getData() != null) {
+            packageName = intent.getData().getSchemeSpecificPart();
+            if (packageName == null || packageName.length() == 0) {
+                // they sent us a bad intent
                 return;
             }
-
-            String[] list_data = str_weather.split(",");
-            ImageView img_weather = (ImageView)findViewById(R.id.img_weather);
-            if (list_data.length >= 3 && list_data[2] != null)
-                img_weather.setImageResource(parseIcon(list_data[2]));
-
-            String str_temp = list_data[1] + " ";
-            TextView tx_temp = (TextView)findViewById(R.id.tx_temp);
-            tx_temp.setTypeface(Typeface.DEFAULT_BOLD);
-            if (list_data.length >= 3 && str_temp.length() >= 1)
-                tx_temp.setText(str_temp);
-
-            String str_city = list_data[0];
-            TextView tx_city = (TextView)findViewById(R.id.tx_city);
-            if (list_data.length >= 3 && str_city.length() >= 1)
-                tx_city.setText(str_city);
+            if (packageName.equals("com.android.provision"))
+                return;
         }
-
-        private int parseIcon(String strIcon)
-        {
-            if (strIcon == null)
-                return -1;
-            if ("0.gif".equals(strIcon))
-                return R.drawable.sunny03;
-            if ("1.gif".equals(strIcon))
-                return R.drawable.cloudy03;
-            if ("2.gif".equals(strIcon))
-                return R.drawable.shade03;
-            if ("3.gif".equals(strIcon))
-                return R.drawable.shower01;
-            if ("4.gif".equals(strIcon))
-                return R.drawable.thunder_shower03;
-            if ("5.gif".equals(strIcon))
-                return R.drawable.rain_and_hail;
-            if ("6.gif".equals(strIcon))
-                return R.drawable.rain_and_snow;
-            if ("7.gif".equals(strIcon))
-                return R.drawable.s_rain03;
-            if ("8.gif".equals(strIcon))
-                return R.drawable.m_rain03;
-            if ("9.gif".equals(strIcon))
-                return R.drawable.l_rain03;
-            if ("10.gif".equals(strIcon))
-                return R.drawable.h_rain03;
-            if ("11.gif".equals(strIcon))
-                return R.drawable.hh_rain03;
-            if ("12.gif".equals(strIcon))
-                return R.drawable.hhh_rain03;
-            if ("13.gif".equals(strIcon))
-                return R.drawable.snow_shower03;
-            if ("14.gif".equals(strIcon))
-                return R.drawable.s_snow03;
-            if ("15.gif".equals(strIcon))
-                return R.drawable.m_snow03;
-            if ("16.gif".equals(strIcon))
-                return R.drawable.l_snow03;
-            if ("17.gif".equals(strIcon))
-                return R.drawable.h_snow03;
-            if ("18.gif".equals(strIcon))
-                return R.drawable.fog03;
-            if ("19.gif".equals(strIcon))
-                return R.drawable.ics_rain;
-            if ("20.gif".equals(strIcon))
-                return R.drawable.sand_storm02;
-            if ("21.gif".equals(strIcon))
-                return R.drawable.m_rain03;
-            if ("22.gif".equals(strIcon))
-                return R.drawable.l_rain03;
-            if ("23.gif".equals(strIcon))
-                return R.drawable.h_rain03;
-            if ("24.gif".equals(strIcon))
-                return R.drawable.hh_rain03;
-            if ("25.gif".equals(strIcon))
-                return R.drawable.hhh_rain03;
-            if ("26.gif".equals(strIcon))
-                return R.drawable.m_snow03;
-            if ("27.gif".equals(strIcon))
-                return R.drawable.l_snow03;
-            if ("28.gif".equals(strIcon))
-                return R.drawable.h_snow03;
-            if ("29.gif".equals(strIcon))
-                return R.drawable.smoke03;
-            if ("30.gif".equals(strIcon))
-                return R.drawable.sand_blowing03;
-            if ("31.gif".equals(strIcon))
-                return R.drawable.sand_storm03;
-            return 0;
-        }
-
-        public static int  parseItemIcon(String packageName){
-            if (packageName.equals("com.droidlogic.FileBrower")) {
-                return R.drawable.icon_filebrowser;
-            } else if (packageName.equals("com.android.browser")) {
-                return R.drawable.icon_browser;
-            } else if (packageName.equals("com.droidlogic.appinstall")) {
-                return R.drawable.icon_appinstaller;
-            } else if (packageName.equals("com.droidlogic.videoplayer")) {
-                return R.drawable.icon_videoplayer;
-            } else if (packageName.equals("com.android.tv.settings")) {
-                return R.drawable.icon_setting;
-            } else if (packageName.equals("com.droidlogic.mediacenter")){
-                return R.drawable.icon_mediacenter;
-            } else if (packageName.equals("com.droidlogic.otaupgrade")) {
-                return R.drawable.icon_backupandupgrade;
-            } else if (packageName.equals("com.android.gallery3d")) {
-                return R.drawable.icon_pictureplayer;
-            } else if (packageName.equals("com.droidlogic.miracast")) {
-                return R.drawable.icon_miracast;
-            } else if (packageName.equals("com.droidlogic.PPPoE")) {
-                return R.drawable.icon_pppoe;
-            } else if (packageName.equals("com.android.music")) {
-                return R.drawable.icon_music;
-            } else if (packageName.equals("com.android.camera2")) {
-                return R.drawable.icon_camera;
+        if (getCurrentFocus() != null && getCurrentFocus().getParent() instanceof MyGridLayout) {
+            int parentId = ((MyGridLayout)getCurrentFocus().getParent()).getId();
+            dontRunAnim = true;
+            if (parentId != View.NO_ID) {
+                String name = getResources().getResourceEntryName(parentId);
+                if (name.equals("gv_shortcut")) {
+                    numberInGridOfShortcut = ((MyGridLayout)getCurrentFocus().getParent()).indexOfChild(getCurrentFocus());
+                    isShortcutIndex = true;
+                }
             }
-            return -1;
-        }
-
-        private void sendKeyCode(final int keyCode){
-            new Thread () {
-                public void run() {
-                    try {
-                        Instrumentation inst = new Instrumentation();
-                        inst.sendKeyDownUpSync(keyCode);
-                    } catch (Exception e) {
-                        Log.e("Exception when sendPointerSync", e.toString());
-                    }
-                }
-            }.start();
-        }
-
-        private void resetShadow(){
-            new Thread( new Runnable() {
-                    public void run() {
-                    try{
-                    Thread.sleep(500);
-                    } catch (Exception e) {
-                    Log.d(TAG,""+e);
-                    }
-                    //Message msg = new Message();
-                    //msg.what = 2;
-                    mHandler.sendEmptyMessage(2);
-                    }
-                    }).start();
-        }
-
-        private void updateAppList(Intent intent){
-            boolean isShortcutIndex = false;
-            String packageName = null;
-
-            if (intent.getData() != null) {
-                packageName = intent.getData().getSchemeSpecificPart();
-                if (packageName == null || packageName.length() == 0) {
-                    // they sent us a bad intent
-                    return;
-                }
-                if (packageName.equals("com.android.provision"))
-                    return;
+            if (!isShortcutIndex) {
+                numberInGrid = ((MyGridLayout)getCurrentFocus().getParent()).indexOfChild(getCurrentFocus());
             }
-            if (getCurrentFocus() != null && getCurrentFocus().getParent() instanceof MyGridLayout) {
-                int parentId = ((MyGridLayout)getCurrentFocus().getParent()).getId();
-                dontRunAnim = true;
-                if (parentId != View.NO_ID) {
-                    String name = getResources().getResourceEntryName(parentId);
-                    if (name.equals("gv_shortcut")) {
-                        numberInGridOfShortcut = ((MyGridLayout)getCurrentFocus().getParent()).indexOfChild(getCurrentFocus());
-                        isShortcutIndex = true;
-                    }
-                }
-                if (!isShortcutIndex) {
-                    numberInGrid = ((MyGridLayout)getCurrentFocus().getParent()).indexOfChild(getCurrentFocus());
-                }
-            } else {
-                numberInGrid = -1;
-            }
-
-            updateAllShortcut = true;
-            ifChangedShortcut = true;
-            displayShortcuts();
-
+        } else {
+            numberInGrid = -1;
         }
+
+        updateAllShortcut = true;
+        ifChangedShortcut = true;
+        displayShortcuts();
+
+    }
 
     private static final int INDEX_TRANSITION_ANIMATION_SCALE = 1;
     private void setAnimationScale(boolean enable_animation) {
@@ -1196,124 +1189,124 @@ public class Launcher extends Activity{
         return scale;
     }
 
-        private Handler mHandler = new Handler() {
-            public void handleMessage(Message msg) {
-                switch (msg.what) {
-                    case 1:
-                        //setPopWindow(popWindow_top, popWindow_bottom);
-                        break;
-                    case 2:
-                        MyRelativeLayout view = (MyRelativeLayout)getCurrentFocus();
-                        view.setSurface();
-                        break;
-                    case 3:
-                        ViewGroup findGridLayout = ((ViewGroup)((ViewGroup)((ViewGroup)viewMenu.getCurrentView()).getChildAt(4)).getChildAt(0));
-                        int count = findGridLayout.getChildCount();
+    private Handler mHandler = new Handler() {
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case 1:
+                    //setPopWindow(popWindow_top, popWindow_bottom);
+                    break;
+                case 2:
+                    MyRelativeLayout view = (MyRelativeLayout)getCurrentFocus();
+                    view.setSurface();
+                    break;
+                case 3:
+                    ViewGroup findGridLayout = ((ViewGroup)((ViewGroup)((ViewGroup)viewMenu.getCurrentView()).getChildAt(4)).getChildAt(0));
+                    int count = findGridLayout.getChildCount();
+                    Launcher.dontRunAnim = true;
+                    findGridLayout.getChildAt(count-1).requestFocus();
+                    Launcher.dontRunAnim = false;
+                    break;
+                case 4:
+                    if (numberInGrid != -1) {
+                        findGridLayout = ((ViewGroup)((ViewGroup)((ViewGroup)viewMenu.getCurrentView()).getChildAt(4)).getChildAt(0));
                         Launcher.dontRunAnim = true;
-                        findGridLayout.getChildAt(count-1).requestFocus();
+                        findGridLayout.getChildAt(numberInGrid).requestFocus();
                         Launcher.dontRunAnim = false;
-                        break;
-                    case 4:
-                        if (numberInGrid != -1) {
-                            findGridLayout = ((ViewGroup)((ViewGroup)((ViewGroup)viewMenu.getCurrentView()).getChildAt(4)).getChildAt(0));
-                            Launcher.dontRunAnim = true;
-                            findGridLayout.getChildAt(numberInGrid).requestFocus();
-                            Launcher.dontRunAnim = false;
-                            numberInGrid = -1;
-                        }
-                        break;
-                    case 5:
-                        if (numberInGridOfShortcut != -1) {
-                            Launcher.dontRunAnim = true;
-                            saveHomeFocusView = homeShortcutView.getChildAt(numberInGridOfShortcut);
-                            saveHomeFocusView.requestFocus();
-                            Launcher.dontRunAnim = false;
-                            numberInGridOfShortcut = -1;
-                        }
-                        break;
-                    case 6:
-                        int i = homeShortcutView.getChildCount();
+                        numberInGrid = -1;
+                    }
+                    break;
+                case 5:
+                    if (numberInGridOfShortcut != -1) {
                         Launcher.dontRunAnim = true;
-                        homeShortcutView.getChildAt(i-1).requestFocus();
+                        saveHomeFocusView = homeShortcutView.getChildAt(numberInGridOfShortcut);
+                        saveHomeFocusView.requestFocus();
                         Launcher.dontRunAnim = false;
-                        if (!isInTouchMode) {
-                            layoutScaleShadow.setVisibility(View.VISIBLE);
-                            //frameView.setVisibility(View.VISIBLE);
-                        }
-                        break;
-                    default:
-                        break;
+                        numberInGridOfShortcut = -1;
+                    }
+                    break;
+                case 6:
+                    int i = homeShortcutView.getChildCount();
+                    Launcher.dontRunAnim = true;
+                    homeShortcutView.getChildAt(i-1).requestFocus();
+                    Launcher.dontRunAnim = false;
+                    if (!isInTouchMode) {
+                        layoutScaleShadow.setVisibility(View.VISIBLE);
+                        //frameView.setVisibility(View.VISIBLE);
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+    };
+
+    private BroadcastReceiver mediaReceiver = new BroadcastReceiver() {
+        @Override
+            public void onReceive(Context context, Intent intent) {
+                String action = intent.getAction();
+
+                //Log.d(TAG, " mediaReceiver		  action = " + action);
+                if (action == null)
+                    return;
+
+                if (Intent.ACTION_MEDIA_EJECT.equals(action)
+                        || Intent.ACTION_MEDIA_UNMOUNTED.equals(action) || Intent.ACTION_MEDIA_MOUNTED.equals(action)) {
+                    displayStatus();
+                    updateStatus();
                 }
             }
-        };
+    };
 
-        private BroadcastReceiver mediaReceiver = new BroadcastReceiver() {
-            @Override
-                public void onReceive(Context context, Intent intent) {
-                    String action = intent.getAction();
+    private BroadcastReceiver netReceiver = new BroadcastReceiver() {
+        @Override
+            public void onReceive(Context context, Intent intent) {
+                String action = intent.getAction();
 
-                    //Log.d(TAG, " mediaReceiver		  action = " + action);
-                    if (action == null)
-                        return;
+                if (action == null)
+                    return;
 
-                    if (Intent.ACTION_MEDIA_EJECT.equals(action)
-                            || Intent.ACTION_MEDIA_UNMOUNTED.equals(action) || Intent.ACTION_MEDIA_MOUNTED.equals(action)) {
-                        displayStatus();
-                        updateStatus();
-                    }
+                //Log.d(TAG, "netReceiver         action = " + action);
+
+                if (action.equals(outputmode_change_action)) {
+                    setHeight();
                 }
-        };
-
-        private BroadcastReceiver netReceiver = new BroadcastReceiver() {
-            @Override
-                public void onReceive(Context context, Intent intent) {
-                    String action = intent.getAction();
-
-                    if (action == null)
-                        return;
-
-                    //Log.d(TAG, "netReceiver         action = " + action);
-
-                    if (action.equals(outputmode_change_action)) {
-                        setHeight();
-                    }
-                    if (action.equals(Intent.ACTION_TIME_CHANGED)) {
-                        displayDate();
-                    }
-                    if (action.equals(Intent.ACTION_TIME_TICK)) {
-                        displayDate();
-
-                        time_count++;
-                        if (time_count >= time_freq) {
-                            sendWeatherBroadcast();
-                            time_count = 0;
-                        }
-                    } else if (action.equals(weather_receive_action)) {
-                        String weatherInfo = intent.getExtras().getString("weather_today");
-                        //Log.d(TAG, "@@@@@@@@@@@@@@@@@@@@@@@@@@ receive " + action + " weather:" + weatherInfo);
-                        setWeatherView(weatherInfo);
-                    } else if (Intent.ACTION_EXTERNAL_APPLICATIONS_AVAILABLE.equals(action)
-                            || Intent.ACTION_EXTERNAL_APPLICATIONS_UNAVAILABLE.equals(action)) {
-                        updateAppList(intent);
-                    }else {
-                        displayStatus();
-                        updateStatus();
-                    }
+                if (action.equals(Intent.ACTION_TIME_CHANGED)) {
+                    displayDate();
                 }
-        };
+                if (action.equals(Intent.ACTION_TIME_TICK)) {
+                    displayDate();
 
-        private BroadcastReceiver appReceiver = new BroadcastReceiver(){
-            @Override
-                public void onReceive(Context context, Intent intent) {
-                    // TODO Auto-generated method stub
-
-                    final String action = intent.getAction();
-                    if (Intent.ACTION_PACKAGE_CHANGED.equals(action)
-                            || Intent.ACTION_PACKAGE_REMOVED.equals(action)
-                            || Intent.ACTION_PACKAGE_ADDED.equals(action)) {
-
-                        updateAppList(intent);
+                    time_count++;
+                    if (time_count >= time_freq) {
+                        sendWeatherBroadcast();
+                        time_count = 0;
                     }
+                } else if (action.equals(weather_receive_action)) {
+                    String weatherInfo = intent.getExtras().getString("weather_today");
+                    //Log.d(TAG, "@@@@@@@@@@@@@@@@@@@@@@@@@@ receive " + action + " weather:" + weatherInfo);
+                    setWeatherView(weatherInfo);
+                } else if (Intent.ACTION_EXTERNAL_APPLICATIONS_AVAILABLE.equals(action)
+                        || Intent.ACTION_EXTERNAL_APPLICATIONS_UNAVAILABLE.equals(action)) {
+                    updateAppList(intent);
+                }else {
+                    displayStatus();
+                    updateStatus();
                 }
-        };
-    }
+            }
+    };
+
+    private BroadcastReceiver appReceiver = new BroadcastReceiver(){
+        @Override
+            public void onReceive(Context context, Intent intent) {
+                // TODO Auto-generated method stub
+
+                final String action = intent.getAction();
+                if (Intent.ACTION_PACKAGE_CHANGED.equals(action)
+                        || Intent.ACTION_PACKAGE_REMOVED.equals(action)
+                        || Intent.ACTION_PACKAGE_ADDED.equals(action)) {
+
+                    updateAppList(intent);
+                }
+            }
+    };
+}
