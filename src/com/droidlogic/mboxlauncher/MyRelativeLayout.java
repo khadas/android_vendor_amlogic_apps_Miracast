@@ -319,9 +319,9 @@ public class MyRelativeLayout extends RelativeLayout{
         text.setTextColor(mContext.getResources().getInteger(R.color.btn_text_color));
         if (screen_mode == MODE_HOME_RECT) {
             if (Launcher.REAL_OUTPUT_MODE.equals("4k2knative")) {
-                para.setMargins(0, 0, 0, 0);
+                para.setMargins(200, 170, 0, 0);
             } else if (Launcher.REAL_OUTPUT_MODE.equals("720p"))
-                para.setMargins(0, 0, 0, 0);
+                para.setMargins(66, 56, 0, 0);
             else
                 para.setMargins(100, 85, 0, 0);
             text.setLayoutParams(para);
@@ -330,9 +330,9 @@ public class MyRelativeLayout extends RelativeLayout{
             para.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
             para.addRule(RelativeLayout.CENTER_HORIZONTAL);
             if (Launcher.REAL_OUTPUT_MODE.equals("4k2knative")) {
-                para.setMargins(100, 0, 150, 80);
+                para.setMargins(130, 0, 130, 100);
             }else if (Launcher.REAL_OUTPUT_MODE.equals("720p"))
-                para.setMargins(34, 0, 34, 20);
+                para.setMargins(44, 0, 44, 34);
             else
                 para.setMargins(65, 0, 65, 50);
             text.setLayoutParams(para);

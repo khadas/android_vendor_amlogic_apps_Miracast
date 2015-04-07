@@ -928,20 +928,23 @@ public class Launcher extends Activity{
     }
 
     private void setHeight() {
-        String outputmode = mSystemControlManager.getPropertyString("ubootenv.var.outputmode", "1080p");
-        isRealOutputMode = mSystemControlManager.getPropertyBoolean("ro.platform.has.realoutputmode", false);
-        isNative4k2k = mSystemControlManager.getPropertyBoolean("ro.platform.has.native4k2k", false);
-        isNative720 = mSystemControlManager.getPropertyBoolean("ro.platform.has.native720", false);
-        if (isNative4k2k && outputmode.startsWith("4k2k")) {
-            REAL_OUTPUT_MODE = "4k2knative";
-            CustomAppsActivity.CONTENT_HEIGHT = 900;
-        } else if (isRealOutputMode && !isNative720) {
+        SystemControlManager.DisplayInfo mDisplayInfo = mSystemControlManager.getDisplayInfo();
+        if (mDisplayInfo.defaultUI != null) {
+            if (mDisplayInfo.defaultUI.contains("720")) {
+                REAL_OUTPUT_MODE = "720p";
+                CustomAppsActivity.CONTENT_HEIGHT = 300;
+            } else if (mDisplayInfo.defaultUI.contains("4k2k")) {
+                REAL_OUTPUT_MODE = "4k2knative";
+                CustomAppsActivity.CONTENT_HEIGHT = 900;
+            } else {
+                REAL_OUTPUT_MODE = "1080p";
+                CustomAppsActivity.CONTENT_HEIGHT = 450;
+            }
+        } else {
             REAL_OUTPUT_MODE = "1080p";
             CustomAppsActivity.CONTENT_HEIGHT = 450;
-        } else {
-            REAL_OUTPUT_MODE = "720p";
-            CustomAppsActivity.CONTENT_HEIGHT = 300;
         }
+
         Display display = this.getWindowManager().getDefaultDisplay();
         Point p = new Point();
         display.getRealSize(p);
@@ -1082,8 +1085,6 @@ public class Launcher extends Activity{
             return R.drawable.icon_browser;
         } else if (packageName.equals("com.droidlogic.appinstall")) {
             return R.drawable.icon_appinstaller;
-        } else if (packageName.equals("com.droidlogic.videoplayer")) {
-            return R.drawable.icon_videoplayer;
         } else if (packageName.equals("com.android.tv.settings")) {
             return R.drawable.icon_setting;
         } else if (packageName.equals("com.droidlogic.mediacenter")){
@@ -1210,7 +1211,11 @@ public class Launcher extends Activity{
                     if (numberInGrid != -1) {
                         findGridLayout = ((ViewGroup)((ViewGroup)((ViewGroup)viewMenu.getCurrentView()).getChildAt(4)).getChildAt(0));
                         Launcher.dontRunAnim = true;
-                        findGridLayout.getChildAt(numberInGrid).requestFocus();
+                        count = findGridLayout.getChildCount();
+                        if (numberInGrid > count -1)
+                            findGridLayout.getChildAt(count-1).requestFocus();
+                        else
+                            findGridLayout.getChildAt(numberInGrid).requestFocus();
                         Launcher.dontRunAnim = false;
                         numberInGrid = -1;
                     }
