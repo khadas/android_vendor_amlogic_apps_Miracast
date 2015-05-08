@@ -187,6 +187,10 @@ public class Launcher extends Activity{
             filter.addAction(Intent.ACTION_PACKAGE_CHANGED);
             filter.addDataScheme("package");
             registerReceiver(appReceiver, filter);
+
+            filter = new IntentFilter();
+            filter.addAction("com.droidlogic.instaboot.RELOAD_APP_COMPLETED");
+            registerReceiver(instabootReceiver, filter);
         }
 
     @Override
@@ -230,6 +234,7 @@ public class Launcher extends Activity{
             unregisterReceiver(mediaReceiver);
             unregisterReceiver(netReceiver);
             unregisterReceiver(appReceiver);
+            unregisterReceiver(instabootReceiver);
             super.onDestroy();
         }
 
@@ -1314,4 +1319,19 @@ public class Launcher extends Activity{
                 }
             }
     };
+
+    private BroadcastReceiver instabootReceiver = new BroadcastReceiver(){
+        @Override
+        public void onReceive(Context context, Intent intent) {
+
+            final String action = intent.getAction();
+            if ("com.droidlogic.instaboot.RELOAD_APP_COMPLETED".equals(action)) {
+                Log.e(TAG,"reloadappcompleted");
+                updateAllShortcut = true;
+                ifChangedShortcut = true;
+                displayShortcuts();
+            }
+        }
+    };
+
 }
