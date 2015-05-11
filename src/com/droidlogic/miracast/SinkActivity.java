@@ -99,7 +99,8 @@ public class SinkActivity extends Activity
     private String mPort;
     private boolean mMiracastRunning = false;
     private PowerManager.WakeLock mWakeLock;
-    private Handler mMiracastThreadHandler = null;
+    private MiracastThread mMiracastThread = null;
+    private Handler mMiracastHandler = null;
     private boolean isHD = false;
     private SurfaceView mSurfaceView;
 
@@ -165,20 +166,26 @@ public class SinkActivity extends Activity
         Bundle bundle = intent.getExtras();
         mPort = bundle.getString (KEY_PORT);
         mIP = bundle.getString (KEY_IP);
-        isHD = bundle.getBoolean (WiFiDirectMainActivity.HRESOLUTION_DISPLAY);
-        MiracastThread thr = new MiracastThread();
-        new Thread (thr).start();
-        synchronized (thr)
+        isHD = bundle.getBoolean(WiFiDirectMainActivity.HRESOLUTION_DISPLAY);
+        MiracastThread mMiracastThread = new MiracastThread();
+        new Thread (mMiracastThread).start();
+        synchronized (mMiracastThread)
         {
-            while ( null == mMiracastThreadHandler )
+            while (null == mMiracastHandler)
             {
                 try
                 {
-                    thr.wait();
+                    mMiracastThread.wait();
                 }
                 catch (InterruptedException e) {}
             }
         }
+    }
+
+    protected void onDestroy()
+    {
+        quitLoop();
+        super.onDestroy();
     }
 
     /** register the BroadcastReceiver with the intent values to be matched */
@@ -304,13 +311,15 @@ public class SinkActivity extends Activity
 
         try
         {
-            BufferedWriter writer = new BufferedWriter (new FileWriter (path), 64);
+            FileWriter fw = new FileWriter(path);
+            BufferedWriter writer = new BufferedWriter (fw, 64);
             try
             {
                 writer.write (val);
             } finally
             {
                 writer.close();
+                fw.close();
             }
             return 0;
 
@@ -339,8 +348,8 @@ public class SinkActivity extends Activity
                     if (str != null)
                         value.append(str);
                 }
-                fr.close();
                 br.close();
+                fr.close();
                 if (value != null)
                     return value.toString();
                 return null;
@@ -389,7 +398,10 @@ public class SinkActivity extends Activity
         Bundle data = msg.getData();
         data.putString (KEY_IP, ip);
         data.putString (KEY_PORT, port);
-        mMiracastThreadHandler.sendMessage (msg);
+        if (mMiracastHandler != null)
+        {
+            mMiracastHandler.sendMessage(msg);
+        }
     }
 
     /**
@@ -502,19 +514,12 @@ public class SinkActivity extends Activity
     //private native void nativeSourceStart(String ip);
     //private native void nativeSourceStop();
     // Native callback.
-    private void notifyRtspError()
+    private void notifyWfdError()
     {
-        Log.d (TAG, "notifyRtspError received!!!");
-        Intent intent = new Intent (WiFiDirectMainActivity.ACTION_FIX_RTSP_FAIL);
-        sendBroadcastAsUser (intent, UserHandle.ALL);
+         Log.d(TAG, "notifyWfdError received!!!");
+         finishView();
     }
-    private void notifyRtpNopacket()
-    {
-        Log.d (TAG, "notifyRtpNopacket received!!!");
-        Intent intent = new Intent (WiFiDirectMainActivity.ACTION_REMOVE_GROUP);
-        sendBroadcastAsUser (intent, UserHandle.ALL);
-        finishView();
-    }
+
     private final int CMD_MIRACAST_START      = 10;
     private final int CMD_MIRACAST_STOP         = 11;
     class MiracastThread implements Runnable
@@ -525,25 +530,25 @@ public class SinkActivity extends Activity
 
             Log.v (TAG, "miracast thread run");
 
-            mMiracastThreadHandler = new Handler()
+            mMiracastHandler = new Handler()
             {
                 public void handleMessage (Message msg)
                 {
                     switch (msg.what)
                     {
-                    case CMD_MIRACAST_START:
-                    {
-                        Bundle data = msg.getData();
-                        String ip = data.getString (KEY_IP);
-                        String port = data.getString (KEY_PORT);
+                        case CMD_MIRACAST_START:
+                            {
+                                Bundle data = msg.getData();
+                                String ip = data.getString (KEY_IP);
+                                String port = data.getString (KEY_PORT);
 
-                        nativeConnectWifiSource (SinkActivity.this, ip, Integer.parseInt (port) );
+                                nativeConnectWifiSource (SinkActivity.this, ip, Integer.parseInt (port) );
+                            }
+                            break;
 
+                        default:
+                            break;
                     }
-                    break;
-                    default: break;
-                    }
-                    sendResultMessage (msg.what, 0, 0, 0);
                 }
             };
 
@@ -552,44 +557,17 @@ public class SinkActivity extends Activity
                 notifyAll();
             }
             Looper.loop();
-        }
-        private Handler mHandler = new Handler()
-        {
-            public void handleMessage (Message msg)
-            {
-                switch (msg.what)
-                {
-                case CMD_MIRACAST_START:
-                {
-                }
-                break;
-                case CMD_MIRACAST_STOP: {}
-                    break;
-                case MSG_CLOSE_OSD:
-                {
-                    Log.v (TAG, "handler message CLOSE OSD");
-                    closeOsd();
-                }
-                break;
+         }
+      };
 
-                default: break;
-                }
-            }
-        };
-
-        private void sendResultMessage (int what, int arg1, int arg2, Object obj)
-        {
-            if ( null != mHandler )
-            {
-                Message message = Message.obtain();
-                message.what = what;
-                message.arg1 = arg1;
-                message.arg2 = arg2;
-                message.obj = obj;
-                mHandler.sendMessage (message);
-            }
-        }
-    }
+      public void quitLoop()
+      {
+          if (mMiracastHandler != null && mMiracastHandler.getLooper() != null)
+          {
+              Log.v(TAG, "miracast thread quit");
+              mMiracastHandler.getLooper().quit();
+          }
+      }
 
     private class SurfaceCallback implements SurfaceHolder.Callback
     {

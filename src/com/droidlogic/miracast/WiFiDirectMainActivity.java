@@ -435,6 +435,9 @@ public class WiFiDirectMainActivity extends Activity implements
         String sFinal1 = String.format (getString (R.string.connect_ready), getString (R.string.device_name) );
         mConnectDesc.setText (sFinal1);
         peers.clear();
+
+        String list = WiFiDirectMainActivity.this.getResources().getString(R.string.peer_list);
+        mPeerList.setText(list);
     }
 
     public void setConnect()
@@ -446,20 +449,19 @@ public class WiFiDirectMainActivity extends Activity implements
     public void setIsWifiP2pEnabled (boolean enable)
     {
         this.isWifiP2pEnabled = enable;
+        String sFinal1 = String.format(getString(R.string.connect_ready),getString(R.string.device_name));
+        mConnectDesc.setText(sFinal1);
         if (enable)
         {
-            mConnectDesc.setText (getString (R.string.connect_ready) );
-            mConnectWarn.setVisibility (View.INVISIBLE);
-            mClick2Settings.setVisibility (View.GONE);
-            mConnectDesc.setFocusable (false);
+            mConnectWarn.setVisibility(View.INVISIBLE);
+            mClick2Settings.setVisibility(View.GONE);
+            mConnectDesc.setFocusable(false);
         }
         else
         {
-            String sFinal1 = String.format (getString (R.string.connect_ready), getString (R.string.device_name) );
-            mConnectDesc.setText (sFinal1);
-            mConnectWarn.setText (WiFiDirectMainActivity.this.getResources()
-                                  .getString (R.string.p2p_off_warning) );
-            mConnectWarn.setVisibility (View.VISIBLE);
+            mConnectWarn.setText(WiFiDirectMainActivity.this.getResources()
+                        .getString(R.string.p2p_off_warning));
+            mConnectWarn.setVisibility(View.VISIBLE);
             mClick2Settings.setVisibility (View.VISIBLE);
             mConnectDesc.setFocusable (true);
         }
@@ -491,10 +493,11 @@ public class WiFiDirectMainActivity extends Activity implements
 
     private void fixRtspFail()
     {
-        if (manager != null && mNetId != -1)
+        if (manager != null /*&& mNetId != -1*/)
         {
             manager.removeGroup (channel, null);
-            manager.deletePersistentGroup (channel, mNetId, null);
+            if (mNetId != -1)
+                manager.deletePersistentGroup (channel, mNetId, null);
 
             new AlertDialog.Builder (this)
             .setTitle (R.string.rtsp_fail)
@@ -726,17 +729,22 @@ public class WiFiDirectMainActivity extends Activity implements
     public String getFromAssets (String fileName)
     {
         String result = "";
-        try
-        {
-            InputStream in = getResources().getAssets().open (fileName);
+        InputStream in = null;
+        try {
+            in = getResources().getAssets().open(fileName);
             int lenght = in.available();
             byte[]  buffer = new byte[lenght];
-            in.read (buffer);
-            result = EncodingUtils.getString (buffer, ENCODING);
-        }
-        catch (Exception e)
-        {
+            in.read(buffer);
+            result = EncodingUtils.getString(buffer, ENCODING);
+        } catch (Exception e) {
             e.printStackTrace();
+        } finally {
+            try {
+                if (in != null)
+                    in.close();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
         }
         return result;
     }

@@ -19,6 +19,5 @@
 #   public *;
 #}
 -keepclassmembers class com.droidlogic.miracast.SinkActivity {
-    private void notifyRtspError();
-    private void notifyRtpNopacket();
+    private void notifyWfdError();
 }
