@@ -489,7 +489,23 @@ public class WiFiDirectMainActivity extends Activity implements
         }, MAX_DELAY_MS);
     }
 
-    public void stopMiracast (boolean stop) {}
+    public void stopMiracast (boolean stop) {
+        if ((manager == null) || !stop) {
+            return;
+        }
+
+        manager.stopPeerDiscovery (channel, new WifiP2pManager.ActionListener() {
+            @Override
+            public void onSuccess() {
+                Log.d (TAG, "stopMiracast Success");
+            }
+
+            @Override
+            public void onFailure (int reasonCode) {
+                Log.d (TAG, "stopMiracast Failure");
+            }
+        });
+    }
 
     private void fixRtspFail()
     {
@@ -592,6 +608,7 @@ public class WiFiDirectMainActivity extends Activity implements
     protected void onDestroy()
     {
         unregisterReceiver (mReceiver2);
+        stopMiracast (true);
         super.onDestroy();
     }
 
