@@ -495,6 +495,7 @@ public class SinkActivity extends Activity
                 mSystemControl.writeSysFs("/sys/module/di/parameters/cue_enable", mCueEnable);
                 mSystemControl.writeSysFs("/sys/module/di/parameters/bypass_dynamic", mBypassDynamic);
                 mSystemControl.writeSysFs("/sys/module/di/parameters/bypass_prog", mBypassProg);
+                mSystemControl.writeSysFs("/sys/class/video/vsync_pts_inc_upint", "0");
 
                 mSystemControl.writeSysFs("/sys/class/vfm/map", "rm default");
                 mSystemControl.writeSysFs("/sys/class/vfm/map", b.toString());
@@ -502,6 +503,7 @@ public class SinkActivity extends Activity
                 writeSysfs("/sys/module/di/parameters/cue_enable", mCueEnable);
                 writeSysfs("/sys/module/di/parameters/bypass_dynamic", mBypassDynamic);
                 writeSysfs("/sys/module/di/parameters/bypass_prog", mBypassProg);
+                writeSysfs("/sys/class/video/vsync_pts_inc_upint", "0");
 
                 writeSysfs("/sys/class/vfm/map", "rm default");
                 writeSysfs("/sys/class/vfm/map", b.toString());
