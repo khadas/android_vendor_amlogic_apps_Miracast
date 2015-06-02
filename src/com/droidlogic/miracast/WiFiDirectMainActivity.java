@@ -482,7 +482,7 @@ public class WiFiDirectMainActivity extends Activity implements
                 Bundle bundle = new Bundle();
                 bundle.putString (SinkActivity.KEY_PORT, mPort);
                 bundle.putString (SinkActivity.KEY_IP, mIP);
-                bundle.putBoolean (HRESOLUTION_DISPLAY, mPref.getBoolean (HRESOLUTION_DISPLAY, false) );
+                bundle.putBoolean (HRESOLUTION_DISPLAY, mPref.getBoolean (HRESOLUTION_DISPLAY, true) );
                 intent.putExtras (bundle);
                 startActivity (intent);
             }
@@ -687,7 +687,7 @@ public class WiFiDirectMainActivity extends Activity implements
         mDisplayResolution = menu.findItem (R.id.setting_definition);
         if (mPref != null)
         {
-            boolean high = mPref.getBoolean (HRESOLUTION_DISPLAY, false);
+            boolean high = mPref.getBoolean (HRESOLUTION_DISPLAY, true);
             Resources res = WiFiDirectMainActivity.this.getResources();
             if (high)
             {
