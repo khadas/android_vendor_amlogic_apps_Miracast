@@ -220,6 +220,7 @@ public class SinkActivity extends Activity
     @Override
     public boolean onKeyDown (int keyCode, KeyEvent event)
     {
+        Log.d (TAG, "onKeyDown miracast running:" + mMiracastRunning + " keyCode:" + keyCode + " event:"  + event);
         if (mMiracastRunning)
         {
             switch (keyCode)
@@ -227,11 +228,11 @@ public class SinkActivity extends Activity
             case KeyEvent.KEYCODE_VOLUME_UP:
             case KeyEvent.KEYCODE_VOLUME_DOWN:
             case KeyEvent.KEYCODE_VOLUME_MUTE:
-                openOsd();
+                //openOsd();
                 break;
 
             case KeyEvent.KEYCODE_BACK:
-                openOsd();
+                //openOsd();
                 return true;
             }
         }
@@ -242,11 +243,7 @@ public class SinkActivity extends Activity
     @Override
     public boolean onKeyUp (int keyCode, KeyEvent event)
     {
-        if (keyCode == KeyEvent.KEYCODE_BACK)
-        {
-            Log.d (TAG, "onKeyUp BACK KEY miracast running:" + mMiracastRunning);
-        }
-
+        Log.d (TAG, "onKeyUp miracast running:" + mMiracastRunning + " keyCode:" + keyCode + " event:"  + event);
         if (mMiracastRunning)
         {
             switch (keyCode)
