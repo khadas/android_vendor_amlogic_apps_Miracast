@@ -193,7 +193,6 @@ public class SinkActivity extends Activity
     public void onResume()
     {
         super.onResume();
-        changeRole (false);
         /* enable backlight */
         PowerManager pm = (PowerManager) getSystemService (Context.POWER_SERVICE);
         mWakeLock = pm.newWakeLock (PowerManager.SCREEN_BRIGHT_WAKE_LOCK |
@@ -609,23 +608,5 @@ public class SinkActivity extends Activity
         {
         }
         return version;
-    }
-
-    private void changeRole (boolean isSource)
-    {
-
-        WifiP2pWfdInfo wfdInfo = new WifiP2pWfdInfo();
-        wfdInfo.setWfdEnabled (true);
-        if (isSource)
-        {
-            wfdInfo.setDeviceType (WifiP2pWfdInfo.WFD_SOURCE);
-        }
-        else
-        {
-            wfdInfo.setDeviceType (WifiP2pWfdInfo.PRIMARY_SINK);
-        }
-        wfdInfo.setSessionAvailable (true);
-        wfdInfo.setControlPort (7236);
-        wfdInfo.setMaxThroughput (50);
     }
 }

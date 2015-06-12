@@ -254,7 +254,6 @@ public class WiFiDirectMainActivity extends Activity implements
                 Log.d(TAG, "removeGroup Failure");
             }
         });
-        changeRole (false);
         /* enable backlight */
         mReceiver = new WiFiDirectBroadcastReceiver (manager, channel, this);
         PowerManager pm = (PowerManager) getSystemService (Context.POWER_SERVICE);
@@ -398,7 +397,6 @@ public class WiFiDirectMainActivity extends Activity implements
         mAddrObserver.stopWatching();
         unregisterReceiver (mReceiver);
         mWakeLock.release();
-        changeRole (true);
     }
 
     /*
@@ -602,11 +600,13 @@ public class WiFiDirectMainActivity extends Activity implements
         registerReceiver (mReceiver2, filter);
         mPref = PreferenceManager.getDefaultSharedPreferences (this);
         mEditor = mPref.edit();
+        changeRole(true);
     }
 
     @Override
     protected void onDestroy()
     {
+        changeRole(false);
         unregisterReceiver (mReceiver2);
         stopMiracast (true);
         super.onDestroy();
@@ -820,36 +820,37 @@ public class WiFiDirectMainActivity extends Activity implements
         return null;
     }
 
-    private void changeRole (boolean isSource)
+    private void changeRole (boolean isSink)
     {
-
         WifiP2pWfdInfo wfdInfo = new WifiP2pWfdInfo();
-        wfdInfo.setWfdEnabled (true);
-        if (isSource)
-        {
-            wfdInfo.setDeviceType (WifiP2pWfdInfo.WFD_SOURCE);
+
+        if (isSink) {
+            wfdInfo.setWfdEnabled(true);
+            wfdInfo.setDeviceType(WifiP2pWfdInfo.PRIMARY_SINK);
+            wfdInfo.setSessionAvailable(true);
+            wfdInfo.setControlPort(7236);
+            wfdInfo.setMaxThroughput(50);
+        } else {
+            wfdInfo.setWfdEnabled(false);
         }
-        else
-        {
-            wfdInfo.setDeviceType (WifiP2pWfdInfo.PRIMARY_SINK);
-        }
-        wfdInfo.setSessionAvailable (true);
-        wfdInfo.setControlPort (7236);
-        wfdInfo.setMaxThroughput (50);
-        manager.setWFDInfo (channel, wfdInfo, new ActionListener()
-        {
+
+        manager.setWFDInfo(channel, wfdInfo, new ActionListener() {
             @Override
-            public void onSuccess()
-            {
-                Log.d (TAG, "Successfully set WFD info.");
+            public void onSuccess() {
+                Log.d(TAG, "Successfully set WFD info.");
             }
 
             @Override
-            public void onFailure (int reason)
-            {
-                Log.d (TAG, "Failed to set WFD info with reason " + reason + ".");
+            public void onFailure(int reason) {
+                Log.d(TAG, "Failed to set WFD info with reason " + reason + ".");
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                WiFiDirectMainActivity.this.changeRole(true);
             }
-        });;
+        });
     }
 
     public void discoveryStop()
