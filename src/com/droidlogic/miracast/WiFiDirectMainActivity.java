@@ -353,16 +353,13 @@ public class WiFiDirectMainActivity extends Activity implements
             @Override
             public void onSuccess()
             {
-                Toast.makeText (WiFiDirectMainActivity.this,
-                                WiFiDirectMainActivity.this.getResources().getString (R.string.discover_init), Toast.LENGTH_SHORT).show();
+                Log.d(TAG, "discoverPeers init success");
             }
 
             @Override
             public void onFailure (int reasonCode)
             {
-                Toast.makeText (WiFiDirectMainActivity.this,
-                                WiFiDirectMainActivity.this.getResources().getString (R.string.discover_fail) + reasonCode, Toast.LENGTH_SHORT)
-                .show();
+                Log.d(TAG, "discoverPeers init failure, reasonCode:" + reasonCode);
             }
         });
     }
@@ -775,9 +772,10 @@ public class WiFiDirectMainActivity extends Activity implements
             if (info == null || !info.isAvailable() )
             {
                 return false;
-            }
-            else
-            {
+            } else if (ConnectivityManager.TYPE_WIFI != info.getType()) {
+                Log.d(TAG, "ActiveNetwork TYPE is not WIFI");
+                return false;
+            } else {
                 return true;
             }
         }
