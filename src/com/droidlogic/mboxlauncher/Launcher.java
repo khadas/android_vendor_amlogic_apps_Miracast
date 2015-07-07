@@ -13,8 +13,11 @@ import android.content.BroadcastReceiver;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.content.pm.LauncherActivityInfo;
+import android.content.pm.LauncherApps;
 import android.content.ComponentName;
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.app.Instrumentation;
 import android.graphics.Bitmap;
 import android.os.Bundle;
@@ -53,6 +56,7 @@ import java.io.InputStreamReader;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Comparator;
 import java.util.Locale;
 import java.util.List;
 import java.util.ArrayList;
@@ -60,6 +64,7 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.Calendar;
 import java.util.Collections;
+import java.text.Collator;
 
 public class Launcher extends Activity{
 
@@ -756,9 +761,12 @@ public class Launcher extends Activity{
         }
     }
 
-    private List<Map<String, Object>> loadShortcutList(PackageManager manager, final List<ResolveInfo> apps, String[] list_custom_apps) {
+    private List<Map<String, Object>> loadShortcutList(PackageManager manager, final List<LauncherActivityInfo> apps, String[] list_custom_apps) {
         Map<String, Object> map = null;
         List<Map<String, Object>> list = new ArrayList<Map<String, Object>>();
+        ActivityManager activityManager =
+                (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        int iconDpi = activityManager.getLauncherLargeIconDensity();
 
         if (list_custom_apps != null) {
             for (int i = 0; i < list_custom_apps.length; i++) {
@@ -766,17 +774,15 @@ public class Launcher extends Activity{
                     final int count = apps.size();
                     for (int j = 0; j < count; j++) {
                         ApplicationInfo application = new ApplicationInfo();
-                        ResolveInfo info = apps.get(j);
+                        LauncherActivityInfo info = apps.get(j);
 
-                        application.title = info.loadLabel(manager);
-                        application.setActivity(new ComponentName(
-                                    info.activityInfo.applicationInfo.packageName,
-                                    info.activityInfo.name),
+                        application.title = info.getLabel().toString();
+                        application.setActivity(info.getComponentName(),
                                 Intent.FLAG_ACTIVITY_NEW_TASK
                                 | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
-                        application.icon = info.activityInfo.loadIcon(manager);
-                        if (application.componentName.getPackageName().equals(list_custom_apps[i])) {
-                            if (application.componentName.getPackageName().equals("com.android.gallery3d") &&
+                        application.icon = info.getBadgedIcon(iconDpi);
+                        if (info.getComponentName().getPackageName().equals(list_custom_apps[i])) {
+                            if (info.getComponentName().getPackageName().equals("com.android.gallery3d") &&
                                     application.intent.toString().contains("camera"))
                                 continue;
 
@@ -805,6 +811,24 @@ public class Launcher extends Activity{
         return map;
     }
 
+    private static final Comparator<LauncherActivityInfo> getAppNameComparator() {
+        final Collator collator = Collator.getInstance();
+        return new Comparator<LauncherActivityInfo>() {
+            public final int compare(LauncherActivityInfo a, LauncherActivityInfo b) {
+                if (a.getUser().equals(b.getUser())) {
+                    int result = collator.compare(a.getLabel().toString(), b.getLabel().toString());
+                    if (result == 0) {
+                        result = a.getName().compareTo(b.getName());
+                    }
+                    return result;
+                } else {
+                    // TODO: Order this based on profile type rather than string compares.
+                    return a.getUser().toString().compareTo(b.getUser().toString());
+                }
+            }
+        };
+    }
+
     private void loadApplications() {
         List<Map<String, Object>> HomeShortCutList = new ArrayList<Map<String, Object>>();
         List<Map<String, Object>> videoShortCutList = new ArrayList<Map<String, Object>>();
@@ -817,8 +841,10 @@ public class Launcher extends Activity{
         Intent mainIntent = new Intent(Intent.ACTION_MAIN, null);
         mainIntent.addCategory(Intent.CATEGORY_LAUNCHER);
 
-        final List<ResolveInfo> apps = manager.queryIntentActivities(mainIntent, 0);
-        Collections.sort(apps, new ResolveInfo.DisplayNameComparator(manager));
+        LauncherApps launcherApps = (LauncherApps)
+                getSystemService(Context.LAUNCHER_APPS_SERVICE);
+        final List<LauncherActivityInfo> apps = launcherApps.getActivityList(null, android.os.Process.myUserHandle());
+        Collections.sort(apps, getAppNameComparator());
 
         HomeShortCutList.clear();
         videoShortCutList.clear();
@@ -835,20 +861,20 @@ public class Launcher extends Activity{
             recommendShortCutList = loadShortcutList(manager, apps, list_recommendShortcut);
             musicShortCutList = loadShortcutList(manager, apps, list_musicShortcut);
             localShortCutList = loadShortcutList(manager, apps, list_localShortcut);
-
+            ActivityManager activityManager =
+                (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+            int iconDpi = activityManager.getLauncherLargeIconDensity();
             if (apps != null) {
                 final int count = apps.size();
                 for (int i = 0; i < count; i++) {
                     ApplicationInfo application = new ApplicationInfo();
-                    ResolveInfo info = apps.get(i);
+                    LauncherActivityInfo info = apps.get(i);
 
-                    application.title = info.loadLabel(manager);
-                    application.setActivity(new ComponentName(
-                                info.activityInfo.applicationInfo.packageName,
-                                info.activityInfo.name),
+                    application.title = info.getLabel().toString();
+                    application.setActivity(info.getComponentName(),
                             Intent.FLAG_ACTIVITY_NEW_TASK
                             | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
-                    application.icon = info.activityInfo.loadIcon(manager);
+                    application.icon = info.getBadgedIcon(iconDpi);
 
                     Map<String, Object> map = new HashMap<String, Object>();
                     map.put("item_name", application.title.toString());
