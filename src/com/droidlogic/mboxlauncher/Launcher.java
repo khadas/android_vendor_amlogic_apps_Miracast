@@ -168,34 +168,6 @@ public class Launcher extends Activity{
             // displayDate();
             setRectOnKeyListener();
             sendWeatherBroadcast();
-
-            IntentFilter filter = new IntentFilter();
-            filter.addAction(Intent.ACTION_MEDIA_EJECT);
-            filter.addAction(Intent.ACTION_MEDIA_UNMOUNTED);
-            filter.addAction(Intent.ACTION_MEDIA_MOUNTED);
-            filter.addDataScheme("file");
-            registerReceiver(mediaReceiver, filter);
-
-            filter = new IntentFilter();
-            filter.addAction(net_change_action);
-            filter.addAction(wifi_signal_action);
-            filter.addAction(Intent.ACTION_TIME_TICK);
-            filter.addAction(Intent.ACTION_TIME_CHANGED);
-            filter.addAction(weather_receive_action);
-            filter.addAction(outputmode_change_action);
-            filter.addAction(Intent.ACTION_EXTERNAL_APPLICATIONS_AVAILABLE);
-            filter.addAction(Intent.ACTION_EXTERNAL_APPLICATIONS_UNAVAILABLE);
-            registerReceiver(netReceiver, filter);
-
-            filter = new IntentFilter(Intent.ACTION_PACKAGE_ADDED);
-            filter.addAction(Intent.ACTION_PACKAGE_REMOVED);
-            filter.addAction(Intent.ACTION_PACKAGE_CHANGED);
-            filter.addDataScheme("package");
-            registerReceiver(appReceiver, filter);
-
-            filter = new IntentFilter();
-            filter.addAction("com.droidlogic.instaboot.RELOAD_APP_COMPLETED");
-            registerReceiver(instabootReceiver, filter);
         }
 
     @Override
@@ -227,6 +199,40 @@ public class Launcher extends Activity{
             }
             IntoCustomActivity = false;
         }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        //Log.d(TAG, "------onStart");
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(Intent.ACTION_MEDIA_EJECT);
+        filter.addAction(Intent.ACTION_MEDIA_UNMOUNTED);
+        filter.addAction(Intent.ACTION_MEDIA_MOUNTED);
+        filter.addDataScheme("file");
+        registerReceiver(mediaReceiver, filter);
+
+        filter = new IntentFilter();
+        filter.addAction(net_change_action);
+        filter.addAction(wifi_signal_action);
+        filter.addAction(Intent.ACTION_TIME_TICK);
+        filter.addAction(Intent.ACTION_TIME_CHANGED);
+        filter.addAction(weather_receive_action);
+        filter.addAction(outputmode_change_action);
+        filter.addAction(Intent.ACTION_EXTERNAL_APPLICATIONS_AVAILABLE);
+        filter.addAction(Intent.ACTION_EXTERNAL_APPLICATIONS_UNAVAILABLE);
+        registerReceiver(netReceiver, filter);
+
+        filter = new IntentFilter(Intent.ACTION_PACKAGE_ADDED);
+        filter.addAction(Intent.ACTION_PACKAGE_REMOVED);
+        filter.addAction(Intent.ACTION_PACKAGE_CHANGED);
+        filter.addDataScheme("package");
+        registerReceiver(appReceiver, filter);
+
+        filter = new IntentFilter();
+        filter.addAction("com.droidlogic.instaboot.RELOAD_APP_COMPLETED");
+        registerReceiver(instabootReceiver, filter);
+    }
+
     @Override
         protected void onPause() {
             super.onPause();
@@ -235,11 +241,17 @@ public class Launcher extends Activity{
         }
 
     @Override
+    protected void onStop() {
+        super.onStop();
+        //Log.d(TAG, "------onStop");
+        unregisterReceiver(mediaReceiver);
+        unregisterReceiver(netReceiver);
+        unregisterReceiver(appReceiver);
+        unregisterReceiver(instabootReceiver);
+    }
+
+    @Override
         protected void onDestroy(){
-            unregisterReceiver(mediaReceiver);
-            unregisterReceiver(netReceiver);
-            unregisterReceiver(appReceiver);
-            unregisterReceiver(instabootReceiver);
             super.onDestroy();
         }
 
