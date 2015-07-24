@@ -254,6 +254,12 @@ public class WiFiDirectMainActivity extends Activity implements
                 Log.d(TAG, "removeGroup Failure");
             }
         });
+
+        File ipFile = new File(mFolder, "dnsmasq.leases");
+        if (ipFile.exists ()) {
+            Log.d(TAG, "delete" + ipFile.toString());
+            ipFile.delete();
+        }
         /* enable backlight */
         mReceiver = new WiFiDirectBroadcastReceiver (manager, channel, this);
         PowerManager pm = (PowerManager) getSystemService (Context.POWER_SERVICE);
