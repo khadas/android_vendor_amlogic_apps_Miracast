@@ -213,6 +213,10 @@ public class Launcher extends Activity{
                 //frameView.setVisibility(View.INVISIBLE);
             }
 
+            // For surface lost focus.
+            if (animIsRun) {
+                initStaticVariable();
+            }
             displayShortcuts();
             displayStatus();
             displayDate();
