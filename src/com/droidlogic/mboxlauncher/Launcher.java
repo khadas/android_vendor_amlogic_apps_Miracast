@@ -19,6 +19,8 @@ import android.content.ComponentName;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.Instrumentation;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.BitmapFactory;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.util.Log;
@@ -153,6 +155,8 @@ public class Launcher extends Activity{
             super.onCreate(savedInstanceState);
             setContentView(R.layout.main);
             Log.d(TAG, "------onCreate");
+            Bitmap bm = BitmapFactory.decodeResource(this.getResources(), R.drawable.bg);
+            this.getWindow().setBackgroundDrawable(new BitmapDrawable(this.getResources(), bm));
 
             if (DesUtils.isAmlogicChip() == false) {
                 finish();
@@ -163,7 +167,7 @@ public class Launcher extends Activity{
 
             initStaticVariable();
             initChildViews();
-            displayShortcuts();
+            //displayShortcuts();
             // displayStatus();
             // displayDate();
             setRectOnKeyListener();
@@ -244,6 +248,8 @@ public class Launcher extends Activity{
             unregisterReceiver(netReceiver);
             unregisterReceiver(appReceiver);
             unregisterReceiver(instabootReceiver);
+            this.getWindow().setBackgroundDrawable(null);
+            System.gc();
             super.onDestroy();
         }
 
@@ -798,11 +804,11 @@ public class Launcher extends Activity{
                             list.add(map);
                             break;
                         }
+                        application.icon.setCallback(null);
                     }
                 }
             }
         }
-
         return list;
     }
 
@@ -849,14 +855,6 @@ public class Launcher extends Activity{
                 getSystemService(Context.LAUNCHER_APPS_SERVICE);
         final List<LauncherActivityInfo> apps = launcherApps.getActivityList(null, android.os.Process.myUserHandle());
         Collections.sort(apps, getAppNameComparator());
-
-        HomeShortCutList.clear();
-        videoShortCutList.clear();
-        recommendShortCutList.clear();
-        appShortCutList.clear();
-        musicShortCutList.clear();
-        localShortCutList.clear();
-
         loadCustomApps(CustomAppsActivity.SHORTCUT_PATH);
 
         if (updateAllShortcut == true) {
@@ -887,6 +885,7 @@ public class Launcher extends Activity{
                     map.put("item_symbol", application.componentName);
                     //Log.d(TAG, ""+ application.componentName.getPackageName() + " path="+application.intent);
                     appShortCutList.add(map);
+                    application.icon.setCallback(null);
                 }
             }
 
@@ -937,6 +936,13 @@ public class Launcher extends Activity{
             HomeShortCutList.add(map);
             homeShortcutView.setLayoutView(HomeShortCutList, 0);
         }
+
+        HomeShortCutList.clear();
+        videoShortCutList.clear();
+        recommendShortCutList.clear();
+        appShortCutList.clear();
+        musicShortCutList.clear();
+        localShortCutList.clear();
     }
 
     private void setRectOnKeyListener(){
