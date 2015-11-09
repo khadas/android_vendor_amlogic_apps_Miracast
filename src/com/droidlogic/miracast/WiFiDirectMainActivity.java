@@ -69,7 +69,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.StringTokenizer;
-import org.apache.http.util.EncodingUtils;
 
 /**
  * @ClassName WiFiDirectMainActivity
@@ -755,7 +754,7 @@ public class WiFiDirectMainActivity extends Activity implements
             int lenght = in.available();
             byte[]  buffer = new byte[lenght];
             in.read(buffer);
-            result = EncodingUtils.getString(buffer, ENCODING);
+            result = new String(buffer, ENCODING);
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
