@@ -119,7 +119,7 @@ static int connect(const char *sourceHost, int32_t sourcePort)
         mSinkLooper->registerHandler(mSink);
         mSinkLooper->registerHandler(mHandler);
 
-        mSink->setHandlerId(mHandler->id());
+        mSink->setSinkHandler(mHandler);
     }
 
     ALOGI("SinkHandler mSink=%d, mHandler=%d", mSink->id(), mHandler->id());
