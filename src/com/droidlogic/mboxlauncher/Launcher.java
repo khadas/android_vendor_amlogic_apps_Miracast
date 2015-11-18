@@ -560,7 +560,7 @@ public class Launcher extends Activity{
                 for (File file : storage_file.listFiles()) {
                     String path = file.getAbsolutePath();
                     if (path.startsWith(STORAGE_PATH + "/" + media_name)
-                        && Environment.getExternalStorageState(file).equals(Environment.MEDIA_MOUNTED)) {
+                            && Environment.getExternalStorageState(file).equals(Environment.MEDIA_MOUNTED)) {
                         return true;
                     }
                 }
@@ -775,7 +775,7 @@ public class Launcher extends Activity{
         Map<String, Object> map = null;
         List<Map<String, Object>> list = new ArrayList<Map<String, Object>>();
         ActivityManager activityManager =
-                (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+            (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
         int iconDpi = activityManager.getLauncherLargeIconDensity();
 
         if (list_custom_apps != null) {
@@ -852,14 +852,15 @@ public class Launcher extends Activity{
         mainIntent.addCategory(Intent.CATEGORY_LAUNCHER);
 
         LauncherApps launcherApps = (LauncherApps)
-                getSystemService(Context.LAUNCHER_APPS_SERVICE);
+            getSystemService(Context.LAUNCHER_APPS_SERVICE);
         final List<LauncherActivityInfo> apps = launcherApps.getActivityList(null, android.os.Process.myUserHandle());
         Collections.sort(apps, getAppNameComparator());
         loadCustomApps(CustomAppsActivity.SHORTCUT_PATH);
 
         if (updateAllShortcut == true) {
             HomeShortCutList = loadShortcutList(manager, apps, list_homeShortcut);
-            videoShortCutList = loadShortcutList(manager, apps, list_videoShortcut);
+            if (!mSystemControlManager.getPropertyBoolean("ro.platform.has.tvuimode", false))
+                videoShortCutList = loadShortcutList(manager, apps, list_videoShortcut);
             recommendShortCutList = loadShortcutList(manager, apps, list_recommendShortcut);
             musicShortCutList = loadShortcutList(manager, apps, list_musicShortcut);
             localShortCutList = loadShortcutList(manager, apps, list_localShortcut);
@@ -891,17 +892,20 @@ public class Launcher extends Activity{
 
             Map<String, Object> map = getAddMap();
             HomeShortCutList.add(map);
-            videoShortCutList.add(map);
+            if (!mSystemControlManager.getPropertyBoolean("ro.platform.has.tvuimode", false))
+                videoShortCutList.add(map);
             musicShortCutList.add(map);
             localShortCutList.add(map);
 
             homeShortcutView.setLayoutView(HomeShortCutList, 0);
-            videoShortcutView.setLayoutView(videoShortCutList, 1);
+            if (!mSystemControlManager.getPropertyBoolean("ro.platform.has.tvuimode", false))
+                videoShortcutView.setLayoutView(videoShortCutList, 1);
             recommendShortcutView.setLayoutView(recommendShortCutList, 1);
             appShortcutView.setLayoutView(appShortCutList, 1);
             musicShortcutView.setLayoutView(musicShortCutList, 1);
             localShortcutView.setLayoutView(localShortCutList, 1);
-            tx_video_allcount.setText("/" + Integer.toString(videoShortCutList.size()));
+            if (!mSystemControlManager.getPropertyBoolean("ro.platform.has.tvuimode", false))
+                tx_video_allcount.setText("/" + Integer.toString(videoShortCutList.size()));
             tx_recommend_allcount.setText("/" + Integer.toString(recommendShortCutList.size()));
             tx_app_allcount.setText("/" + Integer.toString(appShortCutList.size()));
             tx_music_allcount.setText("/" + Integer.toString(musicShortCutList.size()));
@@ -938,7 +942,8 @@ public class Launcher extends Activity{
         }
 
         HomeShortCutList.clear();
-        videoShortCutList.clear();
+        if (!mSystemControlManager.getPropertyBoolean("ro.platform.has.tvuimode", false))
+            videoShortCutList.clear();
         recommendShortCutList.clear();
         appShortCutList.clear();
         musicShortCutList.clear();
@@ -1358,16 +1363,16 @@ public class Launcher extends Activity{
 
     private BroadcastReceiver instabootReceiver = new BroadcastReceiver(){
         @Override
-        public void onReceive(Context context, Intent intent) {
+            public void onReceive(Context context, Intent intent) {
 
-            final String action = intent.getAction();
-            if ("com.droidlogic.instaboot.RELOAD_APP_COMPLETED".equals(action)) {
-                Log.e(TAG,"reloadappcompleted");
-                updateAllShortcut = true;
-                ifChangedShortcut = true;
-                displayShortcuts();
+                final String action = intent.getAction();
+                if ("com.droidlogic.instaboot.RELOAD_APP_COMPLETED".equals(action)) {
+                    Log.e(TAG,"reloadappcompleted");
+                    updateAllShortcut = true;
+                    ifChangedShortcut = true;
+                    displayShortcuts();
+                }
             }
-        }
     };
 
 }

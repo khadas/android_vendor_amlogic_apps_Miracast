@@ -4,6 +4,7 @@
     <string name="hello">Hello World</string>
     <string name="app_name">新媒体盒启动器</string>
     <string name="str_video">在线视频</string>
+    <string name="str_tvapp">电视 </string>
     <string name="str_recommend">推荐</string>
     <string name="str_setting">设置</string>
     <string name="str_app">我的应用</string>
