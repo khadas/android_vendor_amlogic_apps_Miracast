@@ -21,10 +21,12 @@ public class MyOnTouchListener implements OnTouchListener{
     private int NUM_LOCAL = 4;
     private Context mContext;
     private Object appPath;
+    SystemControlManager mSystemControlManager;
 
     public MyOnTouchListener(Context context, Object path){
         mContext = context;
         appPath = path;
+        mSystemControlManager = new SystemControlManager(mContext);
     }
 
     public boolean onTouch (View view, MotionEvent event)  {
@@ -40,12 +42,11 @@ public class MyOnTouchListener implements OnTouchListener{
                 intent .setComponent(new ComponentName("com.android.tv.settings", "com.android.tv.settings.MainSettings"));
                 mContext.startActivity(intent);
             } else if (vName.equals("img_video")) {
-                SystemControlManager scm = new SystemControlManager(mContext);
-                if (scm.getPropertyBoolean("ro.platform.has.tvuimode", false)) {
+                if (mSystemControlManager.getPropertyBoolean("ro.platform.has.tvuimode", false)) {
                     Intent intent = new Intent();
                     intent .setComponent(new ComponentName("com.droidlogic.tvsource", "com.droidlogic.tvsource.DroidLogicTv"));
                     mContext.startActivity(intent);
-                } else if (scm.getPropertyBoolean("ro.platform.has.mbxuimode", false)) {
+                } else if (mSystemControlManager.getPropertyBoolean("ro.platform.has.mbxuimode", false)) {
                     showMenuView(NUM_VIDEO, view);
                 }
             }else if (vName.equals("img_recommend")) {
@@ -77,6 +78,9 @@ public class MyOnTouchListener implements OnTouchListener{
     }
 
     private void showMenuView(int num, View view){
+        if (mSystemControlManager.getPropertyBoolean("ro.platform.has.tvuimode", false))
+            num = num - 1;
+
         Launcher.saveHomeFocusView = view;
         Launcher.isShowHomePage = false;
         Launcher.layoutScaleShadow.setVisibility(View.INVISIBLE);

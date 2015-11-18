@@ -30,10 +30,12 @@ public class MyOnKeyListener implements OnKeyListener{
 
     private Context mContext;
     private Object appPath;
+    SystemControlManager mSystemControlManager;
 
     public MyOnKeyListener(Context context, Object path){
         mContext = context;
         appPath = path;
+        mSystemControlManager = new SystemControlManager(mContext);
     }
     public boolean onKey(View view, int keyCode, KeyEvent event)  {
         if (Launcher.animIsRun)
@@ -60,12 +62,11 @@ public class MyOnKeyListener implements OnKeyListener{
                 Launcher.IntoApps = true;
                 return true;
             } else if (vName.equals("img_video")) {
-                SystemControlManager scm = new SystemControlManager(mContext);
-                if (scm.getPropertyBoolean("ro.platform.has.tvuimode", false)) {
+                if (mSystemControlManager.getPropertyBoolean("ro.platform.has.tvuimode", false)) {
                     Intent intent = new Intent();
                     intent .setComponent(new ComponentName("com.droidlogic.tvsource", "com.droidlogic.tvsource.DroidLogicTv"));
                     mContext.startActivity(intent);
-                } else if (scm.getPropertyBoolean("ro.platform.has.mbxuimode", false)) {
+                } else if (mSystemControlManager.getPropertyBoolean("ro.platform.has.mbxuimode", false)) {
                     showMenuView(NUM_VIDEO, view);
                 }
                 return true;
@@ -122,6 +123,9 @@ public class MyOnKeyListener implements OnKeyListener{
     }
 
     private void showMenuView(int num, View view){
+        if (mSystemControlManager.getPropertyBoolean("ro.platform.has.tvuimode", false))
+            num = num - 1;
+
         Launcher.saveHomeFocusView = view;
         Launcher.isShowHomePage = false;
         Launcher.layoutScaleShadow.setVisibility(View.INVISIBLE);

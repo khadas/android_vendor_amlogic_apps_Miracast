@@ -37,7 +37,7 @@ class ApplicationInfo {
     boolean filtered;
 
     ComponentName componentName;
-    
+
     /**
      * Creates the application intent based on a component name and various launch flags.
      *
