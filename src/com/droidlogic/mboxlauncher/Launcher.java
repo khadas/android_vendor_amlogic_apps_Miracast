@@ -23,6 +23,9 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.BitmapFactory;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.os.storage.DiskInfo;
+import android.os.storage.StorageManager;
+import android.os.storage.VolumeInfo;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -149,12 +152,14 @@ public class Launcher extends Activity{
     private SystemControlManager mSystemControlManager;
     private IWindowManager mWindowManager;
     private static float scale_value;
+    private StorageManager mStorageManager;
 
     @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             setContentView(R.layout.main);
             Log.d(TAG, "------onCreate");
+            mStorageManager = (StorageManager)getSystemService(Context.STORAGE_SERVICE);
             Bitmap bm = BitmapFactory.decodeResource(this.getResources(), R.drawable.bg);
             this.getWindow().setBackgroundDrawable(new BitmapDrawable(this.getResources(), bm));
 
@@ -531,13 +536,13 @@ public class Launcher extends Activity{
             list.add(map);
         }
 
-        if (isExternelStorageExists(SDCARD_FILE_NAME) == true) {
+        if (isSdcardExist()) {
             map = new HashMap<String, Object>();
             map.put("item_type", R.drawable.img_status_sdcard);
             list.add(map);
         }
 
-        if (isExternelStorageExists(UDISK_FILE_NAME) == true) {
+        if (isUdiskExist()) {
             map = new HashMap<String, Object>();
             map.put("item_type", R.drawable.img_status_usb);
             list.add(map);
@@ -552,21 +557,31 @@ public class Launcher extends Activity{
         return list;
     }
 
-    public boolean isExternelStorageExists(String media_name){
-        File storage_file = new File(STORAGE_PATH);
-
-        if (storage_file.exists() && storage_file.isDirectory()) {
-            if (storage_file.listFiles() != null &&  storage_file.listFiles().length > 0) {
-                for (File file : storage_file.listFiles()) {
-                    String path = file.getAbsolutePath();
-                    if (path.startsWith(STORAGE_PATH + "/" + media_name)
-                            && Environment.getExternalStorageState(file).equals(Environment.MEDIA_MOUNTED)) {
-                        return true;
-                    }
+    private boolean isSdcardExist() {
+        List<VolumeInfo> volumes = mStorageManager.getVolumes();
+        Collections.sort(volumes, VolumeInfo.getDescriptionComparator());
+        for (VolumeInfo vol : volumes) {
+            if (vol != null && vol.isMountedReadable() && vol.getType() == VolumeInfo.TYPE_PUBLIC) {
+                DiskInfo disk = vol.getDisk();
+                if (disk.isSd()) {
+                    return true;
                 }
             }
         }
+        return false;
+    }
 
+    private boolean isUdiskExist() {
+        List<VolumeInfo> volumes = mStorageManager.getVolumes();
+        Collections.sort(volumes, VolumeInfo.getDescriptionComparator());
+        for (VolumeInfo vol : volumes) {
+            if (vol != null && vol.isMountedReadable() && vol.getType() == VolumeInfo.TYPE_PUBLIC) {
+                DiskInfo disk = vol.getDisk();
+                if (disk.isUsb()) {
+                    return true;
+                }
+            }
+        }
         return false;
     }
 
