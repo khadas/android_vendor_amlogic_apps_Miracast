@@ -10,8 +10,7 @@
     <string name="str_app">我的應用</string>
     <string name="str_music">音樂</string>
     <string name="str_local">本地播放</string>
-	<string name="str_nospace">快捷欄沒有空間了！</string>
-
+    <string name="str_nospace">快捷欄沒有空間了！</string>
     <string name="str_add">添加</string>
-    <string name="str_exit">退出</string>
+    <string name="str_no_signal">無信號</string>
 </resources>

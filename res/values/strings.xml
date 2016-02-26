@@ -4,7 +4,7 @@
     <string name="hello">Hello World</string>
     <string name="app_name">MediaBox launcher</string>
     <string name="str_video">Online Video </string>
-    <string name="str_tvapp">TV APP </string>
+    <string name="str_tvapp">TV App </string>
     <string name="str_recommend">Recommend</string>
     <string name="str_setting">Settings</string>
     <string name="str_app">My Apps</string>
@@ -15,5 +15,5 @@
     <string name="str_add">Add</string>
     <string name="img_desc">image</string>
     <string name="str_exit">Exit</string>
-    
+    <string name="str_no_signal">No signal</string>
 </resources>

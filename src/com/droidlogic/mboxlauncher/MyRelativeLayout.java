@@ -123,6 +123,8 @@ public class MyRelativeLayout extends RelativeLayout{
                         this.bringToFront();
                         ((View)this.getParent()).bringToFront();
                         Launcher.viewHomePage.bringToFront();
+                        if (((Launcher)mContext).needPreviewFeture())
+                            ((Launcher)mContext).setTvViewFront();
                     }
                     this.startAnimation(anim);
                 }
@@ -250,15 +252,29 @@ public class MyRelativeLayout extends RelativeLayout{
         int screen_mode;
         String text = null;
 
+        imgRect = new Rect();
+        mView.getGlobalVisibleRect(imgRect);
+        //setFramePosition(imgRect);
+
         //Launcher.trans_frameView.bringToFront();
         Launcher.layoutScaleShadow.bringToFront();
         // Launcher.frameView.bringToFront();
 
-        screen_mode = getScreenMode(mView);
+        if (((Launcher)mContext).needPreviewFeture()) {
+            if (mView.getId() == R.id.layout_video)
+                ((Launcher)mContext).setTvViewFront();
 
-        imgRect = new Rect();
-        mView.getGlobalVisibleRect(imgRect);
-        //setFramePosition(imgRect);
+            if (!Launcher.isShowHomePage) {
+                if (((Launcher)mContext).tvViewMode != Launcher.TV_MODE_TOP
+                    && (imgRect.top + imgRect.bottom) / 2 >  ((Launcher)mContext).dipToPx(360))
+                    ((Launcher)mContext).setTvViewPosition(Launcher.TV_MODE_TOP);
+                else if (((Launcher)mContext).tvViewMode != Launcher.TV_MODE_BOTTOM
+                    && (imgRect.top + imgRect.bottom) / 2 <= ((Launcher)mContext).dipToPx(360))
+                    ((Launcher)mContext).setTvViewPosition(Launcher.TV_MODE_BOTTOM);
+            }
+        }
+
+        screen_mode = getScreenMode(mView);
 
         scaleImage = (ImageView)Launcher.layoutScaleShadow.findViewById(R.id.img_focus_unit);
         scaleText = (TextView)Launcher.layoutScaleShadow.findViewById(R.id.tx_focus_unit);
@@ -364,7 +380,7 @@ public class MyRelativeLayout extends RelativeLayout{
         //Launcher.frameView.setLayoutParams(lp);
     }
 
-    private void setViewPosition(View view, Rect rect){
+    public static void setViewPosition(View view, Rect rect){
         android.widget.AbsoluteLayout.LayoutParams lp = new android.widget.AbsoluteLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT, 0, 0);
 
         lp.width = rect.width();

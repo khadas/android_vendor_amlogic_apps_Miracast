@@ -17,8 +17,6 @@ import android.view.animation.ScaleAnimation;
 import android.view.animation.Animation.AnimationListener;
 import android.graphics.Rect;
 
-import com.droidlogic.app.SystemControlManager;
-
 public class MyOnKeyListener implements OnKeyListener{
     private final static String TAG = "MyOnKeyListener";
 
@@ -30,12 +28,10 @@ public class MyOnKeyListener implements OnKeyListener{
 
     private Context mContext;
     private Object appPath;
-    SystemControlManager mSystemControlManager;
 
     public MyOnKeyListener(Context context, Object path){
         mContext = context;
         appPath = path;
-        mSystemControlManager = new SystemControlManager(mContext);
     }
     public boolean onKey(View view, int keyCode, KeyEvent event)  {
         if (Launcher.animIsRun)
@@ -56,20 +52,16 @@ public class MyOnKeyListener implements OnKeyListener{
             // Log.d(TAG, "@@@@@@@@@@@@@@@@@@@@ viewname=" + vName);
             if (vName.equals("img_setting")) {
                 Launcher.saveHomeFocusView = view;
-                Intent intent = new Intent();
-                intent .setComponent(new ComponentName("com.android.tv.settings", "com.android.tv.settings.MainSettings"));
-                mContext.startActivity(intent);
+                ((Launcher)mContext).startTvSettings();
                 Launcher.IntoApps = true;
-                return true;
             } else if (vName.equals("img_video")) {
-                if (mSystemControlManager.getPropertyBoolean("ro.platform.has.tvuimode", false)) {
-                    Intent intent = new Intent();
-                    intent .setComponent(new ComponentName("com.droidlogic.tvsource", "com.droidlogic.tvsource.DroidLogicTv"));
-                    mContext.startActivity(intent);
-                } else if (mSystemControlManager.getPropertyBoolean("ro.platform.has.mbxuimode", false)) {
+                if (((Launcher)mContext).isTvFeture()) {
+                    Launcher.IntoApps = true;
+                    ((Launcher)mContext).startTvApp();
+                } else {
                     showMenuView(NUM_VIDEO, view);
+                    return true;
                 }
-                return true;
             }else if (vName.equals("img_recommend")) {
                 showMenuView(NUM_RECOMMEND, view);
                 return true;
@@ -87,8 +79,13 @@ public class MyOnKeyListener implements OnKeyListener{
                     if (Launcher.isShowHomePage) {
                         Launcher.saveHomeFocusView = view;
                     }
-                    mContext.startActivity((Intent)appPath);
+
+                    Intent intent = (Intent)appPath;
                     Launcher.IntoApps = true;
+                    if (intent.getComponent().flattenToString().equals(Launcher.COMPONENT_TV_APP))
+                        ((Launcher)mContext).startTvApp();
+                    else
+                        mContext.startActivity(intent);
                 }
             }
         }else if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT && !Launcher.isShowHomePage) {
@@ -123,7 +120,7 @@ public class MyOnKeyListener implements OnKeyListener{
     }
 
     private void showMenuView(int num, View view){
-        if (mSystemControlManager.getPropertyBoolean("ro.platform.has.tvuimode", false))
+        if (((Launcher)mContext).isTvFeture())
             num = num - 1;
 
         Launcher.saveHomeFocusView = view;

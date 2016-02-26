@@ -16,13 +16,23 @@ import android.content.pm.ResolveInfo;
 import android.content.pm.LauncherActivityInfo;
 import android.content.pm.LauncherApps;
 import android.content.ComponentName;
+import android.database.ContentObserver;
+import android.database.IContentObserver;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.Instrumentation;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.BitmapFactory;
 import android.graphics.Bitmap;
+import android.media.tv.TvContract;
+import android.media.tv.TvContract.Channels;
+import android.media.tv.TvView;
+import android.media.tv.TvInputInfo;
+import android.media.tv.TvInputManager;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.Settings;
+import android.text.TextUtils;
 import android.os.storage.DiskInfo;
 import android.os.storage.StorageManager;
 import android.os.storage.VolumeInfo;
@@ -50,6 +60,10 @@ import android.text.format.DateFormat;
 import android.graphics.Point;
 
 import com.droidlogic.app.SystemControlManager;
+import com.droidlogic.app.tv.ChannelInfo;
+import com.droidlogic.app.tv.DroidLogicTvUtils;
+import com.droidlogic.app.tv.TvControlManager;
+import com.droidlogic.app.tv.TvDataBaseManager;
 
 import java.io.File;
 import java.io.FileReader;
@@ -92,7 +106,12 @@ public class Launcher extends Activity{
     public static boolean isRealOutputMode;
     public static boolean isNative4k2k;
     public static boolean isNative720;
+
     public static String current_shortcutHead = "Home_Shortcut:";
+    public static String COMPONENT_TV_APP = "com.droidlogic.tvsource/com.droidlogic.tvsource.DroidLogicTv";
+    public static String COMPONENT_TV_SETTINGS = "com.android.tv.settings/com.android.tv.settings.MainSettings";
+    public static String DEFAULT_INPUT_ID = "com.droidlogic.tvinput/.services.ATVInputService/HW0";
+    public static final String PROP_TV_PREVIEW = "tv.is.preview.window";
 
     public static View prevFocusedView;
     public static RelativeLayout layoutScaleShadow;
@@ -132,6 +151,32 @@ public class Launcher extends Activity{
     private TextView tx_app_allcount = null;
     private TextView tx_music_allcount = null;
     private TextView tx_local_allcount = null;
+
+    private TvView tvView = null;
+    private TextView tvPrompt = null;
+    public static final int TV_MODE_NORMAL = 0;
+    public static final int TV_MODE_TOP= 1;
+    public static final int TV_MODE_BOTTOM = 2;
+    private static final int TV_WINDOW_WIDTH = 310;
+    private static final int TV_WINDOW_HEIGHT = 174;
+    private static final int TV_WINDOW_NORMAL_LEFT = 120;
+    private static final int TV_WINDOW_NORMAL_TOP = 197;
+    private static final int TV_WINDOW_RIGHT_LEFT = 1279 - TV_WINDOW_WIDTH;
+    private static final int TV_WINDOW_TOP_TOP = 0;
+    private static final int TV_WINDOW_BOTTOM_TOP = 719 - TV_WINDOW_HEIGHT;
+    private static final int DEFAULT_DELAY = 20;
+    private static final int MOVE_STEP = 40;
+    private static final int TV_MSG_ANIM = 0;
+    private static final int TV_MSG_PLAY_TV = 1;
+    public int tvViewMode = -1;
+    private int mTvTop = -1;
+    private boolean isRadioChannel = false;
+    private ChannelObserver mChannelObserver;
+    private TvInputManager mTvInputManager;
+    private TvInputChangeCallback mTvInputChangeCallback;
+    private TvDataBaseManager mTvDataBaseManager;
+    private String mTvInputId;
+    private Uri mChannelUri;
 
     public static Bitmap screenShot;
     public static Bitmap screenShot_keep;
@@ -207,12 +252,24 @@ public class Launcher extends Activity{
             registerReceiver(instabootReceiver, filter);
         }
 
+    public boolean isMboxFeture () {
+        return mSystemControlManager.getPropertyBoolean("ro.platform.has.mbxuimode", false);
+    }
+
+    public boolean isTvFeture () {
+        return mSystemControlManager.getPropertyBoolean("ro.platform.has.tvuimode", false);
+    }
+
+    public boolean needPreviewFeture () {
+        return isTvFeture() && mSystemControlManager.getPropertyBoolean("tv.need.preview_window", true);
+    }
+
     @Override
         protected void onResume() {
             super.onResume();
             Log.d(TAG, "------onResume");
 
-            if (mSystemControlManager.getPropertyBoolean("ro.platform.has.mbxuimode", false)) {
+            if (isMboxFeture()) {
                 setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
             }
 
@@ -238,6 +295,12 @@ public class Launcher extends Activity{
             if (IntoCustomActivity == true) {
                 setAnimationScale(true);
             }
+
+            if (needPreviewFeture() && !IntoCustomActivity) {
+                tvView.setVisibility(View.VISIBLE);
+                mTvHandler.sendEmptyMessage(TV_MSG_PLAY_TV);
+            }
+
             IntoCustomActivity = false;
         }
     @Override
@@ -245,6 +308,14 @@ public class Launcher extends Activity{
             super.onPause();
             Log.d(TAG, "------onPause");
             prevFocusedView = null;
+        }
+
+    @Override
+        protected void onStop() {
+            if (needPreviewFeture())
+                releaseTvView();
+            super.onStop();
+            Log.d(TAG, "------onStop");
         }
 
     @Override
@@ -437,21 +508,14 @@ public class Launcher extends Activity{
         tx_local_count = (TextView)findViewById(R.id.tx_local_count);
         tx_local_allcount = (TextView)findViewById(R.id.tx_local_allcount);
 
-        /*new Thread( new Runnable() {
-          public void run() {
-          try{
-          Thread.sleep(500);
-          } catch (Exception e) {
-          Log.d(TAG,""+e);
-          }
-        //Message msg = new Message();
-        //msg.what = 2;
-        mHandler.sendEmptyMessage(2);
+        tvView = (TvView)findViewById(R.id.tv_view);
+        tvPrompt = (TextView)findViewById(R.id.tx_tv_prompt);
+        if (needPreviewFeture())
+            setTvView();
+        else {
+            tvView.setVisibility(View.GONE);
+            tvPrompt.setVisibility(View.GONE);
         }
-        }).start();
-         */
-
-
     }
 
     private void displayShortcuts() {
@@ -874,7 +938,7 @@ public class Launcher extends Activity{
 
         if (updateAllShortcut == true) {
             HomeShortCutList = loadShortcutList(manager, apps, list_homeShortcut);
-            if (!mSystemControlManager.getPropertyBoolean("ro.platform.has.tvuimode", false))
+            if (!isTvFeture())
                 videoShortCutList = loadShortcutList(manager, apps, list_videoShortcut);
             recommendShortCutList = loadShortcutList(manager, apps, list_recommendShortcut);
             musicShortCutList = loadShortcutList(manager, apps, list_musicShortcut);
@@ -907,19 +971,19 @@ public class Launcher extends Activity{
 
             Map<String, Object> map = getAddMap();
             HomeShortCutList.add(map);
-            if (!mSystemControlManager.getPropertyBoolean("ro.platform.has.tvuimode", false))
+            if (!isTvFeture())
                 videoShortCutList.add(map);
             musicShortCutList.add(map);
             localShortCutList.add(map);
 
             homeShortcutView.setLayoutView(HomeShortCutList, 0);
-            if (!mSystemControlManager.getPropertyBoolean("ro.platform.has.tvuimode", false))
+            if (!isTvFeture())
                 videoShortcutView.setLayoutView(videoShortCutList, 1);
             recommendShortcutView.setLayoutView(recommendShortCutList, 1);
             appShortcutView.setLayoutView(appShortCutList, 1);
             musicShortcutView.setLayoutView(musicShortCutList, 1);
             localShortcutView.setLayoutView(localShortCutList, 1);
-            if (!mSystemControlManager.getPropertyBoolean("ro.platform.has.tvuimode", false))
+            if (!isTvFeture())
                 tx_video_allcount.setText("/" + Integer.toString(videoShortCutList.size()));
             tx_recommend_allcount.setText("/" + Integer.toString(recommendShortCutList.size()));
             tx_app_allcount.setText("/" + Integer.toString(appShortCutList.size()));
@@ -957,7 +1021,7 @@ public class Launcher extends Activity{
         }
 
         HomeShortCutList.clear();
-        if (!mSystemControlManager.getPropertyBoolean("ro.platform.has.tvuimode", false))
+        if (!isTvFeture())
             videoShortCutList.clear();
         recommendShortCutList.clear();
         appShortCutList.clear();
@@ -986,6 +1050,23 @@ public class Launcher extends Activity{
            sp_button.stop(music_prio_button);
            sp_button.play(music_prio_button, 1, 1, 0, 0, 1);
            } */
+    }
+
+    public void setHomeViewVisible (boolean isShowHome) {
+        if (isShowHome) {
+            viewMenu.setVisibility(View.GONE);
+            viewHomePage.setVisibility(View.VISIBLE);
+            if (needPreviewFeture())
+                setTvViewPosition(TV_MODE_NORMAL);
+        } else {
+            viewHomePage.setVisibility(View.GONE);
+            viewMenu.setVisibility(View.VISIBLE);
+            if (needPreviewFeture()) {
+                tvViewMode = TV_MODE_BOTTOM;
+                mTvTop = dipToPx(TV_WINDOW_BOTTOM_TOP);
+                startTvWindowAnimation();
+            }
+        }
     }
 
     private void setHeight() {
@@ -1390,4 +1471,327 @@ public class Launcher extends Activity{
             }
     };
 
+    public void startTvSettings() {
+        Intent intent = new Intent();
+        intent.setComponent(ComponentName.unflattenFromString(COMPONENT_TV_SETTINGS));
+        startActivity(intent);
+    }
+
+    public void startTvApp() {
+        Intent intent = new Intent();
+        intent.setComponent(ComponentName.unflattenFromString(COMPONENT_TV_APP));
+        startActivity(intent);
+        finish();
+    }
+
+    public int dipToPx(float dpValue) {
+        final float scale = getResources().getDisplayMetrics().density;
+        return (int) (dpValue * scale + 0.5f);
+    }
+
+    private void setTvView() {
+        tvView.setVisibility(View.VISIBLE);
+        tvView.setCallback(new TvViewInputCallback());
+        tvView.setZOrderMediaOverlay(false);
+
+        setTvViewPosition(TV_MODE_NORMAL);
+    }
+
+    public void setTvViewFront() {
+        tvView.bringToFront();
+        tvPrompt.bringToFront();
+    }
+
+    public void setTvViewPosition(int mode) {
+        int left = -1;
+        int top = -1;
+        int right = -1;
+        int bottom = -1;
+
+        tvViewMode = mode;
+        mTvHandler.removeMessages(TV_MSG_ANIM);
+        switch (mode) {
+            case TV_MODE_NORMAL:
+                left = dipToPx(TV_WINDOW_NORMAL_LEFT);
+                top = dipToPx(TV_WINDOW_NORMAL_TOP);
+                break;
+            case TV_MODE_TOP:
+            case TV_MODE_BOTTOM:
+                mTvHandler.sendEmptyMessageDelayed(TV_MSG_ANIM, DEFAULT_DELAY);
+                return;
+            default:
+                left = dipToPx(TV_WINDOW_NORMAL_LEFT);
+                top = dipToPx(TV_WINDOW_NORMAL_TOP);
+                break;
+        }
+        right = left + dipToPx(TV_WINDOW_WIDTH);
+        bottom = top + dipToPx(TV_WINDOW_HEIGHT);
+        MyRelativeLayout.setViewPosition(tvView, new Rect(left, top, right, bottom));
+        MyRelativeLayout.setViewPosition(tvPrompt, new Rect(left, top, right, bottom));
+    }
+
+    private void startTvWindowAnimation() {
+        int left = -1;
+        int right = -1;
+        int bottom = -1;
+
+        mTvHandler.sendEmptyMessageDelayed(TV_MSG_ANIM, DEFAULT_DELAY);
+
+        if (tvViewMode == TV_MODE_TOP) {
+            left = dipToPx(TV_WINDOW_RIGHT_LEFT);
+            mTvTop = mTvTop - dipToPx(MOVE_STEP);
+            if (mTvTop < dipToPx(TV_WINDOW_TOP_TOP)) {
+                mTvHandler.removeMessages(TV_MSG_ANIM);
+                mTvTop = dipToPx(TV_WINDOW_TOP_TOP);
+            }
+        } else if (tvViewMode == TV_MODE_BOTTOM) {
+            left = dipToPx(TV_WINDOW_RIGHT_LEFT);
+            mTvTop = mTvTop + dipToPx(MOVE_STEP);
+            if (mTvTop > dipToPx(TV_WINDOW_BOTTOM_TOP)) {
+                mTvHandler.removeMessages(TV_MSG_ANIM);
+                mTvTop = dipToPx(TV_WINDOW_BOTTOM_TOP);
+            }
+        }
+
+        right = left + dipToPx(TV_WINDOW_WIDTH);
+        bottom = mTvTop+ dipToPx(TV_WINDOW_HEIGHT);
+        MyRelativeLayout.setViewPosition(tvView, new Rect(left, mTvTop, right, bottom));
+        MyRelativeLayout.setViewPosition(tvPrompt, new Rect(left, mTvTop, right, bottom));
+    }
+
+    private boolean isBootvideoStopped() {
+        return TextUtils.equals(mSystemControlManager.getProperty("service.bootvideo"), "1")
+                && TextUtils.equals(mSystemControlManager.getProperty("service.bootvideo.exit"), "1");
+    }
+
+    private void tuneTvView() {
+        stopMusicPlayer();
+
+        //float window don't need load PQ
+        mSystemControlManager.setProperty(PROP_TV_PREVIEW, "true");
+
+        mTvInputId = null;
+        mChannelUri = null;
+        mTvInputManager = (TvInputManager) getSystemService(Context.TV_INPUT_SERVICE);
+        mTvInputChangeCallback = new TvInputChangeCallback();
+        mTvInputManager.registerCallback(mTvInputChangeCallback, new Handler());
+
+        int device_id, index_atv, index_dtv;
+        device_id = Settings.System.getInt(getContentResolver(), DroidLogicTvUtils.TV_CURRENT_DEVICE_ID, 0);
+        index_atv = Settings.System.getInt(getContentResolver(), DroidLogicTvUtils.TV_ATV_CHANNEL_INDEX, -1);
+        index_dtv = Settings.System.getInt(getContentResolver(), DroidLogicTvUtils.TV_DTV_CHANNEL_INDEX, -1);
+        isRadioChannel = Settings.System.getInt(getContentResolver(), DroidLogicTvUtils.TV_CURRENT_CHANNEL_IS_RADIO, 0) == 1 ? true : false;
+        Log.d(TAG, "TV get device_id=" + device_id + " atv=" + index_atv +" dtv=" + index_dtv + " is_radio="+isRadioChannel);
+
+        List<TvInputInfo> input_list = mTvInputManager.getTvInputList();
+        for (TvInputInfo info : input_list) {
+            if (parseDeviceId(info.getId()) == device_id) {
+                mTvInputId = info.getId();
+            }
+        }
+
+        mTvDataBaseManager = new TvDataBaseManager(this);
+
+        if (TextUtils.isEmpty(mTvInputId)) {
+            mTvInputId = DEFAULT_INPUT_ID;
+            mChannelUri = TvContract.buildChannelUri(-1);
+        } else {
+            if (device_id == DroidLogicTvUtils.DEVICE_ID_ATV) {
+                ArrayList<ChannelInfo> channelList = mTvDataBaseManager.getChannelList(mTvInputId, Channels.SERVICE_TYPE_AUDIO_VIDEO, true);
+                setChannelUri(channelList, index_atv);
+            } else if (device_id == DroidLogicTvUtils.DEVICE_ID_DTV) {
+                ArrayList<ChannelInfo> channelList;
+                if (!isRadioChannel) {
+                    channelList = mTvDataBaseManager.getChannelList(mTvInputId, Channels.SERVICE_TYPE_AUDIO_VIDEO, true);
+                } else {
+                    channelList = mTvDataBaseManager.getChannelList(mTvInputId, Channels.SERVICE_TYPE_AUDIO, true);
+                }
+                setChannelUri(channelList, index_dtv);
+            } else {
+                mChannelUri = TvContract.buildChannelUriForPassthroughInput(mTvInputId);
+            }
+        }
+
+        Log.d(TAG, "TV play tune inputId=" + mTvInputId + " uri=" + mChannelUri);
+        tvView.tune(mTvInputId, mChannelUri);
+
+        if (mChannelObserver == null)
+            mChannelObserver = new ChannelObserver();
+        getContentResolver().registerContentObserver(Channels.CONTENT_URI, true, mChannelObserver);
+    }
+
+    private void releaseTvView() {
+        tvView.setVisibility(View.GONE);
+        if (mTvInputChangeCallback != null) {
+            mTvInputManager.unregisterCallback(mTvInputChangeCallback);
+            mTvInputChangeCallback = null;
+        }
+        if (mChannelObserver != null) {
+            getContentResolver().unregisterContentObserver(mChannelObserver);
+            mChannelObserver = null;
+        }
+    }
+
+    private void setChannelUri (ArrayList<ChannelInfo> channelList, int index) {
+        if (channelList.size() > 0) {
+            if (index != -1 && index < channelList.size()) {
+                mChannelUri = channelList.get(index).getUri();
+            } else {
+                ChannelInfo channel = channelList.get(0);
+                mChannelUri = channel.getUri();
+                Settings.System.putInt(getContentResolver(), DroidLogicTvUtils.TV_ATV_CHANNEL_INDEX, 0);
+                Settings.System.putInt(getContentResolver(), DroidLogicTvUtils.TV_CURRENT_CHANNEL_IS_RADIO,
+                                ChannelInfo.isRadioChannel(channel) ? 1 : 0);
+            }
+            setTvPrompt(false);
+        } else {
+            mChannelUri = TvContract.buildChannelUri(-1);
+        }
+    }
+
+    private void setTvPrompt(boolean noSignal) {
+        if (noSignal || isRadioChannel) {
+            tvPrompt.setVisibility(View.VISIBLE);
+            tvPrompt.bringToFront();
+
+            View currentFocus = getCurrentFocus();
+            if (currentFocus != null && currentFocus.getId() != R.id.layout_video)
+                layoutScaleShadow.bringToFront();
+
+            if (noSignal)
+                tvPrompt.setText(getResources().getString(R.string.str_no_signal));
+            else
+                tvPrompt.setText(null);
+
+            if (isRadioChannel)
+                tvPrompt.setBackground(getResources().getDrawable(R.drawable.bg_radio, null));
+            else
+                tvPrompt.setBackground(null);
+        } else
+            tvPrompt.setVisibility(View.GONE);
+    }
+
+    //stop the background music player
+    public void stopMusicPlayer() {
+        Intent intent = new Intent();
+        intent.setAction ("com.android.music.musicservicecommand.pause");
+        intent.putExtra ("command", "stop");
+        sendBroadcast (intent);
+    }
+
+    private Handler mTvHandler = new Handler() {
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case TV_MSG_ANIM:
+                    startTvWindowAnimation();
+                    break;
+                case TV_MSG_PLAY_TV:
+                    if (isBootvideoStopped()) {
+                        Log.d(TAG, "======== bootvideo is stopped, start tv play");
+                        tuneTvView();
+                    } else {
+                        Log.d(TAG, "======== bootvideo is not stopped, wait it");
+                        mTvHandler.sendEmptyMessageDelayed(TV_MSG_PLAY_TV, 200);
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+    };
+
+    public class TvViewInputCallback extends TvView.TvInputCallback {
+        @Override
+            public void onEvent(String inputId, String eventType, Bundle eventArgs) {
+                Log.d(TAG, "====onEvent==inputId =" + inputId +", ===eventType ="+ eventType);
+            }
+
+        @Override
+            public void onVideoAvailable(String inputId) {
+                //tvView.invalidate();
+                setTvPrompt(false);
+
+                Log.d(TAG, "====onVideoAvailable==inputId =" + inputId);
+            }
+
+        @Override
+            public void onConnectionFailed(String inputId) {
+                Log.d(TAG, "====onConnectionFailed==inputId =" + inputId);
+                new Thread( new Runnable() {
+                    public void run() {
+                        try{
+                            Thread.sleep(200);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                        tvView.tune(mTvInputId, mChannelUri);
+                    }
+                }).start();
+            }
+
+        @Override
+            public void onVideoUnavailable(String inputId, int reason) {
+                Log.d(TAG, "====onVideoUnavailable==inputId =" + inputId +", ===reason ="+ reason);
+                switch (reason) {
+                    case TvInputManager.VIDEO_UNAVAILABLE_REASON_UNKNOWN:
+                    case TvInputManager.VIDEO_UNAVAILABLE_REASON_TUNING:
+                    case TvInputManager.VIDEO_UNAVAILABLE_REASON_BUFFERING:
+                        break;
+                    default:
+                        break;
+                }
+                setTvPrompt(true);
+            }
+    }
+
+    private final class TvInputChangeCallback extends TvInputManager.TvInputCallback {
+        @Override
+        public void onInputRemoved(String inputId) {
+            Log.d(TAG, "==== onInputRemoved, inputId=" + inputId + " curent inputid=" + mTvInputId);
+            if (TextUtils.equals(inputId, mTvInputId)) {
+                Log.d(TAG, "==== current input device removed, switch to ATV");
+                mTvInputId = DEFAULT_INPUT_ID;
+                Settings.System.putInt(getContentResolver(), DroidLogicTvUtils.TV_CURRENT_DEVICE_ID, DroidLogicTvUtils.DEVICE_ID_ATV);
+
+                ArrayList<ChannelInfo> channelList = mTvDataBaseManager.getChannelList(mTvInputId, Channels.SERVICE_TYPE_AUDIO_VIDEO, true);
+                int index_atv = Settings.System.getInt(getContentResolver(), DroidLogicTvUtils.TV_ATV_CHANNEL_INDEX, -1);
+                setChannelUri(channelList, index_atv);
+                tvView.tune(mTvInputId, mChannelUri);
+            }
+        }
+    }
+
+    private final class ChannelObserver extends ContentObserver {
+        public ChannelObserver() {
+            super(new Handler());
+        }
+
+        @Override
+        public void onChange(boolean selfChange, Uri uri) {
+            Log.d(TAG, "detect channel changed =" + uri);
+            if (DroidLogicTvUtils.matchsWhich(mChannelUri) == DroidLogicTvUtils.NO_MATCH) {
+                ChannelInfo changedChannel = mTvDataBaseManager.getChannelInfo(uri);
+                if (TextUtils.equals(changedChannel.getInputId(), mTvInputId)) {
+                    Log.d(TAG, "current channel is null, so tune to a new channel");
+                    mChannelUri = uri;
+                    tvView.tune(mTvInputId, mChannelUri);
+                }
+            }
+        }
+
+        @Override
+        public IContentObserver releaseContentObserver() {
+            // TODO Auto-generated method stub
+            return super.releaseContentObserver();
+        }
+    }
+
+    private int parseDeviceId(String inputId) {
+        String[] temp = inputId.split("/");
+        if (temp.length == 3) {
+            return Integer.parseInt(temp[2].substring(2));
+        } else {
+            return -1;
+        }
+    }
 }

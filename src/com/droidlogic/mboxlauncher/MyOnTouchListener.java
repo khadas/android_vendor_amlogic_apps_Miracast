@@ -10,8 +10,6 @@ import android.view.View.OnTouchListener;
 import android.widget.ImageView;
 import android.graphics.Rect;
 
-import com.droidlogic.app.SystemControlManager;
-
 public class MyOnTouchListener implements OnTouchListener{
     private final static String TAG = "MyOnTouchListener";
     private int NUM_VIDEO = 0;
@@ -21,12 +19,10 @@ public class MyOnTouchListener implements OnTouchListener{
     private int NUM_LOCAL = 4;
     private Context mContext;
     private Object appPath;
-    SystemControlManager mSystemControlManager;
 
     public MyOnTouchListener(Context context, Object path){
         mContext = context;
         appPath = path;
-        mSystemControlManager = new SystemControlManager(mContext);
     }
 
     public boolean onTouch (View view, MotionEvent event)  {
@@ -37,18 +33,13 @@ public class MyOnTouchListener implements OnTouchListener{
             String path  = img.getResources().getResourceName(img.getId());
             String vName = path.substring(path.indexOf("/")+1);
 
-            if (vName.equals("img_setting")) {
-                Intent intent = new Intent();
-                intent .setComponent(new ComponentName("com.android.tv.settings", "com.android.tv.settings.MainSettings"));
-                mContext.startActivity(intent);
-            } else if (vName.equals("img_video")) {
-                if (mSystemControlManager.getPropertyBoolean("ro.platform.has.tvuimode", false)) {
-                    Intent intent = new Intent();
-                    intent .setComponent(new ComponentName("com.droidlogic.tvsource", "com.droidlogic.tvsource.DroidLogicTv"));
-                    mContext.startActivity(intent);
-                } else if (mSystemControlManager.getPropertyBoolean("ro.platform.has.mbxuimode", false)) {
+            if (vName.equals("img_setting"))
+                ((Launcher)mContext).startTvSettings();
+            else if (vName.equals("img_video")) {
+                if (((Launcher)mContext).isTvFeture())
+                    ((Launcher)mContext).startTvApp();
+                else
                     showMenuView(NUM_VIDEO, view);
-                }
             }else if (vName.equals("img_recommend")) {
                 showMenuView(NUM_RECOMMEND, view);
             }else if (vName.equals("img_app")) {
@@ -59,7 +50,11 @@ public class MyOnTouchListener implements OnTouchListener{
                 showMenuView(NUM_LOCAL, view);
             }else {
                 if (appPath != null) {
-                    mContext.startActivity((Intent)appPath);
+                    Intent intent = (Intent)appPath;
+                    if (intent.getComponent().flattenToString().equals(Launcher.COMPONENT_TV_APP))
+                        ((Launcher)mContext).startTvApp();
+                    else
+                        mContext.startActivity(intent);
                 }
             }
         }
@@ -78,7 +73,7 @@ public class MyOnTouchListener implements OnTouchListener{
     }
 
     private void showMenuView(int num, View view){
-        if (mSystemControlManager.getPropertyBoolean("ro.platform.has.tvuimode", false))
+        if (((Launcher)mContext).isTvFeture())
             num = num - 1;
 
         Launcher.saveHomeFocusView = view;
