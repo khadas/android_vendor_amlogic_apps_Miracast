@@ -66,10 +66,10 @@ public class MyRelativeLayout extends RelativeLayout{
             setAddShortcutHead();
             setNumberOfScreen();
             if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                Launcher.startX = -1f;
+                //Launcher.startX = -1f;
 
                 // setSurface();
-
+                /*
                 if (this.getChildAt(0) instanceof ImageView) {
                     ImageView img = (ImageView)this.getChildAt(0);
                     if (img != null && img.getDrawable() != null &&
@@ -77,7 +77,7 @@ public class MyRelativeLayout extends RelativeLayout{
                         Launcher.isAddButtonBeTouched = true;
                         Launcher.pressedAddButton = this;
                     }
-                }
+                }*/
             } else if (event.getAction() == MotionEvent.ACTION_UP) {
                 return false;
             }

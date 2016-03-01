@@ -33,6 +33,14 @@ public class MyOnTouchListener implements OnTouchListener{
             String path  = img.getResources().getResourceName(img.getId());
             String vName = path.substring(path.indexOf("/")+1);
 
+            if (Launcher.endX + 20 < Launcher.startX && Launcher.startX != -1f) {
+                return false;
+            } else if (Launcher.endX -20 > Launcher.startX && Launcher.startX != -1f) {
+                return false;
+            }
+
+            Launcher.startX = -1f;
+
             if (vName.equals("img_setting"))
                 ((Launcher)mContext).startTvSettings();
             else if (vName.equals("img_video")) {
@@ -48,6 +56,10 @@ public class MyOnTouchListener implements OnTouchListener{
                 showMenuView(NUM_MUSIC, view);
             }else if (vName.equals("img_local")){
                 showMenuView(NUM_LOCAL, view);
+            }else if (img != null && img.getDrawable() != null &&
+                            img.getContentDescription() != null && img.getContentDescription().equals("img_add")){
+                Launcher.isAddButtonBeTouched = true;
+                Launcher.pressedAddButton = view;
             }else {
                 if (appPath != null) {
                     Intent intent = (Intent)appPath;
@@ -86,8 +98,7 @@ public class MyOnTouchListener implements OnTouchListener{
         Launcher.viewMenu.setInAnimation(null);
         Launcher.viewMenu.setOutAnimation(null);
 
-        Launcher.viewHomePage.setVisibility(View.GONE);
-        Launcher.viewMenu.setVisibility(View.VISIBLE);
+        ((Launcher)mContext).setHomeViewVisible(false);
         Launcher.viewMenu.setDisplayedChild(num);
         Launcher.viewMenu.setFocusableInTouchMode(true);
     }

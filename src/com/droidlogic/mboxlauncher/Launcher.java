@@ -191,6 +191,7 @@ public class Launcher extends Activity{
     private int popWindow_top = -1;
     private int popWindow_bottom = -1;
     public static float startX;
+    public static float endX;
     private static boolean updateAllShortcut;
     private int numberInGrid = -1;
     private int numberInGridOfShortcut = -1;
@@ -333,8 +334,7 @@ public class Launcher extends Activity{
         protected void onNewIntent(Intent intent) {
             super.onNewIntent(intent);
             if (Intent.ACTION_MAIN.equals(intent.getAction())) {
-                viewMenu.setVisibility(View.GONE);
-                viewHomePage.setVisibility(View.VISIBLE);
+                setHomeViewVisible(true);
                 trans_frameView.setVisibility(View.INVISIBLE);
                 layoutScaleShadow.setVisibility(View.INVISIBLE);
                 //frameView.setVisibility(View.INVISIBLE);
@@ -349,11 +349,19 @@ public class Launcher extends Activity{
         }
 
     @Override
+    public boolean dispatchTouchEvent(MotionEvent ev) {
+        if (ev.getAction() == MotionEvent.ACTION_DOWN) {
+            startX = ev.getX();
+        } else if (ev.getAction() == MotionEvent.ACTION_UP) {
+            endX = ev.getX();
+        }
+        return super.dispatchTouchEvent(ev);
+    }
+
+    @Override
         public boolean onTouchEvent (MotionEvent event){
             layoutScaleShadow.setVisibility(View.INVISIBLE);
-            if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                startX = event.getX();
-            } else if (event.getAction() == MotionEvent.ACTION_UP) {
+            if (event.getAction() == MotionEvent.ACTION_UP) {
                 if (pressedAddButton != null && isAddButtonBeTouched && !IntoCustomActivity) {
                     Rect rect = new Rect();
                     pressedAddButton.requestFocus();
@@ -363,11 +371,11 @@ public class Launcher extends Activity{
                     isAddButtonBeTouched = false;
                 }
                 else if (!isShowHomePage) {
-                    if (event.getX() + 20 < startX && startX != -1f) {
+                    if (endX + 20 < startX && startX != -1f) {
                         viewMenu.setInAnimation(this, R.anim.push_right_in);
                         viewMenu.setOutAnimation(this, R.anim.push_right_out);
                         viewMenu.showNext();
-                    } else if (event.getX() -20 > startX && startX != -1f) {
+                    } else if (endX -20 > startX && startX != -1f) {
                         viewMenu.setInAnimation(this, R.anim.push_left_in);
                         viewMenu.setOutAnimation(this,  R.anim.push_left_out);
                         viewMenu.showPrevious();
@@ -380,9 +388,7 @@ public class Launcher extends Activity{
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
             if (!isShowHomePage && !animIsRun){
-                viewMenu.setVisibility(View.GONE);
-                viewMenu.clearFocus();
-                viewHomePage.setVisibility(View.VISIBLE);
+                setHomeViewVisible(true);
                 isShowHomePage = true;
                 IntoCustomActivity = false;
                 if (saveHomeFocusView != null  && !isInTouchMode) {

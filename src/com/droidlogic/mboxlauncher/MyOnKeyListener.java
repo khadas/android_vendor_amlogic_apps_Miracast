@@ -138,8 +138,7 @@ public class MyOnKeyListener implements OnKeyListener{
         Launcher.viewMenu.setInAnimation(scaleAnimationIn);
         Launcher.viewMenu.setOutAnimation(null);
 
-        Launcher.viewHomePage.setVisibility(View.GONE);
-        Launcher.viewMenu.setVisibility(View.VISIBLE);
+        ((Launcher)mContext).setHomeViewVisible(false);
         Launcher.viewMenu.setDisplayedChild(num);
         Launcher.viewMenu.getChildAt(num).requestFocus();
     }
