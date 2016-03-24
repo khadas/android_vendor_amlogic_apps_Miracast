@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>	
 	<drawable name="trans">#00000000</drawable>
-	
+	<drawable name="black">#ff000000</drawable>
+
 	<color name="btn_text_color">#FFFFFFFF</color>	
 	<color name="path_bar_text_color">#FFFFFFFF</color>	
 	<color name="path_bar_bg_color">#FF8C8A8C</color>	

@@ -66,7 +66,7 @@ public class LocalAdapter extends BaseAdapter implements Filterable {
     private int[] mTo;
     private String[] mFrom;
     private ViewBinder mViewBinder;
-
+    private Context mContext;
     private List<? extends Map<String, ?>> mData;
 
     private int mResource;
@@ -93,6 +93,7 @@ public class LocalAdapter extends BaseAdapter implements Filterable {
      */
     public LocalAdapter(Context context, List<? extends Map<String, ?>> data,
             int resource, String[] from, int[] to) {
+        mContext = context;
         mData = data;
         mResource = mDropDownResource = resource;
         mFrom = from;
@@ -200,7 +201,7 @@ public class LocalAdapter extends BaseAdapter implements Filterable {
                         setViewText((TextView) v, text);
                     } else if (v instanceof ImageView) {
                         if (data instanceof Integer) {
-							((ImageView)v).setImageResource((Integer) data);                         
+                            ((ImageView)v).setImageDrawable(mContext.getResources().getDrawable((Integer)data));
 	                    } else if(data instanceof Drawable) {
 								((ImageView)v).setImageDrawable((Drawable)data);
 					    } else {
@@ -212,7 +213,7 @@ public class LocalAdapter extends BaseAdapter implements Filterable {
 	                    }	      
                     } else if (v instanceof RelativeLayout) {
                         if (data instanceof Integer){
-                            v.setBackgroundResource((Integer)data);    
+                            v.setBackgroundDrawable(mContext.getResources().getDrawable((Integer)data));
                         }       
                     } else {
                         throw new IllegalStateException(v.getClass().getName() + " is not a " +

@@ -1,10 +1,8 @@
-/*-------------------------------------------------------------------------
-
--------------------------------------------------------------------------*/
 package com.droidlogic.mboxlauncher;
 
 import android.content.Context;
 import android.content.ComponentName;
+import android.content.Intent;
 import android.widget.GridLayout;
 import android.widget.TextView;
 import android.widget.ImageView;
@@ -12,17 +10,17 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.graphics.drawable.Drawable;
 import android.graphics.Canvas;
-import android.util.Log;
 import android.util.AttributeSet;
+import android.util.ArrayMap;
+import android.util.Log;
 
 import java.util.List;
-import java.util.Map;
+import java.lang.ref.SoftReference;
 
 public class MyGridLayout extends GridLayout{
     private final static String TAG="MyGridLayout";
     private Context mContext;
-    private final static int FLAG_HOME = 0;
-    private final static int FLAG_CHILD_VIEW = 1;
+    private Object mLock;
 
     public MyGridLayout(Context context){
         super(context);
@@ -31,6 +29,7 @@ public class MyGridLayout extends GridLayout{
     public MyGridLayout(Context context, AttributeSet attrs){
         super(context, attrs);
         mContext = context;
+        mLock = ((Launcher)mContext).getLock();
     }
 
     public MyGridLayout(Context context, AttributeSet attrs, int defStyle){
@@ -43,51 +42,55 @@ public class MyGridLayout extends GridLayout{
        super.onDraw(canvas);
     }
 
-    public void setLayoutView(List<Map<String, Object>> list, int flag){
-        int count = 0;
-
-        if (this.getChildCount() > 0)
-            this.removeAllViews();
-
-        for (Map<String, Object> m : list) {
-            count++;
-
-            ViewGroup view;
-            if (flag == FLAG_HOME) {
-                view = (ViewGroup)View.inflate(mContext,R.layout.homegrid_item, null);
-
-            } else {
-                view = (ViewGroup)View.inflate(mContext,R.layout.childgrid_item, null);
-                ((TextView)view.getChildAt(1)).setText((String)m.get("item_name"));
-            }
-
-            ImageView img_bg = (ImageView)view.getChildAt(0);
-            img_bg.setBackgroundResource(parseItemBackground(count, flag));
-            if (m.get("item_type") instanceof Drawable) {
-                int resId = Launcher.parseItemIcon(((ComponentName)m.get("item_symbol")).getPackageName());
-
-                if (resId != -1) {
-                    img_bg.setImageResource(resId);
-                } else {
-                    img_bg.setImageDrawable((Drawable)(m.get("item_type")));
-                }
-            } else {
-                img_bg.setImageResource(R.drawable.item_img_add);
-                img_bg.setContentDescription("img_add");
-            }
-            view.setOnKeyListener(new MyOnKeyListener(mContext, m.get("file_path")));
-            view.setOnTouchListener(new MyOnTouchListener(mContext, m.get("file_path")));
-            view.setFocusable(true);
-            view.setFocusableInTouchMode(true);
-            view.setDescendantFocusability(ViewGroup.FOCUS_BEFORE_DESCENDANTS);
-            //Log.d(TAG, "@@@@@@@@@@@@@@@@@@@@@@@@@@ " + m.get("item_type"));
-            this.addView(view);
-        }
-
+    @Override
+    protected void onLayout (boolean changed, int left, int top, int right, int bottom) {
+        super.onLayout (changed, left, top, right, bottom);
     }
 
-    private int  parseItemBackground(int num, int flag){
-        if (flag == FLAG_HOME) {
+    public void setLayoutView(int mode, List<ArrayMap<String, Object>> list){
+        synchronized (mLock) {
+            if (this.getChildCount() > 0)
+                this.removeAllViews();
+
+            for (int i = 0; i < list.size(); i++) {
+                MyRelativeLayout view;
+                if (mode == Launcher.MODE_HOME) {
+                    view = (MyRelativeLayout)View.inflate(mContext,R.layout.homegrid_item, null);
+                    view.setType(Launcher.TYPE_HOME_SHORTCUT);
+                } else {
+                    view = (MyRelativeLayout)View.inflate(mContext,R.layout.childgrid_item, null);
+                    ((TextView)view.getChildAt(1)).setText((String)list.get(i).get(AppDataLoader.NAME));
+                    view.setType(Launcher.TYPE_APP_SHORTCUT);
+                    view.setNumber(i);
+                }
+
+                ImageView img_bg = (ImageView)view.getChildAt(0);
+                SoftReference<Drawable> bg = new SoftReference<Drawable>(mContext.getResources().getDrawable(parseItemBackground(i, mode)));
+                img_bg.setBackgroundDrawable(bg.get());
+                if (list.get(i).get(AppDataLoader.ICON) instanceof Drawable) {
+                    int resId = parsePackageIcon(((ComponentName)list.get(i).get(AppDataLoader.COMPONENT_NAME)).getPackageName());
+
+                    if (resId != -1) {
+                        SoftReference<Drawable> icon = new SoftReference<Drawable>(mContext.getResources().getDrawable(resId));
+                        img_bg.setImageDrawable(icon.get());
+                    } else {
+                        SoftReference<Drawable> icon = new SoftReference<Drawable>((Drawable)list.get(i).get(AppDataLoader.ICON));
+                        img_bg.setImageDrawable(icon.get());
+                    }
+                   view.setIntent((Intent)list.get(i).get(AppDataLoader.INTENT));
+                } else {
+                    SoftReference<Drawable> add = new SoftReference<Drawable>(mContext.getResources().getDrawable(R.drawable.item_img_add));
+                    img_bg.setImageDrawable(add.get());
+                    img_bg.setContentDescription("img_add");
+                    view.setAddButton(true);
+                }
+                this.addView(view);
+            }
+        }
+    }
+
+    private int  parseItemBackground(int num, int mode){
+        if (mode == Launcher.MODE_HOME) {
             switch (num % 11) {
                 case 1:
                     return R.drawable.item_child_1;
@@ -158,4 +161,30 @@ public class MyGridLayout extends GridLayout{
         }
     }
 
+    private int parsePackageIcon(String packageName){
+        if (packageName.equals("com.droidlogic.FileBrower")) {
+            return R.drawable.icon_filebrowser;
+        } else if (packageName.equals("com.android.browser")) {
+            return R.drawable.icon_browser;
+        } else if (packageName.equals("com.droidlogic.appinstall")) {
+            return R.drawable.icon_appinstaller;
+        } else if (packageName.equals("com.android.tv.settings")) {
+            return R.drawable.icon_setting;
+        } else if (packageName.equals("com.droidlogic.mediacenter")){
+            return R.drawable.icon_mediacenter;
+        } else if (packageName.equals("com.droidlogic.otaupgrade")) {
+            return R.drawable.icon_backupandupgrade;
+        } else if (packageName.equals("com.android.gallery3d")) {
+            return R.drawable.icon_pictureplayer;
+        } else if (packageName.equals("com.droidlogic.miracast")) {
+            return R.drawable.icon_miracast;
+        } else if (packageName.equals("com.droidlogic.PPPoE")) {
+            return R.drawable.icon_pppoe;
+        } else if (packageName.equals("com.android.music")) {
+            return R.drawable.icon_music;
+        } else if (packageName.equals("com.android.camera2")) {
+            return R.drawable.icon_camera;
+        }
+        return -1;
+    }
 }
