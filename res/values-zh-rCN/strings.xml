@@ -43,4 +43,8 @@
     <string name="setting_definition">"清晰度"</string>
     <string name="setting_definition_sd">"标清"</string>
     <string name="setting_definition_hd">"高清"</string>
+    <string name="str_funlist">认证相关命令:</string>
+    <string name="str_listen_channel">Listen通道号:</string>
+    <string name="str_oper_channel">Operation通道号:</string>
+    <string name="str_devicelist">请选择需要去连接的对端设备:</string>
 </resources>

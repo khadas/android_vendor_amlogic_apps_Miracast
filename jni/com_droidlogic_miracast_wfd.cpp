@@ -198,6 +198,25 @@ static void disconnectSink(JNIEnv *env, jclass clazz)
     }
 }
 
+static void setPlay(JNIEnv* env, jclass clazz)
+{
+    ALOGI("setPlay\n");
+    mSink->setPlay();
+}
+
+static void setPause(JNIEnv* env, jclass clazz)
+{
+    ALOGI("setPause\n");
+    mSink->setPause();
+}
+
+static void setTeardown(JNIEnv* env, jclass clazz)
+{
+    ALOGI("setTeardown\n");
+    mSink->setTeardown();
+}
+
+
 /*
 static void source_start(const char *ip) {
   ProcessState::self()->startThreadPool();
@@ -248,6 +267,18 @@ static JNINativeMethod gMethods[] =
     {
         "nativeResolutionSettings", "(Z)V",
         (void *) resolutionSettings
+    },
+    {
+        "nativeSetPlay", "()V",
+        (void*) setPlay
+    },
+    {
+        "nativeSetPause", "()V",
+        (void*) setPause
+    },
+    {
+        "nativeSetTeardown", "()V",
+        (void*) setTeardown
     },
     //{ "nativeSourceStart", "(Ljava/lang/String;)V",
     //        (void*) run_as_source },

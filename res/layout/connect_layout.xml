@@ -25,7 +25,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/show_connect_desc"
-        android:layout_marginTop="60dp"
+        android:layout_marginTop="40dp"
         android:gravity="center"
         android:layout_centerHorizontal="true"
         android:visibility="invisible"
@@ -56,7 +56,7 @@
         android:layout_height="wrap_content"
         android:layout_below="@+id/peer_devices"
         android:layout_marginLeft="60dp"
-        android:layout_marginTop="30dp"
+        android:layout_marginTop="10dp"
         android:text="@string/device_info"
         android:textAppearance="?android:attr/textAppearanceMedium" />
     <TextView
@@ -67,5 +67,97 @@
         android:layout_marginLeft="20dp"
         android:layout_alignBaseline="@id/device_title"
         android:textAppearance="?android:attr/textAppearanceMedium" />
+    <TextView
+        android:id="@+id/text_device"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/device_title"
+        android:layout_marginLeft="60dp"
+        android:layout_marginTop="10dp"
+        android:text="@string/str_devicelist"
+        android:visibility="invisible"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
+    <Spinner
+        android:id="@+id/spinner_device"
+        android:layout_width="150dp"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@+id/text_device"
+        android:layout_alignBaseline="@id/text_device"
+        android:visibility="invisible"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/text_device"
+        android:layout_marginLeft="60dp"
+        android:layout_marginTop="10dp"
+        android:text="@string/str_funlist"
+        android:visibility="invisible"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
+    <Spinner
+        android:id="@+id/spinner1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@+id/textView2"
+        android:layout_alignBaseline="@+id/textView2"
+        android:layout_alignBottom="@+id/textView2"
+        android:visibility="invisible"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
+    <TextView
+        android:id="@+id/tv_channel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/textView2"
+        android:layout_marginLeft="60dp"
+        android:layout_marginTop="10dp"
+        android:text="@string/str_listen_channel"
+        android:visibility="invisible"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
+    <EditText
+        android:id="@+id/edt_listen_channel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/tv_channel"
+        android:layout_alignBottom="@+id/tv_channel"
+        android:layout_toRightOf="@+id/tv_channel"
+        android:inputType="number"
+        android:ems="3"
+        android:visibility="invisible"
+        android:textAppearance="?android:attr/textAppearanceMedium">
+    </EditText>
+    <TextView
+        android:id="@+id/tv_oper_channel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/tv_channel"
+        android:layout_alignBottom="@+id/tv_channel"
+        android:layout_toRightOf="@+id/edt_listen_channel"
+        android:text="@string/str_oper_channel"
+        android:visibility="invisible"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
+    <EditText
+        android:id="@+id/edt_oper_channel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/tv_channel"
+        android:layout_alignBottom="@+id/tv_channel"
+        android:layout_toRightOf="@+id/tv_oper_channel"
+        android:inputType="number"
+        android:ems="3"
+        android:visibility="invisible"
+        android:textAppearance="?android:attr/textAppearanceMedium">
+    </EditText>
 
+<!--        <requestFocus />-->
+    <Button
+        android:id="@+id/btn_channel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/tv_oper_channel"
+        android:layout_alignBottom="@+id/tv_oper_channel"
+        android:layout_toRightOf="@+id/edt_oper_channel"
+        android:text="@android:string/ok"
+        android:visibility="invisible"
+        android:textAppearance="?android:attr/textAppearanceMedium"/>
 </RelativeLayout>

@@ -30,6 +30,7 @@ import android.net.NetworkInfo;
 import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pManager;
+import android.net.wifi.p2p.WifiP2pWfdInfo;
 import android.net.wifi.p2p.WifiP2pManager.ActionListener;
 import android.net.wifi.p2p.WifiP2pManager.Channel;
 import android.net.wifi.p2p.WifiP2pManager.ChannelListener;
@@ -38,8 +39,11 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.Looper;
+import android.os.UserHandle;
 import android.os.PowerManager;
 import android.os.SystemProperties;
+import android.os.FileObserver;
+import android.os.FileUtils;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -55,7 +59,6 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ImageButton;
 import android.widget.Toast;
-import android.net.wifi.p2p.WifiP2pWfdInfo;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -68,15 +71,17 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import com.droidlogic.app.SystemControlManager;
-import com.droidlogic.miracast.WiFiDirectMainActivity;
-import android.os.UserHandle;
-
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.StringTokenizer;
+import java.util.Enumeration;
+import java.net.NetworkInterface;
+import java.net.InetAddress;
+
+import com.droidlogic.app.SystemControlManager;
+import com.droidlogic.miracast.WiFiDirectMainActivity;
 public class SinkActivity extends Activity
 {
-
     public static final String TAG                  = "amlSink";
 
     public static final String KEY_IP               = "ip";
@@ -89,7 +94,11 @@ public class SinkActivity extends Activity
     //private final String OPEN_GRAPHIC_LAYER       = "echo 0 > /sys/class/graphics/fb0/blank";
     //private final String WIFI_DISPLAY_CMD         = "wfd -c";
     //private static final int MAX_DELAY_MS         = 3000;
-
+// Miracast cert begin
+    private File mFolder = new File("/data/data/com.amlogic.miracast");
+    private String strSessionID = null;
+    private String strIP = null;
+// Miracast cert end
     private final int MSG_CLOSE_OSD             = 2;
     private String mCueEnable;
     private String mBypassDynamic;
@@ -107,11 +116,30 @@ public class SinkActivity extends Activity
     private View mRootView;
 
     private SystemControlManager mSystemControl = new SystemControlManager (this);
+    private int certBtnState = 0; // 0: none oper, 1:play, 2:pause
 
     static
     {
         System.loadLibrary ("wfd_jni");
     }
+
+    private FileObserver mFileObserver = new FileObserver(mFolder.getPath(), FileObserver.MODIFY)
+    {
+        public void onEvent(int event, String path) {
+            Log.d(TAG, "File changed : path=" + path + " event=" + event);
+            if (null == path)
+            {
+                return;
+            }
+
+            if (path.equals(new String("sessionId")))
+            {
+                File ipFile = new File(mFolder, path);
+                String fullName = ipFile.getPath();
+                parseSessionId(fullName);
+            }
+        }
+    };
 
     private final BroadcastReceiver mReceiver = new BroadcastReceiver()
     {
@@ -180,11 +208,13 @@ public class SinkActivity extends Activity
                 catch (InterruptedException e) {}
             }
         }
+        mFileObserver.startWatching();
     }
 
     protected void onDestroy()
     {
         quitLoop();
+        mFileObserver.stopWatching();
         super.onDestroy();
     }
 
@@ -202,14 +232,73 @@ public class SinkActivity extends Activity
         IntentFilter intentFilter = new IntentFilter (WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
         registerReceiver (mReceiver, intentFilter);
 
-        setSinkParameters (true);
-        startMiracast (mIP, mPort);
+        setSinkParameters(true);
+        startMiracast(mIP, mPort);
+        strIP = getlocalip();
     }
 
+    private boolean parseSessionId(String fileName)
+    {
+        File file = new File(fileName);
+        BufferedReader reader = null;
+        String info = new String();
+        try {
+            reader = new BufferedReader(new FileReader(file));
+            info = reader.readLine();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                if (info == null) {
+                    Log.d (TAG, "parseSessionId info is NULL");
+                    return false;
+                } else {
+                    StringTokenizer strToke = new StringTokenizer(info," ");
+                    strSessionID = strToke.nextToken();
+                    String sourceInfo = "IP address: " + strIP + ",  session Id: " + strSessionID;
+                    Log.e("wpa_supplicant",  sourceInfo);
+                    return true;
+                }
+            }
+            else
+                return false;
+        }
+    }
+
+    private String getlocalip()
+    {
+        StringBuilder IFCONFIG = new StringBuilder();
+        String ipAddr = "192.168.43.1";
+        try {
+            for (Enumeration<NetworkInterface> en = NetworkInterface
+                .getNetworkInterfaces(); en.hasMoreElements();) {
+                    NetworkInterface intf = en.nextElement();
+                    for (Enumeration<InetAddress> enumIpAddr = intf
+                    .getInetAddresses(); enumIpAddr.hasMoreElements();) {
+                        InetAddress inetAddress = enumIpAddr.nextElement();
+                        if (!inetAddress.isLoopbackAddress()
+                            && !inetAddress.isLinkLocalAddress()
+                            && inetAddress.isSiteLocalAddress()) {
+                            IFCONFIG.append(inetAddress.getHostAddress().toString());
+                            ipAddr = IFCONFIG.toString();
+                        }
+                    }
+            }
+        } catch (Exception ex) {
+        }
+        return ipAddr;
+    }
     @Override
     public void onPause()
     {
         super.onPause();
+        certBtnState = 0;
         stopMiracast (true);
         unregisterReceiver (mReceiver);
         mWakeLock.release();
@@ -361,27 +450,39 @@ public class SinkActivity extends Activity
 
     private void exitMiracastDialog()
     {
-        new AlertDialog.Builder (this)
-        .setTitle (R.string.exit)
-        .setMessage (R.string.exit_miracast)
-        .setPositiveButton (android.R.string.ok,
-                            new DialogInterface.OnClickListener()
-        {
-            public void onClick (DialogInterface dialog, int whichButton)
-            {
-                Intent intent = new Intent (WiFiDirectMainActivity.ACTION_REMOVE_GROUP);
-                sendBroadcastAsUser (intent, UserHandle.ALL);
-                finishView();
-            }
-        })
-        .setNegativeButton (android.R.string.cancel,
-                            new DialogInterface.OnClickListener()
-        {
-            public void onClick (DialogInterface dialog, int whichButton)
-            {
-            }
-        })
-        .show();
+        new AlertDialog.Builder(this).setTitle(R.string.dlg_title)
+            .setItems(new String[]{getString(R.string.disconnect_sink), getString(R.string.play_sink), getString(R.string.pause_sink)},
+                new DialogInterface.OnClickListener()
+               {
+                   @Override
+                   public void onClick(DialogInterface arg0, int arg1)
+                   {
+                       switch (arg1)
+                       {
+                            case 0:
+                                nativeSetTeardown();
+                                finishView();
+                                break;
+                            case 1:
+                                if (certBtnState == 2)
+                                {
+                                    nativeSetPlay();
+                                    certBtnState = 1;
+                                }
+                                break;
+                            case 2:
+                                if (certBtnState != 2)
+                               {
+                                    nativeSetPause();
+                                    certBtnState = 2;
+                                }
+                                break;
+                            default:
+                                break;
+                       }
+                   }
+                })
+        .setNegativeButton("cancel", null).show();
     }
 
     public void startMiracast (String ip, String port)
@@ -509,6 +610,9 @@ public class SinkActivity extends Activity
     private native void nativeConnectWifiSource (SinkActivity sink, String ip, int port);
     private native void nativeDisconnectSink();
     private native void nativeResolutionSettings (boolean isHD);
+    private native void nativeSetPlay();
+    private native void nativeSetPause();
+    private native void nativeSetTeardown();
     //private native void nativeSourceStart(String ip);
     //private native void nativeSourceStop();
     // Native callback.

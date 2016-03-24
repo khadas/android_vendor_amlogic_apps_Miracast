@@ -10,8 +10,6 @@
  */
 package com.droidlogic.miracast;
 
-import java.util.ArrayList;
-import java.util.List;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -29,37 +27,51 @@ import android.content.res.Resources;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.wifi.WifiManager;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WpsInfo;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pManager;
+import android.net.wifi.p2p.WifiP2pGroup;
+import android.net.wifi.p2p.WifiP2pWfdInfo;
+import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pManager.ActionListener;
 import android.net.wifi.p2p.WifiP2pManager.Channel;
 import android.net.wifi.p2p.WifiP2pManager.ChannelListener;
 import android.net.wifi.p2p.WifiP2pManager.PeerListListener;
 import android.net.wifi.p2p.WifiP2pManager.ConnectionInfoListener;
 import android.net.wifi.p2p.WifiP2pManager.GroupInfoListener;
-import android.net.wifi.p2p.WifiP2pGroup;
-import android.net.wifi.p2p.WifiP2pWfdInfo;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.PowerManager;
 import android.os.Message;
+import android.os.SystemProperties;
 import android.os.FileObserver;
 import android.os.FileUtils;
 import android.os.UserHandle;
+import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.text.TextUtils;
 
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.Display;
+import android.view.MotionEvent;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Button;
 import android.widget.Toast;
 import android.widget.EditText;
+import android.widget.Spinner;
+import android.widget.ArrayAdapter;
+import android.widget.AdapterView.OnItemSelectedListener;
+import android.widget.AdapterView;
 import android.provider.Settings;
 import android.graphics.drawable.AnimationDrawable;
 
@@ -68,40 +80,45 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.StringTokenizer;
 
 /**
  * @ClassName WiFiDirectMainActivity
  * @Description TODO
- * @Date 2013-6-20
+ * @Date 2015-12-04
  * @Email
  * @Author
- * @Version V1.0
+ * @Version V2.2
  */
 public class WiFiDirectMainActivity extends Activity implements
     ChannelListener, PeerListListener, ConnectionInfoListener, GroupInfoListener
 {
     public static final String       TAG                    = "amlWifiDirect";
-    public static final boolean      DEBUG                  = false;
+    public static final boolean     DEBUG              = true;
     public static final String       HRESOLUTION_DISPLAY     = "display_resolution_hd";
     public static final String       WIFI_P2P_IP_ADDR_CHANGED_ACTION = "com.droidlogic.miracast.IP_ADDR_CHANGED";
     public static final String       WIFI_P2P_PEER_IP_EXTRA       = "IP_EXTRA";
     public static final String       WIFI_P2P_PEER_MAC_EXTRA       = "MAC_EXTRA";
     private static final String      MIRACAST_PREF          = "miracast_prefences";
     private static final String      IP_ADDR                = "ip_addr";
-    private final String             FB0_BLANK              = "/sys/class/graphics/fb0/blank";
     public static final String ENCODING = "UTF-8";
     private static final String VERSION_FILE = "version";
 
     public static final String  ACTION_FIX_RTSP_FAIL 	= "com.droidlogic.miracast.RTSP_FAIL";
     public static final String  ACTION_REMOVE_GROUP 	= "com.droidlogic.miracast.REMOVE_GROUP";
+    /***Miracast cert begin***/
+    public boolean mForceStopScan = false;
+    public boolean mStartConnecting = false;
+    public boolean mManualInitWfdSession = false;
+    public int mConnectImageNum;
+    public long mConnectImageLastTime;
+    public static final String       MIRACAST_CERT     = "miracast_cert";
+    /***Miracast cert end***/
 
-    // private final String CLOSE_GRAPHIC_LAYER =
-    // "echo 1 > /sys/class/graphics/fb0/blank";
-    // private final String OPEN_GRAPHIC_LAYER =
-    // "echo 0 > /sys/class/graphics/fb0/blank";
-    private final String             WIFI_DISPLAY_CMD       = "wfd -c";
     private WifiP2pManager           manager;
+    private WifiManager                mWifiManager;
     private boolean                  isWifiP2pEnabled       = false;
     private String                   mPort;
     private String                   mIP;
@@ -131,6 +148,17 @@ public class WiFiDirectMainActivity extends Activity implements
     private SharedPreferences mPref;
     private SharedPreferences.Editor mEditor;
     private MenuItem mDisplayResolution;
+    /***Miracast cert begin***/
+    private Spinner mSpinner, mSpinDevice;
+    private ArrayList<String> mFunList;
+    private ArrayList<String> mDeviceList;
+    private Button mBtnChannel;
+    private EditText mEdtListenChannel, mEdtOperChannel;
+    private TextView mFunlistText, mListChannelText, mOperChannelText, mDeviceListText;
+    private InputMethodManager imm;
+    private WifiP2pDevice mSelectDevice = null;
+     /***Miracast cert end***/
+    private boolean mFirstInit = false;
 
     private File mFolder = new File("/data/misc/dhcp");
     private FileObserver mAddrObserver = new FileObserver(mFolder.getPath(), FileObserver.MODIFY | FileObserver.CREATE)
@@ -204,43 +232,387 @@ public class WiFiDirectMainActivity extends Activity implements
         }
     }
 
-    private final Runnable startSearchRunnable = new Runnable()
-    {
-        @Override
-        public void run()
-        {
-            startSearch();
-        }
-    };
 
-    public void startSearchTimer()
-    {
-        if (DEBUG)
-        {
-            Log.d (TAG, " startSearchTimer 6s");
-        }
-        mHandler.postDelayed (startSearchRunnable, 6000);
+/********************Miracast cert begin**********************/
+    private void initFunlist() {
+        mFunList = new ArrayList<String>();
+        mFunList.add(" ");
+        mFunList.add("Start scan");
+        mFunList.add("Stop scan");
+        mFunList.add("Start listen");
+        mFunList.add("Stop listen");
+        mFunList.add("Enable autonomous GO");
+        mFunList.add("Disable autonomous GO");
+        mFunList.add("Connect to peer by display_pin");
+        mFunList.add("Connect to peer by push_button");
+        mFunList.add("Connect to peer by enter_pin");
+        mFunList.add("Set wfd session manual mode");
+        mFunList.add("Set wfd session auto mode");
+        mFunList.add("Continue remaining wfd session under manual mode");
+        mFunList.add("Enable wfd");
+        mFunList.add("Disable wfd");
     }
 
-    public void cancelSearchTimer()
-    {
-        if (DEBUG)
-        {
-            Log.d (TAG, " cancelSearchTimer");
+    private void setCertComponentVisible(boolean value) {
+        if (value) {
+            mBtnChannel.setVisibility(View.VISIBLE);
+            mEdtListenChannel.setVisibility(View.VISIBLE);
+            mEdtOperChannel.setVisibility(View.VISIBLE);
+            mFunlistText.setVisibility(View.VISIBLE);
+            mDeviceListText.setVisibility(View.VISIBLE);
+            mListChannelText.setVisibility(View.VISIBLE);
+            mOperChannelText.setVisibility(View.VISIBLE);
+            mSpinner.setVisibility(View.VISIBLE);
+            mSpinDevice.setVisibility(View.VISIBLE);
+        } else {
+            mBtnChannel.setVisibility(View.INVISIBLE);
+            mEdtListenChannel.setVisibility(View.INVISIBLE);
+            mEdtOperChannel.setVisibility(View.INVISIBLE);
+            mFunlistText.setVisibility(View.INVISIBLE);
+            mDeviceListText.setVisibility(View.INVISIBLE);
+            mListChannelText.setVisibility(View.INVISIBLE);
+            mOperChannelText.setVisibility(View.INVISIBLE);
+            mSpinner.setVisibility(View.INVISIBLE);
+            mSpinDevice.setVisibility(View.INVISIBLE);
         }
-        mHandler.removeCallbacks (startSearchRunnable);
     }
 
-    @Override
-    public void onContentChanged()
-    {
-        super.onContentChanged();
+    private void  initCert() {
+        initFunlist();
+        mStartConnecting = false;
+        mDeviceList = new ArrayList<String>();
+        mDeviceList.add(" ");
+
+        mSpinner = (Spinner)findViewById(R.id.spinner1);
+        imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, mFunList);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        mSpinner.setAdapter(adapter);
+        mSpinner.setPrompt("Please function!");
+
+        mSpinner.setOnItemSelectedListener(new OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> arg0, View arg1,
+                int arg2, long arg3) {
+                switch (arg2) {
+                    case 1: // Start scan
+                        tryDiscoverPeers();
+                        break;
+
+                    case 2: // Stop scan
+                        stopPeerDiscovery();
+                        break;
+
+                    case 3: // Start listen
+                        startListen();
+                        break;
+
+                    case 4:// Stop listen
+                        stopListen();
+                        break;
+
+                    case 5:// Enable autonomous GO
+                        startAutonomousGroup();
+                        break;
+
+                    case 6:// Disable autonomous GO
+                        stopAutonomousGroup();
+                        break;
+
+                    case 7:// Connect to peer by display_pin
+                        if (mSelectDevice == null) {
+                            Toast.makeText(WiFiDirectMainActivity.this, "device is null, please select device from deviceList!", Toast.LENGTH_LONG).show();
+                        } else {
+                            startConnect(mSelectDevice, 1);
+                        }
+                        break;
+
+                    case 8:// Connect to peer by push_button
+                        if (mSelectDevice == null) {
+                            Toast.makeText(WiFiDirectMainActivity.this, "device is null, please select device from deviceList!", Toast.LENGTH_LONG).show();
+                        } else {
+                            startConnect(mSelectDevice, 0);
+                        }
+                        break;
+
+                    case 9:// Set wfd session manual mode
+                        if (mSelectDevice == null) {
+                            Toast.makeText(WiFiDirectMainActivity.this, "device is null, please select device from deviceList!", Toast.LENGTH_LONG).show();
+                        } else {
+                            startConnect(mSelectDevice, 2);
+                        }
+                        break;
+
+                    case 10:// Set wfd session auto mode
+                        setWfdSessionMode(true);
+                        break;
+
+                    case 11:// Set wfd session auto mode
+                        setWfdSessionMode(false);
+                        break;
+
+                    case 12:// Continue remaining wfd session under manual mode
+                        startWfdSession();
+                        break;
+
+                    case 13:// Enable wfd
+                        changeRole(true);
+                        break;
+
+                    case 14:// Disable wfd
+                        changeRole(false);
+                        break;
+
+                    default:
+                        break;
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> arg0) {
+            }
+        });
+
+        mDeviceListText = (TextView)findViewById(R.id.text_device);
+        mSpinDevice = (Spinner)findViewById(R.id.spinner_device);
+        ArrayAdapter<String> adapter1 = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, mDeviceList);
+        adapter1.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        mSpinDevice.setAdapter(adapter1);
+        mSpinDevice.setPrompt("Please select device");
+        mSpinDevice.setOnItemSelectedListener(new OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
+                if (arg2 != 0) {
+                     mSelectDevice = peers.get(arg2 - 1);
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> arg0) {
+            }
+        });
+
+        mFunlistText = (TextView)findViewById(R.id.textView2);
+        mListChannelText = (TextView)findViewById(R.id.tv_channel);
+        mOperChannelText = (TextView)findViewById(R.id.tv_oper_channel);
+        mBtnChannel = (Button)findViewById(R.id.btn_channel);
+        mEdtListenChannel = (EditText)findViewById(R.id.edt_listen_channel);
+        mEdtOperChannel = (EditText)findViewById(R.id.edt_oper_channel);
+
+        mBtnChannel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View arg0) {
+                imm.toggleSoftInput(0, InputMethodManager.HIDE_NOT_ALWAYS);
+                if (mEdtListenChannel.getText().toString().equals("") ||
+                    mEdtOperChannel.getText().toString().equals("")) {
+                    Toast.makeText(WiFiDirectMainActivity.this, "listen channel or oper channel is empty, please fill it!", Toast.LENGTH_LONG).show();
+                } else {
+                    int lc = Integer.parseInt(mEdtListenChannel.getText().toString());
+                    int oc = Integer.parseInt(mEdtOperChannel.getText().toString());
+                    setWifiP2pChannels(lc, oc);
+                }
+            }
+        });
     }
+
+    private static String describeWifiP2pDevice(WifiP2pDevice device) {
+        return device != null ? device.toString().replace('\n', ',') : "null";
+    }
+
+    private void requestPeers() {
+        manager.requestPeers(channel, new PeerListListener() {
+            @Override
+            public void onPeersAvailable(WifiP2pDeviceList peerLists) {
+                Log.d(TAG, "Received list of peers.");
+                peers.clear();
+
+                for (WifiP2pDevice device : peerLists.getDeviceList()) {
+                    Log.d(TAG, "  " + describeWifiP2pDevice(device));
+                    peers.add(device);
+                }
+
+                String list = WiFiDirectMainActivity.this.getResources().getString(R.string.peer_list);
+
+                for (int i = 0; i < peers.size(); i++) {
+                    list += "    " + peers.get(i).deviceName;
+                    Log.d(TAG, "onPeersAvailable peerDevice:" + peers.get(i).deviceName+ ", status:" + peers.get(i).status + " (0-CONNECTED,3-AVAILABLE)");
+                    mPeerList.setText(list);
+                }
+            }
+        });
+    }
+
+
+    private void tryDiscoverPeers() {
+        mForceStopScan = false;
+        manager.discoverPeers(channel, new ActionListener() {
+            @Override
+            public void onSuccess() {
+                Log.d(TAG, "Discover peers succeed.  Requesting peers now.");
+                requestPeers();
+            }
+
+            @Override
+            public void onFailure(int reason) {
+                Log.d(TAG, "Discover peers failed with reason " + reason + ".");
+            }
+        });
+    }
+
+    private void stopPeerDiscovery() {
+        mForceStopScan = true;
+        manager.stopPeerDiscovery(channel, new ActionListener() {
+            @Override
+            public void onSuccess() {
+                Log.d(TAG, "Stop peer discovery succeed.");
+            }
+
+            @Override
+            public void onFailure(int reason) {
+                Log.d(TAG, "Stop peer discovery failed with reason " + reason + ".");
+            }
+        });
+    }
+
+    private void startListen() {
+        manager.listen(channel, true, new ActionListener() {
+            @Override
+            public void onSuccess() {
+                Log.d(TAG, "start listen peers succeed.");
+            }
+
+            @Override
+            public void onFailure(int reason) {
+                Log.d(TAG, "start listen peers failed with reason " + reason + ".");
+            }
+        });
+    }
+
+    private void stopListen() {
+        manager.listen(channel, false, new ActionListener() {
+            @Override
+            public void onSuccess() {
+                Log.d(TAG, "stop listen peers succeed.");
+            }
+
+            @Override
+            public void onFailure(int reason) {
+                Log.d(TAG, "stop listen peers failed with reason " + reason + ".");
+            }
+        });
+    }
+
+    private void startAutonomousGroup() {
+        mForceStopScan = true;
+        manager.createGroup(channel, new WifiP2pManager.ActionListener() {
+            @Override
+            public void onSuccess() {
+                Log.d(TAG, "createGroup Success");
+            }
+
+            @Override
+            public void onFailure(int reasonCode) {
+                Log.d(TAG, "createGroup Failure");
+            }
+        });
+    }
+
+    private void stopAutonomousGroup() {
+        mForceStopScan = false;
+        manager.removeGroup(channel, new WifiP2pManager.ActionListener() {
+            @Override
+            public void onSuccess() {
+                Log.d(TAG, "removeGroup Success");
+            }
+
+            @Override
+            public void onFailure(int reasonCode) {
+                Log.d(TAG, "removeGroup Failure");
+            }
+        });
+    }
+
+    private void startConnect(WifiP2pDevice device, int config) {
+        if (config > WpsInfo.KEYPAD)
+            Log.d(TAG, "startConnect config invalid.");
+
+        if (config == WpsInfo.PBC)
+            Log.d(TAG, "startConnect PBC configuration");
+        else if (config == WpsInfo.DISPLAY)
+            Log.d(TAG, "startConnect DISPLAY configuration");
+        else if (config == WpsInfo.KEYPAD)
+            Log.d(TAG, "startConnect KEYPAD configuration");
+
+        WifiP2pConfig wifip2pconfig = new WifiP2pConfig();
+        WpsInfo wpsConfig = new WpsInfo();
+        wpsConfig.setup = config;
+        wifip2pconfig.wps = wpsConfig;
+        wifip2pconfig.deviceAddress = device.deviceAddress;
+        wifip2pconfig.groupOwnerIntent = 15;
+        mStartConnecting = true;
+
+        manager.connect(channel, wifip2pconfig, new ActionListener() {
+            @Override
+            public void onSuccess() {
+                Log.d(TAG, "startConnect Success.");
+            }
+
+            @Override
+            public void onFailure(int reason) {
+                mStartConnecting = false;
+                Log.d(TAG, "startConnect failed with reason " + reason + ".");
+            }
+        });
+    }
+
+    private void setWfdSessionMode(boolean mode) {
+        Log.d(TAG, "setWfdSessionMode " + mode);
+        mManualInitWfdSession = mode;
+    }
+
+    private void startWfdSession() {
+        if (mManualInitWfdSession) {
+            Log.d(TAG, "start Manual WfdSession ");
+            setConnect();
+            Log.d(TAG, "start miracast delay " + MAX_DELAY_MS + " ms");
+            mHandler.postDelayed(new Runnable() {
+                public void run() {
+                    Intent intent = new Intent(WiFiDirectMainActivity.this, SinkActivity.class);
+                    Bundle bundle = new Bundle();
+                    bundle.putString(SinkActivity.KEY_PORT, mPort);
+                    bundle.putString(SinkActivity.KEY_IP, mIP);
+                    bundle.putBoolean(HRESOLUTION_DISPLAY, mPref.getBoolean(HRESOLUTION_DISPLAY, true));
+                    intent.putExtras(bundle);
+                    startActivity(intent);
+                }}, MAX_DELAY_MS);
+        } else {
+            Log.d(TAG, "error Auto WfdSessionMode,return");
+            return;
+        }
+    }
+
+    private void setWifiP2pChannels(int lc, int oc) {
+        Log.d(TAG, "setWifiP2pChannels lc:" + lc + " oc:" + oc);
+        manager.setWifiP2pChannels(channel, lc, oc, new ActionListener() {
+            @Override
+            public void onSuccess() {
+                Log.d(TAG, "setWifiP2pChannels succeeded.  ");
+            }
+
+            @Override
+            public void onFailure(int reason) {
+                Log.d(TAG, "setWifiP2pChannels failed with reason " + reason + ".");
+            }
+        });
+    }
+
+/********************Miracast cert end**********************/
 
     /** register the BroadcastReceiver with the intent values to be matched */
     @Override
     public void onResume()
     {
+        Log.d(TAG, "onResume====>");
         super.onResume();
         manager.removeGroup(channel, new WifiP2pManager.ActionListener() {
             @Override
@@ -260,18 +632,59 @@ public class WiFiDirectMainActivity extends Activity implements
             ipFile.delete();
         }
         /* enable backlight */
-        mReceiver = new WiFiDirectBroadcastReceiver (manager, channel, this);
         PowerManager pm = (PowerManager) getSystemService (Context.POWER_SERVICE);
         mWakeLock = pm.newWakeLock (PowerManager.SCREEN_BRIGHT_WAKE_LOCK
                                     | PowerManager.ON_AFTER_RELEASE, TAG);
         mWakeLock.acquire();
+        if (mFirstInit) {
+            Intent intent = new Intent(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
+            removeStickyBroadcastAsUser(intent, UserHandle.ALL);
+        } else {
+            mFirstInit = true;
+        }
         registerReceiver (mReceiver, intentFilter);
         mAddrObserver.startWatching();
-        if (DEBUG)
-        {
-            Log.d (TAG, "onResume()");
-        }
-        mConnectStatus = (ImageView) findViewById (R.id.show_connect);
+
+        initCert();//miracast certification
+        mConnectStatus = (ImageView) findViewById(R.id.show_connect);
+        mConnectImageNum = 5;
+        mConnectStatus.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mPref.getBoolean(MIRACAST_CERT, false)) {
+                    if (mConnectImageNum != 5) {
+                        if (mConnectImageLastTime < (SystemClock.uptimeMillis()-500)) {
+                            mConnectImageNum = 5;
+                        }
+                    }
+                    mConnectImageNum--;
+                    mConnectImageLastTime = SystemClock.uptimeMillis();
+                    if (mConnectImageNum <= 0) {
+                        mConnectImageNum = 5;
+                        mEditor.putBoolean(MIRACAST_CERT, false);
+                        mEditor.commit();
+                        setCertComponentVisible(false);
+                    } else {
+                        Log.d(TAG, "already miracast cert mode, return!!!");
+                    }
+                    return;
+                }
+                if (mConnectImageNum != 5) {
+                    if (mConnectImageLastTime < (SystemClock.uptimeMillis()-500)) {
+                        mConnectImageNum = 5;
+                    }
+                }
+                mConnectImageNum--;
+                mConnectImageLastTime = SystemClock.uptimeMillis();
+                if (mConnectImageNum <= 0) {
+                    mConnectImageNum = 5;
+                    mEditor.putBoolean(MIRACAST_CERT, true);
+                    mEditor.commit();
+                    setCertComponentVisible(true);
+                }
+                Log.d(TAG, "mConnectImageNum: " + mConnectImageNum);
+            }
+        });
         mConnectDesc = (TextView) findViewById (R.id.show_connect_desc);
         mConnectWarn = (TextView) findViewById (R.id.show_desc_more);
         mClick2Settings = (Button) findViewById (R.id.settings_btn);
@@ -308,6 +721,48 @@ public class WiFiDirectMainActivity extends Activity implements
             mDeviceTitle.setVisibility (View.INVISIBLE);
         }
         resetData();
+        if (!mPref.getBoolean(MIRACAST_CERT, false))
+            setCertComponentVisible(false);
+        else
+            setCertComponentVisible(true);
+    }
+
+    private final Runnable startSearchRunnable = new Runnable()
+    {
+        @Override
+        public void run()
+        {
+            startSearch();
+        }
+    };
+
+    private final Runnable searchAgainRunnable = new Runnable() {
+    @Override
+        public void run() {
+            if (peers.isEmpty()) {
+                if (DEBUG)
+                    Log.d(TAG, "no peers, search again.");
+                startSearch();
+            }
+        }
+    };
+
+    public void startSearchTimer() {
+        if (DEBUG) Log.d(TAG, " startSearchTimer 6s");
+            mHandler.postDelayed(startSearchRunnable, 6000);
+    }
+
+    public void cancelSearchTimer(){
+        if (DEBUG) Log.d(TAG, " cancelSearchTimer");
+            mHandler.removeCallbacks(startSearchRunnable);
+        if (DEBUG) Log.d(TAG, " cancel searchAgainRunnable");
+            mHandler.removeCallbacks(searchAgainRunnable);
+    }
+
+    @Override
+    public void onContentChanged()
+    {
+        super.onContentChanged();
     }
 
     public void setDevice (WifiP2pDevice device)
@@ -325,7 +780,9 @@ public class WiFiDirectMainActivity extends Activity implements
                 mDeviceNameShow.setText (mSavedDeviceName);
             }
         }
-        if (WifiP2pDevice.CONNECTED == mDevice.status)
+        Log.e(TAG, "====setDevice.mDevice.status: " + mDevice.status);
+        if ((WifiP2pDevice.CONNECTED == mDevice.status)
+            || (WifiP2pDevice.INVITED == mDevice.status))
         {
             cancelSearchTimer();
         }
@@ -341,6 +798,8 @@ public class WiFiDirectMainActivity extends Activity implements
         {
             Log.d (TAG, "startSearch wifiP2pEnabled:" + isWifiP2pEnabled);
         }
+        if (mHandler.hasCallbacks(startSearchRunnable))
+            cancelSearchTimer();
         if (!isWifiP2pEnabled)
         {
             if (manager != null && channel != null)
@@ -353,20 +812,19 @@ public class WiFiDirectMainActivity extends Activity implements
             }
             return;
         }
-        manager.discoverPeers (channel, new WifiP2pManager.ActionListener()
-        {
-            @Override
-            public void onSuccess()
-            {
-                Log.d(TAG, "discoverPeers init success");
-            }
+        if (!SystemProperties.getBoolean("wfd.p2p.go", false)) {
+            manager.discoverPeers(channel, new WifiP2pManager.ActionListener() {
+                @Override
+                public void onSuccess() {
+                    Log.d(TAG, "discoverPeers init success");
+                }
 
-            @Override
-            public void onFailure (int reasonCode)
-            {
-                Log.d(TAG, "discoverPeers init failure, reasonCode:" + reasonCode);
-            }
-        });
+                @Override
+                public void onFailure(int reasonCode) {
+                    Log.d(TAG, "discoverPeers init failure, reasonCode:" + reasonCode);
+                }
+            });
+        }
     }
     public void onQuery (MenuItem item)
     {
@@ -395,12 +853,72 @@ public class WiFiDirectMainActivity extends Activity implements
     @Override
     public void onPause()
     {
+        Log.d(TAG, "onPause====>");
         super.onPause();
         mAddrObserver.stopWatching();
         unregisterReceiver (mReceiver);
         mWakeLock.release();
     }
 
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        Log.d(TAG, "onKeyDown keyCode:" + keyCode + " event:" + event);
+        switch (keyCode) {
+            case KeyEvent.KEYCODE_VOLUME_UP:
+            case KeyEvent.KEYCODE_VOLUME_DOWN:
+            case KeyEvent.KEYCODE_VOLUME_MUTE:
+            case KeyEvent.KEYCODE_BACK:
+                break;
+        }
+        return super.onKeyDown(keyCode, event);
+    }
+
+    @Override
+    public boolean onKeyUp(int keyCode, KeyEvent event) {
+        Log.d(TAG, "onKeyUp keyCode:" + keyCode + " event:" + event);
+        switch (keyCode) {
+           case KeyEvent.KEYCODE_1:
+               tryDiscoverPeers();
+               break;
+           case KeyEvent.KEYCODE_2:
+               stopPeerDiscovery();
+               break;
+           case KeyEvent.KEYCODE_3:
+               startListen();
+               break;
+           case KeyEvent.KEYCODE_4:
+               stopListen();
+               break;
+           case KeyEvent.KEYCODE_5:
+               changeRole(true);
+               break;
+           case KeyEvent.KEYCODE_6:
+               changeRole(false);
+               break;
+           case KeyEvent.KEYCODE_7:
+               startAutonomousGroup();
+               break;
+           case KeyEvent.KEYCODE_8:
+               stopAutonomousGroup();
+               break;
+           case KeyEvent.KEYCODE_9:
+               int tmp_lc = SystemProperties.getInt("wfd.p2p.lc", 1);
+               int tmp_oc = SystemProperties.getInt("wfd.p2p.oc", 1);
+               setWifiP2pChannels(tmp_lc, tmp_oc);
+               break;
+           case KeyEvent.KEYCODE_0:
+               //int tmp_cfg = SystemProperties.getInt("wfd.p2p.wps", 0);
+               //startWps(tmp_cfg);
+               break;
+           case KeyEvent.KEYCODE_A:
+               setWfdSessionMode(!mManualInitWfdSession);
+               break;
+           case KeyEvent.KEYCODE_B:
+               startWfdSession();
+               break;
+           }
+           return super.onKeyUp(keyCode, event);
+     }
     /*
      * (non-Javadoc)
      *
@@ -471,14 +989,17 @@ public class WiFiDirectMainActivity extends Activity implements
     {
         mPort = port;
         mIP = ip;
+        if (mManualInitWfdSession) {
+            Log.d(TAG,"waiting startMiracast");
+            return;
+        }
         setConnect();
-        Log.d (TAG, "start miracast delay " + MAX_DELAY_MS + " ms");
+        Log.d(TAG, "start miracast delay " + MAX_DELAY_MS + " ms");
         mHandler.postDelayed (new Runnable()
         {
             public void run()
             {
-                Intent intent = new Intent (WiFiDirectMainActivity.this,
-                                            SinkActivity.class);
+                Intent intent = new Intent (WiFiDirectMainActivity.this, SinkActivity.class);
                 Bundle bundle = new Bundle();
                 bundle.putString (SinkActivity.KEY_PORT, mPort);
                 bundle.putString (SinkActivity.KEY_IP, mIP);
@@ -489,23 +1010,7 @@ public class WiFiDirectMainActivity extends Activity implements
         }, MAX_DELAY_MS);
     }
 
-    public void stopMiracast (boolean stop) {
-        if ((manager == null) || !stop) {
-            return;
-        }
-
-        manager.stopPeerDiscovery (channel, new WifiP2pManager.ActionListener() {
-            @Override
-            public void onSuccess() {
-                Log.d (TAG, "stopMiracast Success");
-            }
-
-            @Override
-            public void onFailure (int reasonCode) {
-                Log.d (TAG, "stopMiracast Failure");
-            }
-        });
-    }
+    public void stopMiracast(boolean stop) {}
 
     private void fixRtspFail()
     {
@@ -513,20 +1018,7 @@ public class WiFiDirectMainActivity extends Activity implements
         {
             manager.removeGroup (channel, null);
             if (mNetId != -1)
-                manager.deletePersistentGroup (channel, mNetId, null);
-
-            new AlertDialog.Builder (this)
-            .setTitle (R.string.rtsp_fail)
-            .setMessage (R.string.rtsp_suggestion)
-            .setIconAttribute (android.R.attr.alertDialogIcon)
-            .setPositiveButton (android.R.string.ok,
-                                new DialogInterface.OnClickListener()
-            {
-                public void onClick (DialogInterface dialog, int whichButton)
-                {
-                }
-            })
-            .show();
+                manager.deletePersistentGroup(channel, mNetId, null);
         }
     }
 
@@ -544,6 +1036,7 @@ public class WiFiDirectMainActivity extends Activity implements
         intentFilter.addAction (WifiP2pManager.WIFI_P2P_DISCOVERY_CHANGED_ACTION);
         intentFilter.addAction (WIFI_P2P_IP_ADDR_CHANGED_ACTION);
         manager = (WifiP2pManager) getSystemService (Context.WIFI_P2P_SERVICE);
+        mWifiManager = (WifiManager) getSystemService (Context.WIFI_SERVICE);
         channel = manager.initialize (this, getMainLooper(), null);
         mRenameListener = new OnClickListener()
         {
@@ -600,6 +1093,7 @@ public class WiFiDirectMainActivity extends Activity implements
         filter.addAction (ACTION_FIX_RTSP_FAIL);
         filter.addAction (ACTION_REMOVE_GROUP);
         registerReceiver (mReceiver2, filter);
+        mReceiver = new WiFiDirectBroadcastReceiver (manager, channel, this);
         mPref = PreferenceManager.getDefaultSharedPreferences (this);
         mEditor = mPref.edit();
         changeRole(true);
@@ -610,7 +1104,7 @@ public class WiFiDirectMainActivity extends Activity implements
     {
         changeRole(false);
         unregisterReceiver (mReceiver2);
-        stopMiracast (true);
+        mFirstInit = false;
         super.onDestroy();
     }
 
@@ -633,23 +1127,44 @@ public class WiFiDirectMainActivity extends Activity implements
     @Override
     public void onPeersAvailable (WifiP2pDeviceList devicelist)
     {
-        String list = WiFiDirectMainActivity.this.getResources().getString (R.string.peer_list);
-        if (progressDialog != null && progressDialog.isShowing() )
+        String list = WiFiDirectMainActivity.this.getResources().getString(R.string.peer_list);
+        if (progressDialog != null && progressDialog.isShowing())
         {
             progressDialog.dismiss();
         }
+
+        Log.d(TAG, "===onPeersAvailable===");
         peers.clear();
-        peers.addAll (devicelist.getDeviceList() );
+        mDeviceList.clear();
+        mDeviceList.add(" ");
+        peers.addAll(devicelist.getDeviceList());
         freshView();
         for (int i = 0; i < peers.size(); i++)
         {
-            list += peers.get (i).deviceName + " ";
-            if (DEBUG)
+            if (!peers.get(i).wfdInfo.isWfdEnabled())
             {
-                Log.d (TAG, "onPeersAvailable peerDevice:" + peers.get (i).deviceName + ", status:" + peers.get (i).status + " (0-CONNECTED,3-AVAILABLE)");
+                Log.d(TAG, "peerDevice:" + peers.get(i).deviceName + " is not a wfd device");
+                continue;
             }
+            if (!peers.get(i).wfdInfo.isSessionAvailable())
+            {
+                Log.d(TAG, "peerDevice:" + peers.get(i).deviceName + " is an unavailable wfd session");
+                continue;
+            }
+
+            if ((WifiP2pDevice.INVITED == peers.get(i).status)
+                || (WifiP2pDevice.CONNECTED == peers.get(i).status))
+                cancelSearchTimer();
+            list += "    " + peers.get(i).deviceName;
+            mDeviceList.add(peers.get(i).deviceName);
+            if (DEBUG)
+                Log.d(TAG, "peerDevice:" + peers.get(i).deviceName + ", status:" + peers.get(i).status + " (0-CONNECTED,3-AVAILABLE)");
         }
-        mPeerList.setText (list);
+        mPeerList.setText(list);
+        Log.d(TAG, "===onPeersAvailable===");
+
+        if (!mForceStopScan)
+            mHandler.postDelayed(searchAgainRunnable, 5000);
     }
 
     public void onGroupInfoAvailable (WifiP2pGroup group)
@@ -770,18 +1285,15 @@ public class WiFiDirectMainActivity extends Activity implements
 
     private boolean isNetAvailiable()
     {
-        ConnectivityManager connectivity = (ConnectivityManager) getSystemService (Context.CONNECTIVITY_SERVICE);
-        if (connectivity != null)
-        {
-            NetworkInfo info = connectivity.getActiveNetworkInfo();
-            if (info == null || !info.isAvailable() )
-            {
-                return false;
-            } else if (ConnectivityManager.TYPE_WIFI != info.getType()) {
-                Log.d(TAG, "ActiveNetwork TYPE is not WIFI");
-                return false;
-            } else {
+        if (mWifiManager != null) {
+            int state = mWifiManager.getWifiState();
+            if (WifiManager.WIFI_STATE_ENABLING == state
+                || WifiManager.WIFI_STATE_ENABLED == state) {
+                Log.d(TAG, "WIFI enabled");
                 return true;
+            } else {
+                Log.d(TAG, "WIFI disabled");
+                return false;
             }
         }
         return false;
@@ -789,8 +1301,7 @@ public class WiFiDirectMainActivity extends Activity implements
 
     public void onConnectionInfoAvailable (WifiP2pInfo info)
     {
-        if (DEBUG)
-        {
+        if (DEBUG) {
             Log.d (TAG, "onConnectionInfoAvailable info:" + info);
         }
     }

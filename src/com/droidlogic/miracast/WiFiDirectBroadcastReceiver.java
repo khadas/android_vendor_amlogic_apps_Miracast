@@ -97,8 +97,8 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver
             // request available peers from the wifi p2p manager. This is an
             // asynchronous call and the calling activity is notified with a
             // callback on PeerListListener.onPeersAvailable()
-            if (manager != null)
-            {
+            if (manager != null && !activity.mForceStopScan && !activity.mStartConnecting) {
+                Log.d(WiFiDirectMainActivity.TAG, "requestPeers!!!!");
                 manager.requestPeers (channel, (PeerListListener) activity);
             }
             if (WiFiDirectMainActivity.DEBUG)
@@ -164,7 +164,8 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver
                 activity.resetData();
                 activity.stopMiracast (false);
                 //start a search when we are disconnected
-                activity.startSearch();
+                if (!activity.mForceStopScan)
+                    activity.startSearch();
             }
         }
         else if (WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION.equals (action) )
@@ -175,7 +176,7 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver
                 Log.d (WiFiDirectMainActivity.TAG, "WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION");
             }
             activity.resetData();
-            activity.setDevice ( (WifiP2pDevice) intent.getParcelableExtra (
+            activity.setDevice( (WifiP2pDevice) intent.getParcelableExtra (
                                      WifiP2pManager.EXTRA_WIFI_P2P_DEVICE) );
         }
         else if (WifiP2pManager.WIFI_P2P_DISCOVERY_CHANGED_ACTION.equals (action) )
@@ -185,7 +186,8 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver
             if ( activity != null && discoveryState == WifiP2pManager.WIFI_P2P_DISCOVERY_STOPPED)
             {
                 activity.discoveryStop();
-                activity.startSearchTimer();
+                if (!activity.mForceStopScan && !activity.mStartConnecting)
+                    activity.startSearchTimer();
             }
             if (WiFiDirectMainActivity.DEBUG)
             {
