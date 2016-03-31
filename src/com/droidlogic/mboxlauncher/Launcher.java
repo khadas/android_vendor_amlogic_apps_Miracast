@@ -434,7 +434,7 @@ public class Launcher extends Activity{
     }
 
     public void resetShortcutScreen(int mode) {
-        mTvHandler.removeMessages(MSG_REFRESH_SHORTCUT);
+        mHandler.removeMessages(MSG_REFRESH_SHORTCUT);
         if (mAppDataLoader.isDataLoaded()) {
             if (mode == MODE_HOME) {
                 mHomeShortcutView.setLayoutView(mode, mAppDataLoader.getShortcutList(mode));
@@ -774,8 +774,8 @@ public class Launcher extends Activity{
     }
 
     private boolean isBootvideoStopped() {
-        return TextUtils.equals(mSystemControlManager.getProperty("service.bootvideo"), "1")
-                && TextUtils.equals(mSystemControlManager.getProperty("service.bootvideo.exit"), "1");
+        return !TextUtils.equals(mSystemControlManager.getProperty("service.bootvideo"), "1")
+                || TextUtils.equals(mSystemControlManager.getProperty("service.bootvideo.exit"), "1");
     }
 
     private void tuneTvView() {
