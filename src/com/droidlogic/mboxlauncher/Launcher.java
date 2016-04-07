@@ -664,6 +664,7 @@ public class Launcher extends Activity{
     }
 
     public void startCustomScreen(View view) {
+        if (current_screen_mode == MODE_CUSTOM) return;
         mHoverView.clear();
         if (needPreviewFeture()) {
             hideTvViewForCustom();
