@@ -475,6 +475,9 @@ public class Launcher extends Activity{
 
     public void setHomeViewVisible (boolean isShowHome) {
         if (isShowHome) {
+            if (mCustomView != null && current_screen_mode == MODE_CUSTOM) {
+                mCustomView.recoverMainView();
+            }
             current_screen_mode = MODE_HOME;
             mSecondScreen.setVisibility(View.GONE);
             mHomeView.setVisibility(View.VISIBLE);
