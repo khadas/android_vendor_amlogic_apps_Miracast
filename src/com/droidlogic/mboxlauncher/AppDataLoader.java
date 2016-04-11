@@ -365,7 +365,12 @@ public class AppDataLoader {
         ArrayMap<String, Object> map = new ArrayMap<String, Object>();
         map.put(NAME, name);
         map.put(INTENT, i);
-        map.put(ICON, icon);
+        int resId = parsePackageIcon(c.getPackageName());
+        if (resId == -1) {
+            map.put(ICON, icon);
+        } else {
+            map.put(ICON, mContext.getResources().getDrawable(resId));
+        }
         map.put(COMPONENT_NAME, c);
         return map;
     }
@@ -434,5 +439,32 @@ public class AppDataLoader {
                 return LOCAL_SHORTCUT_HEAD;
         }
         return null;
+    }
+
+    private int parsePackageIcon(String packageName){
+        if (packageName.equals("com.droidlogic.FileBrower")) {
+            return R.drawable.icon_filebrowser;
+        } else if (packageName.equals("com.android.browser")) {
+            return R.drawable.icon_browser;
+        } else if (packageName.equals("com.droidlogic.appinstall")) {
+            return R.drawable.icon_appinstaller;
+        } else if (packageName.equals("com.android.tv.settings")) {
+            return R.drawable.icon_setting;
+        } else if (packageName.equals("com.droidlogic.mediacenter")){
+            return R.drawable.icon_mediacenter;
+        } else if (packageName.equals("com.droidlogic.otaupgrade")) {
+            return R.drawable.icon_backupandupgrade;
+        } else if (packageName.equals("com.android.gallery3d")) {
+            return R.drawable.icon_pictureplayer;
+        } else if (packageName.equals("com.droidlogic.miracast")) {
+            return R.drawable.icon_miracast;
+        } else if (packageName.equals("com.droidlogic.PPPoE")) {
+            return R.drawable.icon_pppoe;
+        } else if (packageName.equals("com.android.music")) {
+            return R.drawable.icon_music;
+        } else if (packageName.equals("com.android.camera2")) {
+            return R.drawable.icon_camera;
+        }
+        return -1;
     }
 }

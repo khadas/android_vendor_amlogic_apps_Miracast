@@ -68,16 +68,9 @@ public class MyGridLayout extends GridLayout{
                 SoftReference<Drawable> bg = new SoftReference<Drawable>(mContext.getResources().getDrawable(parseItemBackground(i, mode)));
                 img_bg.setBackgroundDrawable(bg.get());
                 if (list.get(i).get(AppDataLoader.ICON) instanceof Drawable) {
-                    int resId = parsePackageIcon(((ComponentName)list.get(i).get(AppDataLoader.COMPONENT_NAME)).getPackageName());
-
-                    if (resId != -1) {
-                        SoftReference<Drawable> icon = new SoftReference<Drawable>(mContext.getResources().getDrawable(resId));
-                        img_bg.setImageDrawable(icon.get());
-                    } else {
-                        SoftReference<Drawable> icon = new SoftReference<Drawable>((Drawable)list.get(i).get(AppDataLoader.ICON));
-                        img_bg.setImageDrawable(icon.get());
-                    }
-                   view.setIntent((Intent)list.get(i).get(AppDataLoader.INTENT));
+                    SoftReference<Drawable> icon = new SoftReference<Drawable>((Drawable)list.get(i).get(AppDataLoader.ICON));
+                    img_bg.setImageDrawable(icon.get());
+                    view.setIntent((Intent)list.get(i).get(AppDataLoader.INTENT));
                 } else {
                     SoftReference<Drawable> add = new SoftReference<Drawable>(mContext.getResources().getDrawable(R.drawable.item_img_add));
                     img_bg.setImageDrawable(add.get());
@@ -159,32 +152,5 @@ public class MyGridLayout extends GridLayout{
                     return R.drawable.item_child_1;
             }
         }
-    }
-
-    private int parsePackageIcon(String packageName){
-        if (packageName.equals("com.droidlogic.FileBrower")) {
-            return R.drawable.icon_filebrowser;
-        } else if (packageName.equals("com.android.browser")) {
-            return R.drawable.icon_browser;
-        } else if (packageName.equals("com.droidlogic.appinstall")) {
-            return R.drawable.icon_appinstaller;
-        } else if (packageName.equals("com.android.tv.settings")) {
-            return R.drawable.icon_setting;
-        } else if (packageName.equals("com.droidlogic.mediacenter")){
-            return R.drawable.icon_mediacenter;
-        } else if (packageName.equals("com.droidlogic.otaupgrade")) {
-            return R.drawable.icon_backupandupgrade;
-        } else if (packageName.equals("com.android.gallery3d")) {
-            return R.drawable.icon_pictureplayer;
-        } else if (packageName.equals("com.droidlogic.miracast")) {
-            return R.drawable.icon_miracast;
-        } else if (packageName.equals("com.droidlogic.PPPoE")) {
-            return R.drawable.icon_pppoe;
-        } else if (packageName.equals("com.android.music")) {
-            return R.drawable.icon_music;
-        } else if (packageName.equals("com.android.camera2")) {
-            return R.drawable.icon_camera;
-        }
-        return -1;
     }
 }

@@ -29,7 +29,8 @@ public class HoverView extends RelativeLayout{
     private final static int animDelay = 0;
 
     private Context mContext;
-    private ImageView hoverImage;
+    private ImageView hoverImage_home;
+    private ImageView hoverImage_second;
     private TextView textTop;
     private TextView textBottom;
 
@@ -50,7 +51,8 @@ public class HoverView extends RelativeLayout{
 
     private void initlayout() {
         inflate(mContext, R.layout.layout_hover, this);
-        hoverImage = (ImageView)findViewById(R.id.img_hover);
+        hoverImage_home = (ImageView)findViewById(R.id.img_hover_home);
+        hoverImage_second= (ImageView)findViewById(R.id.img_hover_second);
         textTop = (TextView)findViewById(R.id.tx_hover_top);
         textBottom = (TextView)findViewById(R.id.tx_hover_bottom);
     }
@@ -65,8 +67,10 @@ public class HoverView extends RelativeLayout{
     }
 
     public void clear() {
-        hoverImage.setBackgroundDrawable(null);
-        hoverImage.setImageDrawable(null);
+        hoverImage_home.setBackgroundDrawable(null);
+        hoverImage_home.setImageDrawable(null);
+        hoverImage_second.setBackgroundDrawable(null);
+        hoverImage_second.setImageDrawable(null);
         textTop.setText(null);
         textBottom.setText(null);
         this.setOutlineProvider(null);
@@ -120,7 +124,7 @@ public class HoverView extends RelativeLayout{
         this.setOutlineProvider(viewOutlineProvider);
         this.setElevation(elevation);
 
-        setHoverImage((ImageView)(focusView.getChildAt(0)));
+        setHoverImage(focusView, (ImageView)(focusView.getChildAt(0)));
         if (focusView.getChildAt(1) instanceof TextView) {
             setHoverText(focusView, ((TextView)focusView.getChildAt(1)).getText().toString());
         } else {
@@ -132,9 +136,18 @@ public class HoverView extends RelativeLayout{
         }
     }
 
-    private void setHoverImage(ImageView source) {
-        hoverImage.setBackgroundDrawable(source.getBackground());
-        hoverImage.setImageDrawable(source.getDrawable());
+    private void setHoverImage(MyRelativeLayout focusView, ImageView source) {
+        if (focusView.getType() != Launcher.TYPE_APP_SHORTCUT) {
+            hoverImage_home.setBackgroundDrawable(source.getBackground());
+            hoverImage_home.setImageDrawable(source.getDrawable());
+            hoverImage_second.setBackgroundDrawable(null);
+            hoverImage_second.setImageDrawable(null);
+        } else {
+            hoverImage_home.setBackgroundDrawable(null);
+            hoverImage_home.setImageDrawable(null);
+            hoverImage_second.setBackgroundDrawable(source.getBackground());
+            hoverImage_second.setImageDrawable(source.getDrawable());
+        }
     }
 
     private void setHoverText(MyRelativeLayout focusView, String s){
