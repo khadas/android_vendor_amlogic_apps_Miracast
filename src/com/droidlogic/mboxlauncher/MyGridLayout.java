@@ -6,6 +6,8 @@ import android.content.Intent;
 import android.widget.GridLayout;
 import android.widget.TextView;
 import android.widget.ImageView;
+import android.view.InputDevice;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.graphics.drawable.Drawable;
@@ -40,6 +42,20 @@ public class MyGridLayout extends GridLayout{
     public void onDraw(Canvas canvas) {
        // TODO Auto-generated method stub
        super.onDraw(canvas);
+    }
+
+    @Override
+    public boolean onGenericMotionEvent(MotionEvent event) {
+        //The input source is a pointing device associated with a display.
+        if (0 != (event.getSource() & InputDevice.SOURCE_CLASS_POINTER)) {
+            switch (event.getAction()) {
+                // process the scroll wheel movement
+                case MotionEvent.ACTION_SCROLL:
+                    ((Launcher)mContext).getHoverView().clear();
+                    break;
+            }
+        }
+        return super.onGenericMotionEvent(event);
     }
 
     @Override

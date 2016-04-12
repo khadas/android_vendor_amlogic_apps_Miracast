@@ -137,7 +137,7 @@ public class Launcher extends Activity{
     private boolean isRadioChannel = false;
     private ChannelObserver mChannelObserver;
     private TvInputManager mTvInputManager;
-    private TvInputChangeCallback mTvInputChangeCallback;
+    //private TvInputChangeCallback mTvInputChangeCallback;
     private TvDataBaseManager mTvDataBaseManager;
     private String mTvInputId;
     private Uri mChannelUri;
@@ -788,8 +788,8 @@ public class Launcher extends Activity{
         mTvInputId = null;
         mChannelUri = null;
         mTvInputManager = (TvInputManager) getSystemService(Context.TV_INPUT_SERVICE);
-        mTvInputChangeCallback = new TvInputChangeCallback();
-        mTvInputManager.registerCallback(mTvInputChangeCallback, new Handler());
+        //mTvInputChangeCallback = new TvInputChangeCallback();
+        //mTvInputManager.registerCallback(mTvInputChangeCallback, new Handler());
 
         int device_id, index_atv, index_dtv;
         device_id = Settings.System.getInt(getContentResolver(), DroidLogicTvUtils.TV_CURRENT_DEVICE_ID, 0);
@@ -837,10 +837,10 @@ public class Launcher extends Activity{
 
     private void releaseTvView() {
         tvView.setVisibility(View.GONE);
-        if (mTvInputChangeCallback != null) {
+        /*if (mTvInputChangeCallback != null) {
             mTvInputManager.unregisterCallback(mTvInputChangeCallback);
             mTvInputChangeCallback = null;
-        }
+        }*/
         if (mChannelObserver != null) {
             getContentResolver().unregisterContentObserver(mChannelObserver);
             mChannelObserver = null;
