@@ -137,7 +137,7 @@ public class Launcher extends Activity{
     private boolean isRadioChannel = false;
     private ChannelObserver mChannelObserver;
     private TvInputManager mTvInputManager;
-    //private TvInputChangeCallback mTvInputChangeCallback;
+    private TvInputChangeCallback mTvInputChangeCallback;
     private TvDataBaseManager mTvDataBaseManager;
     private String mTvInputId;
     private Uri mChannelUri;
@@ -788,8 +788,8 @@ public class Launcher extends Activity{
         mTvInputId = null;
         mChannelUri = null;
         mTvInputManager = (TvInputManager) getSystemService(Context.TV_INPUT_SERVICE);
-        //mTvInputChangeCallback = new TvInputChangeCallback();
-        //mTvInputManager.registerCallback(mTvInputChangeCallback, new Handler());
+        mTvInputChangeCallback = new TvInputChangeCallback();
+        mTvInputManager.registerCallback(mTvInputChangeCallback, new Handler());
 
         int device_id, index_atv, index_dtv;
         device_id = Settings.System.getInt(getContentResolver(), DroidLogicTvUtils.TV_CURRENT_DEVICE_ID, 0);
@@ -808,8 +808,11 @@ public class Launcher extends Activity{
         mTvDataBaseManager = new TvDataBaseManager(this);
 
         if (TextUtils.isEmpty(mTvInputId)) {
-            mTvInputId = DEFAULT_INPUT_ID;
-            mChannelUri = TvContract.buildChannelUri(-1);
+            Log.d(TAG, "device" + device_id + " is not exist");
+            setTvPrompt(false, true);
+            return;
+            //mTvInputId = DEFAULT_INPUT_ID;
+            //mChannelUri = TvContract.buildChannelUri(-1);
         } else {
             if (device_id == DroidLogicTvUtils.DEVICE_ID_ATV) {
                 ArrayList<ChannelInfo> channelList = mTvDataBaseManager.getChannelList(mTvInputId, Channels.SERVICE_TYPE_AUDIO_VIDEO, true);
@@ -837,10 +840,10 @@ public class Launcher extends Activity{
 
     private void releaseTvView() {
         tvView.setVisibility(View.GONE);
-        /*if (mTvInputChangeCallback != null) {
+        if (mTvInputChangeCallback != null) {
             mTvInputManager.unregisterCallback(mTvInputChangeCallback);
             mTvInputChangeCallback = null;
-        }*/
+        }
         if (mChannelObserver != null) {
             getContentResolver().unregisterContentObserver(mChannelObserver);
             mChannelObserver = null;
@@ -858,25 +861,29 @@ public class Launcher extends Activity{
                 Settings.System.putInt(getContentResolver(), DroidLogicTvUtils.TV_CURRENT_CHANNEL_IS_RADIO,
                                 ChannelInfo.isRadioChannel(channel) ? 1 : 0);
             }
-            setTvPrompt(false);
+            setTvPrompt(false, false);
         } else {
             mChannelUri = TvContract.buildChannelUri(-1);
         }
     }
 
-    private void setTvPrompt(boolean noSignal) {
-        if (noSignal || isRadioChannel) {
+    private void setTvPrompt(boolean noSignal, boolean noDevice) {
+        if (noSignal || noDevice || isRadioChannel) {
             if (noSignal)
                 tvPrompt.setText(getResources().getString(R.string.str_no_signal));
             else
                 tvPrompt.setText(null);
 
-            if (isRadioChannel)
+            if (isRadioChannel) {
                 tvPrompt.setBackgroundDrawable(getResources().getDrawable(R.drawable.bg_radio));
-            else
+            } else if (noDevice) {
+                tvPrompt.setBackgroundDrawable(getResources().getDrawable(R.drawable.hotplug_out));
+            } else {
                 tvPrompt.setBackground(null);
+            }
         } else {
             tvPrompt.setText(null);
+            tvPrompt.setBackground(null);
         }
     }
 
@@ -915,7 +922,7 @@ public class Launcher extends Activity{
         @Override
         public void onVideoAvailable(String inputId) {
             //tvView.invalidate();
-            setTvPrompt(false);
+            setTvPrompt(false, false);
 
             Log.d(TAG, "====onVideoAvailable==inputId =" + inputId);
         }
@@ -946,23 +953,46 @@ public class Launcher extends Activity{
                 default:
                     break;
             }
-            setTvPrompt(true);
+            setTvPrompt(true, false);
         }
     }
 
     private final class TvInputChangeCallback extends TvInputManager.TvInputCallback {
         @Override
+        public void onInputAdded(String inputId) {
+            Log.d(TAG, "==== onInputAdded, inputId=" + inputId + " curent inputid=" + mTvInputId);
+            int device_id = Settings.System.getInt(getContentResolver(), DroidLogicTvUtils.TV_CURRENT_DEVICE_ID, 0);
+            if (device_id == parseDeviceId(inputId)) {
+                switch (device_id) {
+                    case DroidLogicTvUtils.DEVICE_ID_AV1:
+                    case DroidLogicTvUtils.DEVICE_ID_AV2:
+                    case DroidLogicTvUtils.DEVICE_ID_HDMI1:
+                    case DroidLogicTvUtils.DEVICE_ID_HDMI2:
+                    case DroidLogicTvUtils.DEVICE_ID_HDMI3:
+                        tvView.reset();
+                        setTvPrompt(false, false);
+                        mTvInputId = inputId;
+                        mChannelUri = TvContract.buildChannelUriForPassthroughInput(mTvInputId);
+                        tvView.tune(mTvInputId, mChannelUri);
+                        break;
+                }
+            }
+        }
+
+        @Override
         public void onInputRemoved(String inputId) {
             Log.d(TAG, "==== onInputRemoved, inputId=" + inputId + " curent inputid=" + mTvInputId);
             if (TextUtils.equals(inputId, mTvInputId)) {
-                Log.d(TAG, "==== current input device removed, switch to ATV");
-                mTvInputId = DEFAULT_INPUT_ID;
+                Log.d(TAG, "==== current input device removed");
+                mTvInputId = null;
+                setTvPrompt(false, true);
+                /*mTvInputId = DEFAULT_INPUT_ID;
                 Settings.System.putInt(getContentResolver(), DroidLogicTvUtils.TV_CURRENT_DEVICE_ID, DroidLogicTvUtils.DEVICE_ID_ATV);
 
                 ArrayList<ChannelInfo> channelList = mTvDataBaseManager.getChannelList(mTvInputId, Channels.SERVICE_TYPE_AUDIO_VIDEO, true);
                 int index_atv = Settings.System.getInt(getContentResolver(), DroidLogicTvUtils.TV_ATV_CHANNEL_INDEX, -1);
                 setChannelUri(channelList, index_atv);
-                tvView.tune(mTvInputId, mChannelUri);
+                tvView.tune(mTvInputId, mChannelUri);*/
             }
         }
     }
