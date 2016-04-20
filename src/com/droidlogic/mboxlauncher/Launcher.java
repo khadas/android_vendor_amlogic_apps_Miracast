@@ -382,25 +382,32 @@ public class Launcher extends Activity{
     private void recycleBigBackgroundDrawable() {
         Drawable drawable = getMainView().getBackground();
         getMainView().setBackgroundResource(0);
-        drawable.setCallback(null);
+        if (drawable != null)
+            drawable.setCallback(null);
 
         drawable = ((ImageView)findViewById(R.id.img_video)).getDrawable();
-        drawable.setCallback(null);
-
-        drawable = ((ImageView)findViewById(R.id.img_video)).getDrawable();;
-        drawable.setCallback(null);
+        if (drawable != null)
+            drawable.setCallback(null);
 
         drawable = ((ImageView)findViewById(R.id.img_video)).getDrawable();
-        drawable.setCallback(null);
+        if (drawable != null)
+            drawable.setCallback(null);
 
         drawable = ((ImageView)findViewById(R.id.img_video)).getDrawable();
-        drawable.setCallback(null);
+        if (drawable != null)
+            drawable.setCallback(null);
 
         drawable = ((ImageView)findViewById(R.id.img_video)).getDrawable();
-        drawable.setCallback(null);
+        if (drawable != null)
+            drawable.setCallback(null);
 
         drawable = ((ImageView)findViewById(R.id.img_video)).getDrawable();
-        drawable.setCallback(null);
+        if (drawable != null)
+            drawable.setCallback(null);
+
+        drawable = ((ImageView)findViewById(R.id.img_video)).getDrawable();
+        if (drawable != null)
+            drawable.setCallback(null);
     }
 
     private void setHomeRectType(){
