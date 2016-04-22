@@ -108,8 +108,9 @@ public class CustomView extends FrameLayout implements OnItemClickListener, OnGl
         gv.startAnimation(translateAnimation);
     }
 
-    private void recoverMainView() {
-        View view = ((Launcher)mContext).getMainView();
+    public void recoverMainView() {
+        Launcher context = (Launcher) mContext;
+        View view = context.getMainView();
         this.setVisibility(View.VISIBLE);
         TranslateAnimation translateAnimation = new TranslateAnimation(0.0f, 0.0f, 0.0f, -transY);
         translateAnimation.setDuration(duration);
@@ -123,6 +124,7 @@ public class CustomView extends FrameLayout implements OnItemClickListener, OnGl
             setInterpolator(new AccelerateInterpolator()).
             setListener(new mAnimatorListener()).
             start();
+        context.getAppDataLoader().saveShortcut(mMode, str_custom_apps);
     }
 
     private  List<ArrayMap<String, Object>> getAppList() {
@@ -172,7 +174,6 @@ public class CustomView extends FrameLayout implements OnItemClickListener, OnGl
             switch (event.getKeyCode()) {
                 case KeyEvent.KEYCODE_BACK:
                     recoverMainView();
-                    ((Launcher)mContext).getAppDataLoader().saveShortcut(mMode, str_custom_apps);
                     break;
             }
         }
