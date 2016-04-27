@@ -64,29 +64,29 @@ public class Launcher extends Activity{
     public static String DEFAULT_INPUT_ID = "com.droidlogic.tvinput/.services.ATVInputService/HW0";
     public static final String PROP_TV_PREVIEW = "tv.is.preview.window";
 
-    public static final int TYPE_VIDEO         = 0;
-    public static final int TYPE_RECOMMEND     = 1;
-    public static final int TYPE_MUSIC         = 2;
-    public static final int TYPE_APP            = 3;
-    public static final int TYPE_LOCAL         = 4;
-    public static final int TYPE_SETTINGS      = 5;
-    public static final int TYPE_HOME_SHORTCUT = 6;
-    public static final int TYPE_APP_SHORTCUT  = 7;
+    public static final int TYPE_VIDEO                           = 0;
+    public static final int TYPE_RECOMMEND                       = 1;
+    public static final int TYPE_MUSIC                           = 2;
+    public static final int TYPE_APP                             = 3;
+    public static final int TYPE_LOCAL                           = 4;
+    public static final int TYPE_SETTINGS                        = 5;
+    public static final int TYPE_HOME_SHORTCUT                   = 6;
+    public static final int TYPE_APP_SHORTCUT                    = 7;
 
-    public static final int MODE_HOME            = 0;
-    public static final int MODE_VIDEO           = 1;
-    public static final int MODE_RECOMMEND       = 2;
-    public static final int MODE_MUSIC            = 3;
-    public static final int MODE_APP              = 4;
-    public static final int MODE_LOCAL            = 5;
-    public static final int MODE_CUSTOM           = 6;
+    public static final int MODE_HOME                            = 0;
+    public static final int MODE_VIDEO                           = 1;
+    public static final int MODE_RECOMMEND                       = 2;
+    public static final int MODE_MUSIC                           = 3;
+    public static final int MODE_APP                             = 4;
+    public static final int MODE_LOCAL                           = 5;
+    public static final int MODE_CUSTOM                          = 6;
     private int current_screen_mode = 0;
     private int saveModeBeforeCustom = 0;
 
-    private static final int MSG_REFRESH_SHORTCUT = 0;
-    private static final int MSG_RECOVER_HOME = 1;
-    private static final int animDuration = 70;
-    private static final int animDelay = 0;
+    private static final int MSG_REFRESH_SHORTCUT                = 0;
+    private static final int MSG_RECOVER_HOME                    = 1;
+    private static final int animDuration                        = 70;
+    private static final int animDelay                           = 0;
 
     private static final int[] childScreens = {
         MODE_VIDEO,
@@ -117,21 +117,25 @@ public class Launcher extends Activity{
     private MyRelativeLayout mSettingsView;
     private CustomView mCustomView = null;
 
-    public static int HOME_SHORTCUT_COUNT = 10;
+    public static int HOME_SHORTCUT_COUNT                      = 10;
 
     private TvView tvView = null;
     private TextView tvPrompt = null;
-    public static final int TV_MODE_NORMAL = 0;
-    public static final int TV_MODE_TOP= 1;
-    public static final int TV_MODE_BOTTOM = 2;
-    private static final int TV_WINDOW_WIDTH = 310;
-    private static final int TV_WINDOW_HEIGHT = 174;
-    private static final int TV_WINDOW_NORMAL_LEFT = 120;
-    private static final int TV_WINDOW_NORMAL_TOP = 197;
-    private static final int TV_WINDOW_RIGHT_LEFT = 1279 - TV_WINDOW_WIDTH;
+    public static final int TV_MODE_NORMAL                     = 0;
+    public static final int TV_MODE_TOP                        = 1;
+    public static final int TV_MODE_BOTTOM                     = 2;
+    private static final int TV_PROMPT_GOT_SIGNAL              = 0;
+    private static final int TV_PROMPT_NO_SIGNAL               = 1;
+    private static final int TV_PROMPT_IS_SCRAMBLED            = 2;
+    private static final int TV_PROMPT_NO_DEVICE               = 3;
+    private static final int TV_WINDOW_WIDTH                   = 310;
+    private static final int TV_WINDOW_HEIGHT                  = 174;
+    private static final int TV_WINDOW_NORMAL_LEFT             = 120;
+    private static final int TV_WINDOW_NORMAL_TOP              = 197;
+    private static final int TV_WINDOW_RIGHT_LEFT              = 1279 - TV_WINDOW_WIDTH;
     private static final int TV_WINDOW_TOP_TOP = 0;
-    private static final int TV_WINDOW_BOTTOM_TOP = 719 - TV_WINDOW_HEIGHT;
-    private static final int TV_MSG_PLAY_TV = 0;
+    private static final int TV_WINDOW_BOTTOM_TOP              = 719 - TV_WINDOW_HEIGHT;
+    private static final int TV_MSG_PLAY_TV                    = 0;
     public int tvViewMode = -1;
     private int mTvTop = -1;
     private boolean isRadioChannel = false;
@@ -218,7 +222,7 @@ public class Launcher extends Activity{
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         }
 
-        // For surface lost focus.
+        getMainView().animate().translationY(0).start();
         setBigBackgroundDrawable();
         displayShortcuts();
         displayStatus();
@@ -425,7 +429,19 @@ public class Launcher extends Activity{
 
     public void displayShortcuts() {
         mAppDataLoader.update();
-        setShortcutScreen(current_screen_mode);
+        switch (current_screen_mode) {
+            case MODE_HOME:
+            case MODE_VIDEO:
+            case MODE_RECOMMEND:
+            case MODE_MUSIC:
+            case MODE_APP:
+            case MODE_LOCAL:
+                setShortcutScreen(current_screen_mode);
+                break;
+            default:
+                setShortcutScreen(saveModeBeforeCustom);
+                break;
+        }
     }
 
     private void updateStatus() {
@@ -442,6 +458,7 @@ public class Launcher extends Activity{
 
     public void resetShortcutScreen(int mode) {
         mHandler.removeMessages(MSG_REFRESH_SHORTCUT);
+        Log.d(TAG, "resetShortcutScreen mode is " + mode);
         if (mAppDataLoader.isDataLoaded()) {
             if (mode == MODE_HOME) {
                 mHomeShortcutView.setLayoutView(mode, mAppDataLoader.getShortcutList(mode));
@@ -580,10 +597,6 @@ public class Launcher extends Activity{
                     resetShortcutScreen(msg.arg1);
                     break;
                 case MSG_RECOVER_HOME:
-                    if (needPreviewFeture ()) {
-                        tvView.setVisibility(View.VISIBLE);
-                        tvPrompt.setBackgroundDrawable(null);
-                    }
                     resetShortcutScreen(current_screen_mode);
                     break;
                 default:
@@ -670,7 +683,6 @@ public class Launcher extends Activity{
         Intent intent = new Intent();
         intent.setComponent(ComponentName.unflattenFromString(COMPONENT_TV_APP));
         startActivity(intent);
-        finish();
     }
 
     public void startCustomScreen(View view) {
@@ -735,6 +747,7 @@ public class Launcher extends Activity{
         } else {
             tvPrompt.setBackgroundDrawable(null);
         }
+        mTvHandler.sendEmptyMessage(TV_MSG_PLAY_TV);
     }
 
     public void setTvViewElevation(float elevation) {
@@ -800,6 +813,7 @@ public class Launcher extends Activity{
         mTvInputManager = (TvInputManager) getSystemService(Context.TV_INPUT_SERVICE);
         mTvInputChangeCallback = new TvInputChangeCallback();
         mTvInputManager.registerCallback(mTvInputChangeCallback, new Handler());
+        setTvPrompt(TV_PROMPT_GOT_SIGNAL);
 
         int device_id, index_atv, index_dtv;
         device_id = Settings.System.getInt(getContentResolver(), DroidLogicTvUtils.TV_CURRENT_DEVICE_ID, 0);
@@ -819,7 +833,7 @@ public class Launcher extends Activity{
 
         if (TextUtils.isEmpty(mTvInputId)) {
             Log.d(TAG, "device" + device_id + " is not exist");
-            setTvPrompt(false, true);
+            setTvPrompt(TV_PROMPT_NO_DEVICE);
             return;
             //mTvInputId = DEFAULT_INPUT_ID;
             //mChannelUri = TvContract.buildChannelUri(-1);
@@ -850,6 +864,7 @@ public class Launcher extends Activity{
 
     private void releaseTvView() {
         tvView.setVisibility(View.GONE);
+        //tvView.reset();
         if (mTvInputChangeCallback != null) {
             mTvInputManager.unregisterCallback(mTvInputChangeCallback);
             mTvInputChangeCallback = null;
@@ -871,29 +886,42 @@ public class Launcher extends Activity{
                 Settings.System.putInt(getContentResolver(), DroidLogicTvUtils.TV_CURRENT_CHANNEL_IS_RADIO,
                                 ChannelInfo.isRadioChannel(channel) ? 1 : 0);
             }
-            setTvPrompt(false, false);
+            setTvPrompt(TV_PROMPT_GOT_SIGNAL);
         } else {
             mChannelUri = TvContract.buildChannelUri(-1);
         }
     }
 
-    private void setTvPrompt(boolean noSignal, boolean noDevice) {
-        if (noSignal || noDevice || isRadioChannel) {
-            if (noSignal)
-                tvPrompt.setText(getResources().getString(R.string.str_no_signal));
-            else
+    private void setTvPrompt(int mode) {
+        switch (mode) {
+            case TV_PROMPT_GOT_SIGNAL:
                 tvPrompt.setText(null);
-
-            if (isRadioChannel) {
-                tvPrompt.setBackgroundDrawable(getResources().getDrawable(R.drawable.bg_radio));
-            } else if (noDevice) {
+                if (isRadioChannel) {
+                    tvPrompt.setBackgroundDrawable(getResources().getDrawable(R.drawable.bg_radio));
+                }  else {
+                    tvPrompt.setBackground(null);
+                }
+                break;
+            case TV_PROMPT_NO_SIGNAL:
+                tvPrompt.setText(getResources().getString(R.string.str_no_signal));
+                if (isRadioChannel) {
+                    tvPrompt.setBackgroundDrawable(getResources().getDrawable(R.drawable.bg_radio));
+                }  else {
+                    tvPrompt.setBackground(null);
+                }
+                break;
+            case TV_PROMPT_IS_SCRAMBLED:
+                tvPrompt.setText(getResources().getString(R.string.str_scrambeled));
+                if (isRadioChannel) {
+                    tvPrompt.setBackgroundDrawable(getResources().getDrawable(R.drawable.bg_radio));
+                }  else {
+                    tvPrompt.setBackground(null);
+                }
+                break;
+            case TV_PROMPT_NO_DEVICE:
+                tvPrompt.setText(null);
                 tvPrompt.setBackgroundDrawable(getResources().getDrawable(R.drawable.hotplug_out));
-            } else {
-                tvPrompt.setBackground(null);
-            }
-        } else {
-            tvPrompt.setText(null);
-            tvPrompt.setBackground(null);
+                break;
         }
     }
 
@@ -927,12 +955,15 @@ public class Launcher extends Activity{
         @Override
         public void onEvent(String inputId, String eventType, Bundle eventArgs) {
             Log.d(TAG, "====onEvent==inputId =" + inputId +", ===eventType ="+ eventType);
+            if (eventType.equals(DroidLogicTvUtils.AV_SIG_SCRAMBLED)) {
+                setTvPrompt(TV_PROMPT_IS_SCRAMBLED);
+            }
         }
 
         @Override
         public void onVideoAvailable(String inputId) {
             //tvView.invalidate();
-            setTvPrompt(false, false);
+            setTvPrompt(TV_PROMPT_GOT_SIGNAL);
 
             Log.d(TAG, "====onVideoAvailable==inputId =" + inputId);
         }
@@ -963,7 +994,7 @@ public class Launcher extends Activity{
                 default:
                     break;
             }
-            setTvPrompt(true, false);
+            setTvPrompt(TV_PROMPT_NO_SIGNAL);
         }
     }
 
@@ -980,7 +1011,7 @@ public class Launcher extends Activity{
                     case DroidLogicTvUtils.DEVICE_ID_HDMI2:
                     case DroidLogicTvUtils.DEVICE_ID_HDMI3:
                         tvView.reset();
-                        setTvPrompt(false, false);
+                        setTvPrompt(TV_PROMPT_GOT_SIGNAL);
                         mTvInputId = inputId;
                         mChannelUri = TvContract.buildChannelUriForPassthroughInput(mTvInputId);
                         tvView.tune(mTvInputId, mChannelUri);
@@ -995,7 +1026,7 @@ public class Launcher extends Activity{
             if (TextUtils.equals(inputId, mTvInputId)) {
                 Log.d(TAG, "==== current input device removed");
                 mTvInputId = null;
-                setTvPrompt(false, true);
+                setTvPrompt(TV_PROMPT_NO_DEVICE);
                 /*mTvInputId = DEFAULT_INPUT_ID;
                 Settings.System.putInt(getContentResolver(), DroidLogicTvUtils.TV_CURRENT_DEVICE_ID, DroidLogicTvUtils.DEVICE_ID_ATV);
 

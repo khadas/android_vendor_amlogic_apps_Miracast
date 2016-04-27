@@ -14,4 +14,5 @@
     <string name="str_add">添加</string>
     <string name="str_exit">退出</string>
     <string name="str_no_signal">无信号</string>
+    <string name="str_scrambeled">频道加密</string>
 </resources>
