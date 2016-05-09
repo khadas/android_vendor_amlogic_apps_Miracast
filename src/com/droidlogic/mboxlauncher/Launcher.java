@@ -728,6 +728,9 @@ public class Launcher extends Activity{
     }
 
     private void setTvView() {
+        TextView title_video = (TextView)findViewById(R.id.tx_video);
+        title_video.setText(R.string.str_tvapp);
+
         tvView.setVisibility(View.VISIBLE);
         tvView.setCallback(new TvViewInputCallback());
         tvView.setZOrderMediaOverlay(false);
