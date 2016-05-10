@@ -9,15 +9,13 @@
 			android:id="@+id/gv_shortcut"
 	        android:layout_width="1040dp"
 	        android:layout_height="200dp"
-	       	android:orientation="horizontal"
+            android:orientation="horizontal"
 	        android:columnCount="11"
 	        android:rowCount="1"
 	        android:layout_marginLeft="120dp"
 	        android:layout_marginTop="582dp"
-	       	android:layout_centerHorizontal="true" 
+            android:layout_centerHorizontal="true"
 	        android:descendantFocusability="afterDescendants"
 	/>
-
-    
 </RelativeLayout>
 

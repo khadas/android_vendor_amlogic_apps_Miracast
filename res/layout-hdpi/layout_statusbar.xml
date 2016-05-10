@@ -4,11 +4,11 @@
 	android:layout_height="wrap_content"
 	android:background="@color/transparent_background"
 	android:layout_marginTop="18dp"
-	android:descendantFocusability="blocksDescendants"	
+	android:descendantFocusability="blocksDescendants"
 	>
 		<GridView
 			android:id="@+id/list_status"
-		   	android:scrollbars="none"
+            android:scrollbars="none"
 	        android:drawSelectorOnTop="false"
 	        android:verticalSpacing="0dip"
 	        android:horizontalSpacing="0dip"
@@ -51,7 +51,7 @@
 			android:layout_marginTop="20dp"
 			android:textSize="20dp"
 		/>
-		
+
 		<TextView
 			android:id="@+id/tx_time"
 			android:layout_width="wrap_content"
@@ -71,6 +71,5 @@
 			android:layout_alignParentRight="true"
 			android:textSize="20dp"
 		/>
-	
+
 	</RelativeLayout>
-	
