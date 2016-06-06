@@ -880,15 +880,22 @@ public class Launcher extends Activity{
 
     private void setChannelUri (ArrayList<ChannelInfo> channelList, int index) {
         if (channelList.size() > 0) {
-            if (index != -1 && index < channelList.size()) {
-                mChannelUri = channelList.get(index).getUri();
-            } else {
-                ChannelInfo channel = channelList.get(0);
-                mChannelUri = channel.getUri();
-                Settings.System.putInt(getContentResolver(), DroidLogicTvUtils.TV_ATV_CHANNEL_INDEX, 0);
-                Settings.System.putInt(getContentResolver(), DroidLogicTvUtils.TV_CURRENT_CHANNEL_IS_RADIO,
-                                ChannelInfo.isRadioChannel(channel) ? 1 : 0);
+
+            if (index > 0) {
+                for (ChannelInfo channelInfo : channelList) {
+                    if (index == channelInfo.getNumber()) {
+                        mChannelUri = channelInfo.getUri();
+                        setTvPrompt(TV_PROMPT_GOT_SIGNAL);
+                        return;
+                    }
+                }
             }
+
+            ChannelInfo channel = channelList.get(0);
+            mChannelUri = channel.getUri();
+            Settings.System.putInt(getContentResolver(), DroidLogicTvUtils.TV_ATV_CHANNEL_INDEX, 1);
+            Settings.System.putInt(getContentResolver(), DroidLogicTvUtils.TV_CURRENT_CHANNEL_IS_RADIO,
+                    ChannelInfo.isRadioChannel(channel) ? 1 : 0);
             setTvPrompt(TV_PROMPT_GOT_SIGNAL);
         } else {
             mChannelUri = TvContract.buildChannelUri(-1);
