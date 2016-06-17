@@ -209,21 +209,7 @@ public class SinkActivity extends Activity
             }
         }
         mFileObserver.startWatching();
-    }
 
-    protected void onDestroy()
-    {
-        quitLoop();
-        mFileObserver.stopWatching();
-        super.onDestroy();
-    }
-
-    /** register the BroadcastReceiver with the intent values to be matched */
-    @Override
-    public void onResume()
-    {
-        super.onResume();
-        /* enable backlight */
         PowerManager pm = (PowerManager) getSystemService (Context.POWER_SERVICE);
         mWakeLock = pm.newWakeLock (PowerManager.SCREEN_BRIGHT_WAKE_LOCK |
                                     PowerManager.ON_AFTER_RELEASE, TAG);
@@ -235,6 +221,27 @@ public class SinkActivity extends Activity
         setSinkParameters(true);
         startMiracast(mIP, mPort);
         strIP = getlocalip();
+    }
+
+    protected void onDestroy()
+    {
+        super.onDestroy();
+
+        certBtnState = 0;
+        stopMiracast (true);
+        unregisterReceiver (mReceiver);
+        mWakeLock.release();
+        setSinkParameters (false);
+
+        quitLoop();
+        mFileObserver.stopWatching();
+    }
+
+    /** register the BroadcastReceiver with the intent values to be matched */
+    @Override
+    public void onResume()
+    {
+        super.onResume();
     }
 
     private boolean parseSessionId(String fileName)
@@ -298,11 +305,6 @@ public class SinkActivity extends Activity
     public void onPause()
     {
         super.onPause();
-        certBtnState = 0;
-        stopMiracast (true);
-        unregisterReceiver (mReceiver);
-        mWakeLock.release();
-        setSinkParameters (false);
     }
 
     @Override
