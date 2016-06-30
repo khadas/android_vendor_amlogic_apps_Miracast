@@ -1,7 +1,9 @@
 package com.droidlogic.mboxlauncher;
 
 import android.content.Context;
+import android.content.ComponentName;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.ImageView;
@@ -146,9 +148,20 @@ public class MyRelativeLayout extends RelativeLayout implements OnGlobalLayoutLi
                             break;
                         case Launcher.TYPE_APP_SHORTCUT:
                         case Launcher.TYPE_HOME_SHORTCUT:
+                            ComponentName cameraCom = new ComponentName("com.android.camera2", "com.android.camera.CameraLauncher");
                             if (mIntent != null) {
                                 if (mIntent.getComponent().flattenToString().equals(Launcher.COMPONENT_TV_APP))
                                     ((Launcher)mContext).startTvApp();
+                                else if (mIntent.getComponent().equals(cameraCom)) {
+                                    if (mContext.getPackageManager().getComponentEnabledSetting(cameraCom)
+                                        != PackageManager.COMPONENT_ENABLED_STATE_DISABLED) {
+                                        try {
+                                            mContext.startActivity(mIntent);
+                                        } catch (Exception e) {
+                                            e.printStackTrace();
+                                        }
+                                    }
+                                }
                                 else
                                     mContext.startActivity(mIntent);
                             } else if (mIsAddButton){
@@ -195,9 +208,20 @@ public class MyRelativeLayout extends RelativeLayout implements OnGlobalLayoutLi
                             break;
                         case Launcher.TYPE_APP_SHORTCUT:
                         case Launcher.TYPE_HOME_SHORTCUT:
+                            ComponentName cameraCom = new ComponentName("com.android.camera2", "com.android.camera.CameraLauncher");
                             if (mIntent != null) {
                                 if (mIntent.getComponent().flattenToString().equals(Launcher.COMPONENT_TV_APP))
                                     ((Launcher)mContext).startTvApp();
+                                else if (mIntent.getComponent().equals(cameraCom)) {
+                                    if (mContext.getPackageManager().getComponentEnabledSetting(cameraCom)
+                                        != PackageManager.COMPONENT_ENABLED_STATE_DISABLED) {
+                                        try {
+                                            mContext.startActivity(mIntent);
+                                        } catch (Exception e) {
+                                            e.printStackTrace();
+                                        }
+                                    }
+                                }
                                 else
                                     mContext.startActivity(mIntent);
                             } else if (mIsAddButton){
