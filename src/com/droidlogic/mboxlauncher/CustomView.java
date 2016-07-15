@@ -22,7 +22,7 @@ import android.widget.Toast;
 import android.view.animation.Animation;
 import android.view.animation.TranslateAnimation;
 import android.view.animation.Animation.AnimationListener;
-import 	android.view.animation.AccelerateInterpolator;
+import android.view.animation.AccelerateInterpolator;
 import android.animation.Animator;
 import android.animation.Animator.AnimatorListener;
 import android.view.ViewGroup;
@@ -42,6 +42,7 @@ public class CustomView extends FrameLayout implements OnItemClickListener, OnGl
     private final static String COMPONENT_NAME = "component name";
 
     private final static int duration = 300;
+    private static boolean allowAnimation = true;
 
     private ImageView img_screen_shot = null;
     private ImageView img_screen_shot_keep = null;
@@ -112,19 +113,21 @@ public class CustomView extends FrameLayout implements OnItemClickListener, OnGl
         Launcher context = (Launcher) mContext;
         View view = context.getMainView();
         this.setVisibility(View.VISIBLE);
-        TranslateAnimation translateAnimation = new TranslateAnimation(0.0f, 0.0f, 0.0f, -transY);
-        translateAnimation.setDuration(duration);
-        //translateAnimation.setAnimationListener(new exitAnimationListener());
-        translateAnimation.setInterpolator(new AccelerateInterpolator());
-        gv.startAnimation(translateAnimation);
-        view.animate().
-            translationY(0).
-            setDuration(duration).
-            alpha(1f).
-            setInterpolator(new AccelerateInterpolator()).
-            setListener(new mAnimatorListener()).
-            start();
-        context.getAppDataLoader().saveShortcut(mMode, str_custom_apps);
+        if (allowAnimation) {
+            allowAnimation = false;
+            TranslateAnimation translateAnimation = new TranslateAnimation(0.0f, 0.0f, 0.0f, -transY);
+            translateAnimation.setDuration(duration);
+            translateAnimation.setInterpolator(new AccelerateInterpolator());
+            gv.startAnimation(translateAnimation);
+            view.animate().
+                translationY(0).
+                setDuration(duration).
+                alpha(1f).
+                setInterpolator(new AccelerateInterpolator()).
+                setListener(new mAnimatorListener()).
+                start();
+            context.getAppDataLoader().saveShortcut(mMode, str_custom_apps);
+        }
     }
 
     private  List<ArrayMap<String, Object>> getAppList() {
@@ -257,21 +260,6 @@ public class CustomView extends FrameLayout implements OnItemClickListener, OnGl
         }
     }
 
-    private class exitAnimationListener implements AnimationListener {
-        @Override
-        public void onAnimationStart(Animation animation) {
-        }
-
-        @Override
-        public void onAnimationEnd(Animation animation) {
-            ((Launcher)mContext).getRootView().removeView(thisView);
-            ((Launcher)mContext).recoverFromCustom();
-        }
-
-        @Override
-        public void onAnimationRepeat(Animation animation) {
-        }
-    }
     private class mAnimatorListener implements AnimatorListener {
         @Override
         public void onAnimationCancel(Animator animation) {
@@ -281,6 +269,7 @@ public class CustomView extends FrameLayout implements OnItemClickListener, OnGl
         }
         @Override
         public void onAnimationEnd(Animator animation) {
+            allowAnimation = true;
             ((Launcher)mContext).getRootView().removeView(thisView);
             ((Launcher)mContext).getMainView().animate().setListener(null);
             ((Launcher)mContext).recoverFromCustom();

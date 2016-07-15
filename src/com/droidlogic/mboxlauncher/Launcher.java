@@ -222,7 +222,7 @@ public class Launcher extends Activity{
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         }
 
-        getMainView().animate().translationY(0).start();
+        //getMainView().animate().translationY(0).start();
         setBigBackgroundDrawable();
         displayShortcuts();
         displayStatus();
