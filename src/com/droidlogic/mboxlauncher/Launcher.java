@@ -238,13 +238,15 @@ public class Launcher extends Activity{
     protected void onPause() {
         super.onPause();
         Log.d(TAG, "------onPause");
+        mTvHandler.removeMessages(TV_MSG_PLAY_TV);
+        if (needPreviewFeture())
+            releaseTvView();
     }
 
     @Override
     protected void onStop() {
         recycleBigBackgroundDrawable();
-        if (needPreviewFeture())
-            releaseTvView();
+
         super.onStop();
         Log.d(TAG, "------onStop");
     }
