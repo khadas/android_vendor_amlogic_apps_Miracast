@@ -189,6 +189,13 @@ public class SinkActivity extends Activity
         mSurfaceView.getHolder().addCallback (new SurfaceCallback() );
         mSurfaceView.getHolder().setKeepScreenOn (true);
         mSurfaceView.getHolder().setType (SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+        mSurfaceView.setVisibility(View.GONE);
+
+        Window window=getWindow();
+        WindowManager.LayoutParams wl = window.getAttributes();
+        wl.flags=WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON;
+        wl.alpha=0.0f;
+        window.setAttributes(wl);
 
         Intent intent = getIntent();
         Bundle bundle = intent.getExtras();
