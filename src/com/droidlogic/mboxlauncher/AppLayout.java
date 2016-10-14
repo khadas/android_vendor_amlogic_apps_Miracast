@@ -121,14 +121,14 @@ public class AppLayout extends RelativeLayout{
         @Override
         public void onAnimationStart(Animation animation) {
             ((Launcher)mContext).getHoverView().setVisibility(View.INVISIBLE);
-            setVisibility(View.INVISIBLE);
+            //setVisibility(View.INVISIBLE);
             currenPassword = mPassword;
         }
 
         @Override
         public void onAnimationEnd(Animation animation) {
             if (mType == TYPE_ANIM_IN) {
-                setVisibility(View.VISIBLE);
+                //setVisibility(View.VISIBLE);
                 if (currenPassword == mPassword) {
                     ((Launcher)mContext).getHoverView().setVisibility(View.VISIBLE);
                 }

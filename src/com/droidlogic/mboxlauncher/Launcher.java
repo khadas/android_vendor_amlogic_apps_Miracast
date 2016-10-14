@@ -290,9 +290,10 @@ public class Launcher extends Activity{
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
                 switch (current_screen_mode) {
+                    case MODE_APP:
+                        mSecondScreen.clearAnimation();
                     case MODE_VIDEO:
                     case MODE_RECOMMEND:
-                    case MODE_APP:
                     case MODE_MUSIC:
                     case MODE_LOCAL:
                         setHomeViewVisible(true);
