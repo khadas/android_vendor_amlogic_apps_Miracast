@@ -85,6 +85,7 @@ public class Launcher extends Activity{
 
     private static final int MSG_REFRESH_SHORTCUT                = 0;
     private static final int MSG_RECOVER_HOME                    = 1;
+    private static final int MSG_START_CUSTOM_SCREEN             = 2;
     private static final int animDuration                        = 70;
     private static final int animDelay                           = 0;
 
@@ -217,7 +218,7 @@ public class Launcher extends Activity{
     protected void onResume() {
         super.onResume();
         Log.d(TAG, "------onResume");
-
+        current_screen_mode = MODE_HOME;
         if (isMboxFeture()) {
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         }
@@ -237,6 +238,7 @@ public class Launcher extends Activity{
     @Override
     protected void onPause() {
         super.onPause();
+        mHandler.removeMessages(MSG_START_CUSTOM_SCREEN);
         Log.d(TAG, "------onPause");
     }
 
@@ -601,6 +603,10 @@ public class Launcher extends Activity{
                 case MSG_RECOVER_HOME:
                     resetShortcutScreen(current_screen_mode);
                     break;
+                case MSG_START_CUSTOM_SCREEN:
+                    View CustomView=(View)msg.obj;
+                    CustomScreen(CustomView);
+                    break;
                 default:
                     break;
             }
@@ -688,6 +694,13 @@ public class Launcher extends Activity{
     }
 
     public void startCustomScreen(View view) {
+        Message msg = new Message();
+        msg.what = MSG_START_CUSTOM_SCREEN;
+        msg.obj = view;
+        mHandler.sendMessageDelayed(msg, 500);
+    }
+
+    public void CustomScreen(View view) {
         if (current_screen_mode == MODE_CUSTOM) return;
         mHoverView.clear();
         if (needPreviewFeture()) {
