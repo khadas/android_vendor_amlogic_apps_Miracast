@@ -218,7 +218,6 @@ public class Launcher extends Activity{
     protected void onResume() {
         super.onResume();
         Log.d(TAG, "------onResume");
-        current_screen_mode = MODE_HOME;
         if (isMboxFeture()) {
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         }
