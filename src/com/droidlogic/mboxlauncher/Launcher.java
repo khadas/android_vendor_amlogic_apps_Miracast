@@ -64,6 +64,9 @@ public class Launcher extends Activity{
     public static String DEFAULT_INPUT_ID = "com.droidlogic.tvinput/.services.ATVInputService/HW0";
     public static final String PROP_TV_PREVIEW = "tv.is.preview.window";
 
+    public static final String COMPONENT_THOMASROOM = "com.android.gl2jni";
+    public static boolean isLaunchingThomasroom = false;
+
     public static final int TYPE_VIDEO                           = 0;
     public static final int TYPE_RECOMMEND                       = 1;
     public static final int TYPE_MUSIC                           = 2;
@@ -239,6 +242,12 @@ public class Launcher extends Activity{
         super.onPause();
         mHandler.removeMessages(MSG_START_CUSTOM_SCREEN);
         Log.d(TAG, "------onPause");
+
+        //if launch Thomas' Room, we should call onStop() to release TvView.
+        if (isLaunchingThomasroom) {
+            onStop();
+            isLaunchingThomasroom = false;
+        }
     }
 
     @Override

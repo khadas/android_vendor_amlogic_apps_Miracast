@@ -161,9 +161,12 @@ public class MyRelativeLayout extends RelativeLayout implements OnGlobalLayoutLi
                                             e.printStackTrace();
                                         }
                                     }
-                                }
-                                else
+                                } else {
                                     mContext.startActivity(mIntent);
+                                    String[] temp = mIntent.getComponent().flattenToString().split("/");
+                                    if (temp.length > 0 && temp[0].equals(Launcher.COMPONENT_THOMASROOM))
+                                        Launcher.isLaunchingThomasroom = true;
+                                }
                             } else if (mIsAddButton){
                                 ((Launcher)mContext).startCustomScreen(this);
                             }
