@@ -99,8 +99,9 @@ public class WiFiDirectMainActivity extends Activity implements
     public static final boolean     DEBUG              = true;
     public static final String       HRESOLUTION_DISPLAY     = "display_resolution_hd";
     public static final String       WIFI_P2P_IP_ADDR_CHANGED_ACTION = "com.droidlogic.miracast.IP_ADDR_CHANGED";
-    public static final String       WIFI_P2P_PEER_IP_EXTRA       = "IP_EXTRA";
-    public static final String       WIFI_P2P_PEER_MAC_EXTRA       = "MAC_EXTRA";
+    //public static final String       WIFI_P2P_PEER_IP_EXTRA       = "IP_EXTRA";
+    //public static final String       WIFI_P2P_PEER_MAC_EXTRA       = "MAC_EXTRA";
+    public static final String       WIFI_P2P_PEER_DNSMASQ_EXTRA       = "DNSMASQ_EXTRA";
     private static final String      MIRACAST_PREF          = "miracast_prefences";
     private static final String      IP_ADDR                = "ip_addr";
     public static final String ENCODING = "UTF-8";
@@ -184,24 +185,24 @@ public class WiFiDirectMainActivity extends Activity implements
         File file = new File(fileName);
         BufferedReader reader = null;
         String info = new String();
+        ArrayList<String> dnsmasqInfo = new ArrayList<String>();
+
         try {
             reader = new BufferedReader(new FileReader(file));
-            info = reader.readLine();
         } catch (IOException e) {
             e.printStackTrace();
-        } finally {
-            if (reader != null)
-            {
-                try {
-                    reader.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+        }
 
+	while (true) {
+            try {
+                info = reader.readLine();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
                 if (info == null)
                 {
-                    Log.d (TAG, "parseDnsmasqAddr info is NULL");
-                    return false;
+                    //Log.d (TAG, "parseDnsmasqAddr info end");
+                    break;
                 }
                 else
                 {
@@ -215,21 +216,29 @@ public class WiFiDirectMainActivity extends Activity implements
                             if (strToke.hasMoreElements())
                             {
                                 String ip = strToke.nextToken();
-                                Log.d (TAG, "Sending WIFI_P2P_IP_ADDR_CHANGED_ACTION broadcast : ip=" + ip + " mac=" + mac);
-                                Intent intent = new Intent(WIFI_P2P_IP_ADDR_CHANGED_ACTION);
-                                intent.putExtra(WIFI_P2P_PEER_IP_EXTRA, ip);
-                                intent.putExtra(WIFI_P2P_PEER_MAC_EXTRA, mac);
-                                sendBroadcastAsUser(intent, UserHandle.ALL);
-                                return true;
+                                Log.d (TAG, "parseDnsmasqAddr: ip=" + ip + ", mac=" + mac);
+                                dnsmasqInfo.add(ip);
+                                dnsmasqInfo.add(mac);
                             }
                         }
                     }
-                    return false;
                 }
             }
-            else
-                return false;
         }
+
+        //Log.d (TAG, "Sending WIFI_P2P_IP_ADDR_CHANGED_ACTION broadcast");
+        Intent intent = new Intent(WIFI_P2P_IP_ADDR_CHANGED_ACTION);
+        Bundle b = new Bundle();
+        b.putStringArrayList(WIFI_P2P_PEER_DNSMASQ_EXTRA, dnsmasqInfo);
+        intent.putExtras(b);
+        sendBroadcastAsUser(intent, UserHandle.ALL);
+
+        try {
+            reader.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return true;
     }
 
 
@@ -626,11 +635,6 @@ public class WiFiDirectMainActivity extends Activity implements
             }
         });
 
-        File ipFile = new File(mFolder, "dnsmasq.leases");
-        if (ipFile.exists ()) {
-            Log.d(TAG, "delete" + ipFile.toString());
-            ipFile.delete();
-        }
         /* enable backlight */
         PowerManager pm = (PowerManager) getSystemService (Context.POWER_SERVICE);
         mWakeLock = pm.newWakeLock (PowerManager.SCREEN_BRIGHT_WAKE_LOCK
