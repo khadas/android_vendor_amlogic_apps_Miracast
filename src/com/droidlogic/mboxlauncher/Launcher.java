@@ -225,6 +225,9 @@ public class Launcher extends Activity{
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         }
 
+        if (isTvFeture()) {
+            stopMusicPlayer();
+        }
         //getMainView().animate().translationY(0).start();
         setBigBackgroundDrawable();
         displayShortcuts();
