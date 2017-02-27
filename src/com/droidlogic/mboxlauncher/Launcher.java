@@ -243,6 +243,7 @@ public class Launcher extends Activity{
         mHandler.removeMessages(MSG_START_CUSTOM_SCREEN);
         Log.d(TAG, "------onPause");
 
+        mSystemControlManager.writeSysFs("/sys/module/tvin_hdmirx/parameters/en_4k_2_2k", "0");
         //if launch Thomas' Room, we should call onStop() to release TvView.
         if (isLaunchingThomasroom) {
             onStop();
@@ -876,6 +877,7 @@ public class Launcher extends Activity{
                 }
                 setChannelUri(channelList, index_dtv);
             } else {
+                mSystemControlManager.writeSysFs("/sys/module/tvin_hdmirx/parameters/en_4k_2_2k", "1");
                 mChannelUri = TvContract.buildChannelUriForPassthroughInput(mTvInputId);
             }
         }
