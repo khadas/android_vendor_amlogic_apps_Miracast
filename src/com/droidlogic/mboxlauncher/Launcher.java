@@ -871,7 +871,7 @@ public class Launcher extends Activity{
             if (device_id == DroidLogicTvUtils.DEVICE_ID_ATV) {
                 ArrayList<ChannelInfo> channelList = mTvDataBaseManager.getChannelList(mTvInputId, Channels.SERVICE_TYPE_AUDIO_VIDEO, true);
                 setChannelUri(channelList, index_atv);
-            } else if (device_id == DroidLogicTvUtils.DEVICE_ID_DTV) {
+            } else if (device_id == DroidLogicTvUtils.DEVICE_ID_DTV || device_id == DroidLogicTvUtils.DEVICE_ID_ADTV) {
                 ArrayList<ChannelInfo> channelList;
                 if (!isRadioChannel) {
                     channelList = mTvDataBaseManager.getChannelList(mTvInputId, Channels.SERVICE_TYPE_AUDIO_VIDEO, true);
