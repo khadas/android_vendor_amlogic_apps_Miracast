@@ -1016,6 +1016,8 @@ public class Launcher extends Activity{
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
+                    if (TextUtils.isEmpty(mTvInputId))
+                        return;
                     tvView.tune(mTvInputId, mChannelUri);
                 }
             }).start();
