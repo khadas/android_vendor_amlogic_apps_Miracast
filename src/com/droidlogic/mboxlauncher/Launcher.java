@@ -1050,6 +1050,7 @@ public class Launcher extends Activity{
                     case DroidLogicTvUtils.DEVICE_ID_HDMI1:
                     case DroidLogicTvUtils.DEVICE_ID_HDMI2:
                     case DroidLogicTvUtils.DEVICE_ID_HDMI3:
+                    case DroidLogicTvUtils.DEVICE_ID_HDMI4:
                         tvView.reset();
                         setTvPrompt(TV_PROMPT_GOT_SIGNAL);
                         mTvInputId = inputId;
