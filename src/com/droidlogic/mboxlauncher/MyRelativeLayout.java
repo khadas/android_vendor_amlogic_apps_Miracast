@@ -144,6 +144,8 @@ public class MyRelativeLayout extends RelativeLayout implements OnGlobalLayoutLi
                         case Launcher.TYPE_SETTINGS:
                             if (mIntent != null) {
                                 mContext.startActivity(mIntent);
+                                if (mIntent.getComponent().flattenToString().equals(Launcher.COMPONENT_TVSETTINGS))
+                                    Launcher.isLaunchingTvSettings = true;
                             }
                             break;
                         case Launcher.TYPE_APP_SHORTCUT:

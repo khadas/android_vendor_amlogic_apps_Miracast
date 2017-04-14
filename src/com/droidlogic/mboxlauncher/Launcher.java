@@ -66,6 +66,8 @@ public class Launcher extends Activity{
 
     public static final String COMPONENT_THOMASROOM = "com.android.gl2jni";
     public static boolean isLaunchingThomasroom = false;
+    public static final String COMPONENT_TVSETTINGS = "com.android.tv.settings/com.android.tv.settings.MainSettings";
+    public static boolean isLaunchingTvSettings = false;
 
     public static final int TYPE_VIDEO                           = 0;
     public static final int TYPE_RECOMMEND                       = 1;
@@ -248,7 +250,7 @@ public class Launcher extends Activity{
 
         mSystemControlManager.writeSysFs("/sys/module/tvin_hdmirx/parameters/en_4k_2_2k", "0");
         //if launch Thomas' Room, we should call onStop() to release TvView.
-        if (isLaunchingThomasroom) {
+        if (isLaunchingThomasroom || isLaunchingTvSettings) {
             onStop();
             isLaunchingThomasroom = false;
         }
