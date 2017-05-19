@@ -167,10 +167,24 @@ public class Launcher extends Activity{
         setContentView(R.layout.main);
         Log.d(TAG, "------onCreate");
 
+        mSystemControlManager = new SystemControlManager(this);
+        if (TextUtils.equals(mSystemControlManager.getProperty("ro.platform.has.tvuimode"), "true") &&
+            !TextUtils.equals(mSystemControlManager.getProperty("tv.launcher.firsttime.launch"), "false") &&
+            Settings.System.getInt(getContentResolver(), "tv_start_up_enter_app", 0) > 0) {
+            Log.d(TAG, "starting tvapp...");
+            Intent intent = new Intent();
+            intent.setComponent(ComponentName.unflattenFromString(COMPONENT_TV_APP));
+            startActivity(intent);
+            finish();
+        } else {
+            Log.d(TAG, "starting launcher...");
+        }
+        mSystemControlManager.setProperty("tv.launcher.firsttime.launch", "false");
+
         if (DesUtils.isAmlogicChip() == false) {
             finish();
         }
-        mSystemControlManager = new SystemControlManager(this);
+
         mAppDataLoader = new AppDataLoader(this);
         mStatusLoader = new StatusLoader(this);
         mWindowManager = IWindowManager.Stub.asInterface(ServiceManager.getService("window"));
