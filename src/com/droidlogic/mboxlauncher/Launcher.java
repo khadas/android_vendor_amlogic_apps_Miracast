@@ -134,6 +134,7 @@ public class Launcher extends Activity{
     private static final int TV_PROMPT_NO_SIGNAL               = 1;
     private static final int TV_PROMPT_IS_SCRAMBLED            = 2;
     private static final int TV_PROMPT_NO_DEVICE               = 3;
+    private static final int TV_PROMPT_SPDIF                   = 4;
     private static final int TV_WINDOW_WIDTH                   = 310;
     private static final int TV_WINDOW_HEIGHT                  = 174;
     private static final int TV_WINDOW_NORMAL_LEFT             = 120;
@@ -903,7 +904,9 @@ public class Launcher extends Activity{
 
         Log.d(TAG, "TV play tune inputId=" + mTvInputId + " uri=" + mChannelUri);
         tvView.tune(mTvInputId, mChannelUri);
-
+        if (device_id == DroidLogicTvUtils.DEVICE_ID_SPDIF) {
+            setTvPrompt(TV_PROMPT_SPDIF);
+        }
         if (mChannelObserver == null)
             mChannelObserver = new ChannelObserver();
         getContentResolver().registerContentObserver(Channels.CONTENT_URI, true, mChannelObserver);
@@ -975,6 +978,10 @@ public class Launcher extends Activity{
             case TV_PROMPT_NO_DEVICE:
                 tvPrompt.setText(null);
                 tvPrompt.setBackgroundDrawable(getResources().getDrawable(R.drawable.hotplug_out));
+                break;
+            case TV_PROMPT_SPDIF:
+                tvPrompt.setText(null);
+                tvPrompt.setBackgroundDrawable(getResources().getDrawable(R.drawable.spdifin));
                 break;
         }
     }
@@ -1050,7 +1057,12 @@ public class Launcher extends Activity{
                 default:
                     break;
             }
-            setTvPrompt(TV_PROMPT_NO_SIGNAL);
+            int device_id = Settings.System.getInt(getContentResolver(), DroidLogicTvUtils.TV_CURRENT_DEVICE_ID, 0);
+            if (device_id == DroidLogicTvUtils.DEVICE_ID_SPDIF) {
+                setTvPrompt(TV_PROMPT_SPDIF);
+            } else {
+                setTvPrompt(TV_PROMPT_NO_SIGNAL);
+            }
         }
     }
 
