@@ -22,6 +22,10 @@ LOCAL_JAVA_LIBRARIES := droidlogic
 LOCAL_PACKAGE_NAME := Miracast
 LOCAL_CERTIFICATE := platform
 
+ifeq ($(shell test $(PLATFORM_SDK_VERSION) -ge 26 && echo OK),OK)
+LOCAL_PROPRIETARY_MODULE := true
+endif
+
 #LOCAL_JNI_SHARED_LIBRARIES := libwfd_jni
 LOCAL_REQUIRED_MODULES := libwfd_jni
 
