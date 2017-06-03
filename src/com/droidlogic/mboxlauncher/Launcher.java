@@ -254,7 +254,8 @@ public class Launcher extends Activity{
         if (needPreviewFeture()) {
             tvView.setVisibility(View.VISIBLE);
             mTvHandler.sendEmptyMessage(TV_MSG_PLAY_TV);
-        }
+        } else
+            tvView.setVisibility(View.INVISIBLE);
     }
 
     @Override
@@ -774,7 +775,6 @@ public class Launcher extends Activity{
     private void setTvView() {
         TextView title_video = (TextView)findViewById(R.id.tx_video);
         title_video.setText(R.string.str_tvapp);
-
         tvView.setVisibility(View.VISIBLE);
         tvView.setCallback(new TvViewInputCallback());
         tvView.setZOrderMediaOverlay(false);
