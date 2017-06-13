@@ -234,6 +234,13 @@ public class Launcher extends Activity{
         return isTvFeture() && mSystemControlManager.getPropertyBoolean("tv.need.preview_window", true);
     }
 
+    private void releasePlayingTv() {
+        Log.d(TAG, "------releasePlayingTv");
+        recycleBigBackgroundDrawable();
+        mTvHandler.removeMessages(TV_MSG_PLAY_TV);
+        releaseTvView();
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -265,21 +272,26 @@ public class Launcher extends Activity{
         Log.d(TAG, "------onPause");
 
         mSystemControlManager.writeSysFs("/sys/module/tvin_hdmirx/parameters/en_4k_2_2k", "0");
-        //if launch Thomas' Room, we should call onStop() to release TvView.
-        if (isLaunchingThomasroom || isLaunchingTvSettings) {
-            onStop();
-            isLaunchingThomasroom = false;
+
+        if (needPreviewFeture()) {
+            //if launch Thomas' Room, we should call onStop() to release TvView.
+            if (isLaunchingThomasroom || isLaunchingTvSettings
+                    || mSecondScreen.getVisibility() == View.VISIBLE) {
+                releasePlayingTv();
+                isLaunchingThomasroom = false;
+                isLaunchingTvSettings = false;
+            }
         }
     }
 
     @Override
     protected void onStop() {
-        recycleBigBackgroundDrawable();
-        mTvHandler.removeMessages(TV_MSG_PLAY_TV);
-        if (needPreviewFeture())
-            releaseTvView();
         super.onStop();
         Log.d(TAG, "------onStop");
+
+        if (needPreviewFeture()) {
+            releasePlayingTv();
+        }
     }
 
     @Override
@@ -420,26 +432,6 @@ public class Launcher extends Activity{
     private void recycleBigBackgroundDrawable() {
         Drawable drawable = getMainView().getBackground();
         getMainView().setBackgroundResource(0);
-        if (drawable != null)
-            drawable.setCallback(null);
-
-        drawable = ((ImageView)findViewById(R.id.img_video)).getDrawable();
-        if (drawable != null)
-            drawable.setCallback(null);
-
-        drawable = ((ImageView)findViewById(R.id.img_video)).getDrawable();
-        if (drawable != null)
-            drawable.setCallback(null);
-
-        drawable = ((ImageView)findViewById(R.id.img_video)).getDrawable();
-        if (drawable != null)
-            drawable.setCallback(null);
-
-        drawable = ((ImageView)findViewById(R.id.img_video)).getDrawable();
-        if (drawable != null)
-            drawable.setCallback(null);
-
-        drawable = ((ImageView)findViewById(R.id.img_video)).getDrawable();
         if (drawable != null)
             drawable.setCallback(null);
 
