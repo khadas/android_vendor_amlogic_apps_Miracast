@@ -22,6 +22,7 @@ import android.media.tv.TvView;
 import android.media.tv.TvInputInfo;
 import android.media.tv.TvInputManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.text.TextUtils;
@@ -60,6 +61,7 @@ public class Launcher extends Activity{
     private final String outputmode_change_action = "android.amlogic.settings.CHANGE_OUTPUT_MODE";
 
     public static String COMPONENT_TV_APP = "com.droidlogic.tvsource/com.droidlogic.tvsource.DroidLogicTv";
+    public static String COMPONENT_LIVE_TV = "com.android.tv/com.android.tv.MainActivity";
     public static String COMPONENT_TV_SETTINGS = "com.android.tv.settings/com.android.tv.settings.MainSettings";
     public static String DEFAULT_INPUT_ID = "com.droidlogic.tvinput/.services.ATVInputService/HW0";
     public static final String PROP_TV_PREVIEW = "tv.is.preview.window";
@@ -169,6 +171,10 @@ public class Launcher extends Activity{
         Log.d(TAG, "------onCreate");
 
         mSystemControlManager = new SystemControlManager(this);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1) {
+            COMPONENT_TV_APP = COMPONENT_LIVE_TV;
+        }
         if (TextUtils.equals(mSystemControlManager.getProperty("ro.platform.has.tvuimode"), "true") &&
             !TextUtils.equals(mSystemControlManager.getProperty("tv.launcher.firsttime.launch"), "false") &&
             Settings.System.getInt(getContentResolver(), "tv_start_up_enter_app", 0) > 0) {
