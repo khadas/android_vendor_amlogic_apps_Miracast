@@ -167,7 +167,11 @@ public class Launcher extends Activity{
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.main);
+        if (ServiceManager.getService(Context.TV_INPUT_SERVICE) == null) {
+            setContentView(R.layout.main_box);
+        } else {
+            setContentView(R.layout.main);
+        }
         Log.d(TAG, "------onCreate");
 
         mSystemControlManager = new SystemControlManager(this);
@@ -267,8 +271,9 @@ public class Launcher extends Activity{
         if (needPreviewFeture()) {
             tvView.setVisibility(View.VISIBLE);
             mTvHandler.sendEmptyMessage(TV_MSG_PLAY_TV);
-        } else
+        } else if (tvView != null) {
             tvView.setVisibility(View.INVISIBLE);
+        }
     }
 
     @Override
@@ -420,7 +425,9 @@ public class Launcher extends Activity{
             setTvView();
         } else {
             mChildScreens = childScreens;
-            tvView.setVisibility(View.GONE);
+            if (tvView != null) {
+                tvView.setVisibility(View.GONE);
+            }
             tvPrompt.setVisibility(View.GONE);
         }
     }
