@@ -1,19 +1,11 @@
-/** @file DesUtils.java
- *  @par Copyright:
- *  - Copyright 2012 Amlogic Inc as unpublished work                             
- *  All Rights Reserved                                                                                                                              
- *  - The information contained herein is the confidential property            
- *  of Amlogic.  The use, copying, transfer or disclosure of such information
- *  is prohibited except by express written agreement with Amlogic Inc. 
- *  @author   tellen
- *  @version  1.0        
- *  @date     2012/08/16
- *  @par function description:
- *  - 1 check device is amlogic cpu or not
- *  @warning This class may explode in your face.
- *  @note If you inherit anything from this class, you're doomed.
- */
- 
+/*
+* Copyright (c) 2014 Amlogic, Inc. All rights reserved.
+* *
+This source code is subject to the terms and conditions defined in the
+* file 'LICENSE' which is part of this source code package.
+* *
+Description: java file
+*/
 package com.droidlogic.mboxlauncher;
 
 
