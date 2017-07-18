@@ -70,7 +70,7 @@ public class Launcher extends Activity{
     private final String outputmode_change_action = "android.amlogic.settings.CHANGE_OUTPUT_MODE";
 
     public static String COMPONENT_TV_APP = "com.droidlogic.tvsource/com.droidlogic.tvsource.DroidLogicTv";
-    public static String COMPONENT_LIVE_TV = "com.android.tv/com.android.tv.MainActivity";
+    public static String COMPONENT_LIVE_TV = "com.android.tv/com.android.tv.TvActivity";
     public static String COMPONENT_TV_SETTINGS = "com.android.tv.settings/com.android.tv.settings.MainSettings";
     public static String DEFAULT_INPUT_ID = "com.droidlogic.tvinput/.services.ATVInputService/HW0";
     public static final String PROP_TV_PREVIEW = "tv.is.preview.window";
