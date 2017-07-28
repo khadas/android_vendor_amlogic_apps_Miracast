@@ -14,6 +14,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.os.RemoteException;
 import android.os.ServiceManager;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -188,18 +189,6 @@ public class Launcher extends Activity{
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1) {
             COMPONENT_TV_APP = COMPONENT_LIVE_TV;
         }
-        if (TextUtils.equals(mSystemControlManager.getProperty("ro.platform.has.tvuimode"), "true") &&
-            !TextUtils.equals(mSystemControlManager.getProperty("tv.launcher.firsttime.launch"), "false") &&
-            Settings.System.getInt(getContentResolver(), "tv_start_up_enter_app", 0) > 0) {
-            Log.d(TAG, "starting tvapp...");
-            Intent intent = new Intent();
-            intent.setComponent(ComponentName.unflattenFromString(COMPONENT_TV_APP));
-            startActivity(intent);
-            finish();
-        } else {
-            Log.d(TAG, "starting launcher...");
-        }
-        mSystemControlManager.setProperty("tv.launcher.firsttime.launch", "false");
 
         if (DesUtils.isAmlogicChip() == false) {
             finish();
@@ -261,9 +250,16 @@ public class Launcher extends Activity{
     }
 
     @Override
+    protected void onStart() {
+        super.onStart();
+        startTvAppAsLancher();
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
         Log.d(TAG, "------onResume");
+
         if (isMboxFeture()) {
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         }
@@ -726,15 +722,37 @@ public class Launcher extends Activity{
     };
 
     public void startTvSettings() {
-        Intent intent = new Intent();
-        intent.setComponent(ComponentName.unflattenFromString(COMPONENT_TV_SETTINGS));
-        startActivity(intent);
+        try {
+            Intent intent = new Intent();
+            intent.setComponent(ComponentName.unflattenFromString(COMPONENT_TV_SETTINGS));
+            startActivity(intent);
+        } catch (ActivityNotFoundException e) {
+            Log.e(TAG, " can't start TvSettings:" + e);
+        }
     }
 
     public void startTvApp() {
-        Intent intent = new Intent();
-        intent.setComponent(ComponentName.unflattenFromString(COMPONENT_TV_APP));
-        startActivity(intent);
+        try {
+            Intent intent = new Intent();
+            intent.setComponent(ComponentName.unflattenFromString(COMPONENT_TV_APP));
+            startActivity(intent);
+        } catch (ActivityNotFoundException e) {
+            Log.e(TAG, " can't start TvSettings:" + e);
+        }
+    }
+
+    private void startTvAppAsLancher() {
+        if (TextUtils.equals(mSystemControlManager.getProperty("ro.platform.has.tvuimode"), "true") &&
+            !TextUtils.equals(mSystemControlManager.getProperty("tv.launcher.firsttime.launch"), "false") &&
+            Settings.System.getInt(getContentResolver(), "tv_start_up_enter_app", 0) > 0) {
+            Log.d(TAG, "starting tvapp...");
+
+            startTvApp();
+            finish();
+        } else {
+            Log.d(TAG, "starting launcher...");
+        }
+        mSystemControlManager.setProperty("tv.launcher.firsttime.launch", "false");
     }
 
     public void startCustomScreen(View view) {
