@@ -155,6 +155,8 @@ public class Launcher extends Activity{
     private static final int TV_WINDOW_TOP_TOP = 0;
     private static final int TV_WINDOW_BOTTOM_TOP              = 719 - TV_WINDOW_HEIGHT;
     private static final int TV_MSG_PLAY_TV                    = 0;
+    private static final int TV_MSG_PLAY_TV_APP                = 1;
+
     public int tvViewMode = -1;
     private int mTvTop = -1;
     private boolean isRadioChannel = false;
@@ -252,13 +254,16 @@ public class Launcher extends Activity{
     @Override
     protected void onStart() {
         super.onStart();
-        startTvAppAsLancher();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         Log.d(TAG, "------onResume");
+
+        if (checkNeedStartTvApp()) {
+            mTvHandler.sendEmptyMessage(TV_MSG_PLAY_TV_APP);
+        }
 
         if (isMboxFeture()) {
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
@@ -741,18 +746,18 @@ public class Launcher extends Activity{
         }
     }
 
-    private void startTvAppAsLancher() {
+    private boolean checkNeedStartTvApp() {
+        boolean ret = false;
         if (TextUtils.equals(mSystemControlManager.getProperty("ro.platform.has.tvuimode"), "true") &&
             !TextUtils.equals(mSystemControlManager.getProperty("tv.launcher.firsttime.launch"), "false") &&
             Settings.System.getInt(getContentResolver(), "tv_start_up_enter_app", 0) > 0) {
             Log.d(TAG, "starting tvapp...");
 
-            startTvApp();
-            finish();
-        } else {
-            Log.d(TAG, "starting launcher...");
+            ret = true;
         }
         mSystemControlManager.setProperty("tv.launcher.firsttime.launch", "false");
+
+        return ret;
     }
 
     public void startCustomScreen(View view) {
@@ -1036,6 +1041,16 @@ public class Launcher extends Activity{
                     } else {
                         Log.d(TAG, "======== bootvideo is not stopped, wait it");
                         mTvHandler.sendEmptyMessageDelayed(TV_MSG_PLAY_TV, 200);
+                    }
+                    break;
+                case TV_MSG_PLAY_TV_APP:
+                    if (isBootvideoStopped()) {
+                        Log.d(TAG, "======== bootvideo is stopped, start tv app");
+                        startTvApp();
+                        finish();
+                    } else {
+                        Log.d(TAG, "======== bootvideo is not stopped, wait it");
+                        mTvHandler.sendEmptyMessageDelayed(TV_MSG_PLAY_TV_APP, 50);
                     }
                     break;
                 default:
