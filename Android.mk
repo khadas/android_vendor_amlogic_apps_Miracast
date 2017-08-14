@@ -14,6 +14,7 @@ LOCAL_SRC_FILES := $(call all-java-files-under, src)
 LOCAL_JAVA_LIBRARIES := droidlogic droidlogic-tv
 
 LOCAL_PACKAGE_NAME := MboxLauncher
+LOCAL_PRIVILEGED_MODULE := true
 
 ifeq ($(shell test $(PLATFORM_SDK_VERSION) -ge 26 && echo OK),OK)
 LOCAL_PROPRIETARY_MODULE := true

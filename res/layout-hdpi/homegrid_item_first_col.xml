@@ -9,7 +9,7 @@
 -->
 
 <com.droidlogic.mboxlauncher.MyRelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="117dp"
+    android:layout_width="137dp"
     android:layout_height="137dp"
     android:layout_centerHorizontal="true"
     android:focusable="true"
