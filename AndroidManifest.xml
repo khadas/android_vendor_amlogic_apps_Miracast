@@ -32,7 +32,7 @@
         android:label="@string/app_name"
         android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
 
-
+        <uses-library android:name="droidlogic.software.core" />
         <activity
             android:label="@string/app_name"
             android:name=".Launcher"
