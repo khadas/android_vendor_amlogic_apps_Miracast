@@ -69,6 +69,9 @@ public class Launcher extends Activity{
     private final String net_change_action = "android.net.conn.CONNECTIVITY_CHANGE";
     private final String wifi_signal_action = "android.net.wifi.RSSI_CHANGED";
     private final String outputmode_change_action = "android.amlogic.settings.CHANGE_OUTPUT_MODE";
+    private final String DROIDVOLD_MEDIA_UNMOUNTED_ACTION = "com.droidvold.action.MEDIA_UNMOUNTED";
+    private final String DROIDVOLD_MEDIA_EJECT_ACTION = "com.droidvold.action.MEDIA_EJECT";
+    private final String DROIDVOLD_MEDIA_MOUNTED_ACTION = "com.droidvold.action.MEDIA_MOUNTED";
 
     public static String COMPONENT_TV_APP = "com.droidlogic.tvsource/com.droidlogic.tvsource.DroidLogicTv";
     public static String COMPONENT_LIVE_TV = "com.android.tv/com.android.tv.TvActivity";
@@ -208,6 +211,9 @@ public class Launcher extends Activity{
         filter.addAction(Intent.ACTION_MEDIA_EJECT);
         filter.addAction(Intent.ACTION_MEDIA_UNMOUNTED);
         filter.addAction(Intent.ACTION_MEDIA_MOUNTED);
+        filter.addAction (DROIDVOLD_MEDIA_UNMOUNTED_ACTION);
+        filter.addAction (DROIDVOLD_MEDIA_MOUNTED_ACTION);
+        filter.addAction (DROIDVOLD_MEDIA_EJECT_ACTION);
         filter.addDataScheme("file");
         registerReceiver(mediaReceiver, filter);
 
@@ -668,7 +674,12 @@ public class Launcher extends Activity{
                 return;
 
             if (Intent.ACTION_MEDIA_EJECT.equals(action)
-                    || Intent.ACTION_MEDIA_UNMOUNTED.equals(action) || Intent.ACTION_MEDIA_MOUNTED.equals(action)) {
+                    || Intent.ACTION_MEDIA_UNMOUNTED.equals(action)
+                    || Intent.ACTION_MEDIA_MOUNTED.equals(action)
+                    || action.equals ("com.droidvold.action.MEDIA_UNMOUNTED")
+                    || action.equals ("com.droidvold.action.MEDIA_EJECT")
+                    || action.equals ("com.droidvold.action.MEDIA_MOUNTED")
+                    ) {
                 displayStatus();
                 updateStatus();
             }
