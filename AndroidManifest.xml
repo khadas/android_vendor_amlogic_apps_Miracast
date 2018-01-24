@@ -33,6 +33,7 @@
         android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
 
         <uses-library android:name="droidlogic.software.core" />
+        <uses-library android:name="droidlogic.tv.software.core" />
         <activity
             android:label="@string/app_name"
             android:name=".Launcher"
