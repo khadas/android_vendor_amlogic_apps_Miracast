@@ -12,7 +12,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.droidlogic.mboxlauncher"
     android:sharedUserId="android.uid.system"
-    android:minSdkVersion="21">
+    android:minSdkVersion="26">
 
     <uses-permission android:name="android.permission.INTERNET"></uses-permission>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"></uses-permission>
@@ -33,7 +33,6 @@
         android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
 
         <uses-library android:name="droidlogic.software.core" />
-        <uses-library android:name="droidlogic.tv.software.core" />
         <activity
             android:label="@string/app_name"
             android:name=".Launcher"

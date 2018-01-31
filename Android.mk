@@ -25,4 +25,11 @@ LOCAL_PROGUARD_ENABLED := full
 LOCAL_PROGUARD_FLAG_FILES := proguard.flags
 LOCAL_CERTIFICATE := platform
 
+FILE := device/amlogic/$(TARGET_PRODUCT)/files/AndroidManifest-common.xml
+
+ifeq ($(FILE), $(wildcard $(FILE)))
+LOCAL_FULL_LIBS_MANIFEST_FILES := $(FILE)
+LOCAL_JACK_COVERAGE_INCLUDE_FILTER := com.droidlogic.mboxlauncher*
+endif
+
 include $(BUILD_PACKAGE)
