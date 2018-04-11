@@ -9,6 +9,7 @@ Description: java file
 
 package com.droidlogic.mboxlauncher;
 
+import android.os.Build;
 import android.os.Environment;
 import android.os.storage.DiskInfo;
 import android.os.storage.StorageManager;
@@ -109,6 +110,10 @@ public class StatusLoader {
     }
 
     private boolean isSdcardExist() {
+        //from P don't support call hidden apis
+        //if (Build.VERSION.SDK_INT > Build.VERSION_CODES.O_MR1) return false;
+
+        /*
         List<VolumeInfo> volumes = mStorageManager.getVolumes();
         Collections.sort(volumes, VolumeInfo.getDescriptionComparator());
         for (VolumeInfo vol : volumes) {
@@ -119,6 +124,7 @@ public class StatusLoader {
                 }
             }
         }
+        */
         return false;
     }
 
