@@ -27,10 +27,11 @@ LOCAL_PROGUARD_ENABLED := full
 LOCAL_PROGUARD_FLAG_FILES := proguard.flags
 LOCAL_CERTIFICATE := platform
 
-FILE := device/amlogic/$(TARGET_PRODUCT)/files/AndroidManifest-common.xml
+FILE := device/*/$(TARGET_PRODUCT)/files/MboxLauncher2/AndroidManifest-common.xml
+FILES := $(foreach v,$(wildcard $(FILE)),$(v))
 
-ifeq ($(FILE), $(wildcard $(FILE)))
-LOCAL_FULL_LIBS_MANIFEST_FILES := $(FILE)
+ifeq ($(FILES), $(wildcard $(FILE)))
+LOCAL_FULL_LIBS_MANIFEST_FILES := $(FILES)
 LOCAL_JACK_COVERAGE_INCLUDE_FILTER := com.droidlogic.mboxlauncher*
 endif
 
