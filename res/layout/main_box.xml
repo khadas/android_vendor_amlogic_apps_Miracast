@@ -16,7 +16,8 @@
     <FrameLayout
         android:id="@+id/layout_main"
         android:layout_width="fill_parent"
-        android:layout_height="fill_parent" >
+        android:layout_height="fill_parent"
+        android:visibility="gone" >
 
         <RelativeLayout
             android:id="@+id/layout_homepage"
@@ -50,6 +51,14 @@
             android:gravity="center"
             android:textSize="30sp"
             android:textStyle="bold" />
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/layout_black"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:background="@color/black_ground"
+        android:visibility="visible" >
     </FrameLayout>
 
 </RelativeLayout>

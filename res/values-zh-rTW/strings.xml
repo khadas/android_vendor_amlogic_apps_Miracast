@@ -14,4 +14,5 @@
     <string name="str_add">添加</string>
     <string name="str_no_signal">無信號</string>
     <string name="str_scrambeled">頻道加密</string>
+    <string name="str_blocked">頻道加鎖</string>
 </resources>
