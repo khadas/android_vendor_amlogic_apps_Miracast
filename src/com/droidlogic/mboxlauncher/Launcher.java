@@ -262,11 +262,11 @@ public class Launcher extends Activity{
     }
 
     public boolean isMboxFeture () {
-        return mSystemControlManager.getPropertyBoolean("ro.platform.has.mbxuimode", false);
+        return mSystemControlManager.getPropertyBoolean("ro.vendor.platform.has.mbxuimode", false);
     }
 
     public boolean isTvFeture () {
-        return TextUtils.equals(mSystemControlManager.getPropertyString("ro.platform.is.tv", ""), "1");
+        return TextUtils.equals(mSystemControlManager.getPropertyString("ro.vendor.platform.is.tv", ""), "1");
     }
 
     public boolean needPreviewFeture () {
@@ -818,7 +818,7 @@ public class Launcher extends Activity{
 
     private boolean checkNeedStartTvApp(boolean close) {
         boolean ret = false;
-        if (TextUtils.equals(mSystemControlManager.getProperty("ro.platform.has.tvuimode"), "true") &&
+        if (TextUtils.equals(mSystemControlManager.getProperty("ro.vendor.platform.has.tvuimode"), "true") &&
             !TextUtils.equals(mSystemControlManager.getProperty("tv.launcher.firsttime.launch"), "false") &&
             Settings.System.getInt(getContentResolver(), "tv_start_up_enter_app", 0) > 0) {
             Log.d(TAG, "starting tvapp...");
