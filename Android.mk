@@ -36,4 +36,4 @@ LOCAL_FULL_LIBS_MANIFEST_FILES := $(FILES)
 LOCAL_JACK_COVERAGE_INCLUDE_FILTER := com.droidlogic.mboxlauncher*
 endif
 
-#include $(BUILD_PACKAGE)
+include $(BUILD_PACKAGE)

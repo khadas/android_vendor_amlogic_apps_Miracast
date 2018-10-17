@@ -13,7 +13,6 @@ import android.app.SearchManager;
 import android.os.Handler;
 import android.os.Message;
 import android.os.RemoteException;
-import android.os.ServiceManager;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
@@ -22,7 +21,6 @@ import android.content.BroadcastReceiver;
 import android.content.pm.ActivityInfo;
 import android.content.ComponentName;
 import android.database.ContentObserver;
-import android.database.IContentObserver;
 import android.app.Activity;
 import android.app.Instrumentation;
 import android.graphics.drawable.Drawable;
@@ -43,7 +41,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.KeyEvent;
 import android.view.View.OnTouchListener;
-import android.view.IWindowManager;
 import android.media.tv.TvContentRating;
 import android.media.tv.TvTrackInfo;
 
@@ -183,10 +180,8 @@ public class Launcher extends Activity{
     public static float startX;
     public static float endX;
     private SystemControlManager mSystemControlManager;
-    private IWindowManager mWindowManager;
     private AppDataLoader mAppDataLoader;
     private StatusLoader mStatusLoader;
-    private static float scale_value;
     private Object mlock = new Object();
 
     private FrameLayout mMainFrameLayout;
@@ -195,7 +190,9 @@ public class Launcher extends Activity{
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (ServiceManager.getService(Context.TV_INPUT_SERVICE) == null) {
+        mTvInputManager = (TvInputManager) getSystemService(Context.TV_INPUT_SERVICE);
+
+        if (mTvInputManager == null) {
             setContentView(R.layout.main_box);
         } else {
             setContentView(R.layout.main);
@@ -211,7 +208,6 @@ public class Launcher extends Activity{
         }
         if (needPreviewFeture()) {
             mTvDataBaseManager = new TvDataBaseManager(this);
-            mTvInputManager = (TvInputManager) getSystemService(Context.TV_INPUT_SERVICE);
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1) {
@@ -224,8 +220,6 @@ public class Launcher extends Activity{
 
         mAppDataLoader = new AppDataLoader(this);
         mStatusLoader = new StatusLoader(this);
-        mWindowManager = IWindowManager.Stub.asInterface(ServiceManager.getService("window"));
-        scale_value = getAnimationScaleValue();
 
         mAppDataLoader.update();
         initChildViews();
@@ -324,7 +318,6 @@ public class Launcher extends Activity{
                 }
             }
 
-            setAnimationScale(false);
             tvView.setVisibility(View.VISIBLE);
             if (!isChannelBlocked) {
                 mTvHandler.sendEmptyMessage(TV_MSG_PLAY_TV);
@@ -362,7 +355,6 @@ public class Launcher extends Activity{
         Log.d(TAG, "------onStop");
 
         if (needPreviewFeture()) {
-            setAnimationScale(true);
             releasePlayingTv();
         }
     }
@@ -671,27 +663,6 @@ public class Launcher extends Activity{
                 return;
         }
         displayShortcuts();
-    }
-
-    private static final int INDEX_TRANSITION_ANIMATION_SCALE = 1;
-    private void setAnimationScale(boolean enable_animation) {
-        try {
-            if (enable_animation) {
-                mWindowManager.setAnimationScale(INDEX_TRANSITION_ANIMATION_SCALE, scale_value);
-            } else {
-                mWindowManager.setAnimationScale(INDEX_TRANSITION_ANIMATION_SCALE, 0);
-            }
-        } catch (RemoteException e) {
-        }
-    }
-
-    private float getAnimationScaleValue() {
-        float scale = 0;
-        try {
-            scale = mWindowManager.getAnimationScale(INDEX_TRANSITION_ANIMATION_SCALE);
-        } catch (RemoteException e) {
-        }
-        return scale;
     }
 
     private Handler mHandler = new Handler() {
@@ -1356,12 +1327,6 @@ public class Launcher extends Activity{
                     tvView.tune(mTvInputId, mChannelUri);
                 }
             }*/
-        }
-
-        @Override
-        public IContentObserver releaseContentObserver() {
-            // TODO Auto-generated method stub
-            return super.releaseContentObserver();
         }
     }
 

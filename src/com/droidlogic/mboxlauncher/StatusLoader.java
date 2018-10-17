@@ -11,9 +11,7 @@ package com.droidlogic.mboxlauncher;
 
 import android.os.Build;
 import android.os.Environment;
-import android.os.storage.DiskInfo;
 import android.os.storage.StorageManager;
-import android.os.storage.VolumeInfo;
 import android.content.Context;
 import android.provider.Settings;
 import android.text.TextUtils;
