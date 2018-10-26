@@ -1261,7 +1261,7 @@ public class Launcher extends Activity{
         @Override
         public void onTracksChanged(String inputId, List<TvTrackInfo> tracks) {
             Log.d(TAG, "onTracksChanged inputId = " + inputId);
-            appyPrimaryAudioLanguage(tracks);
+            //appyPrimaryAudioLanguage(tracks);
         }
 
         @Override
