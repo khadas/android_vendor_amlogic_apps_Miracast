@@ -989,7 +989,9 @@ public class Launcher extends Activity{
         }
 
         Log.d(TAG, "TV play tune inputId=" + mTvInputId + " uri=" + mChannelUri);
-        tvView.tune(mTvInputId, mChannelUri);
+        if (mChannelUri != null) {
+            tvView.tune(mTvInputId, mChannelUri);
+        }
 
         if (mChannelUri != null && !TvContract.isChannelUriForPassthroughInput(mChannelUri)) {
             ChannelInfo current = mTvDataBaseManager.getChannelInfo(mChannelUri);
