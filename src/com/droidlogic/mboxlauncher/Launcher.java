@@ -20,6 +20,7 @@ import android.content.IntentFilter;
 import android.content.BroadcastReceiver;
 import android.content.pm.ActivityInfo;
 import android.content.ComponentName;
+import android.content.ContentProviderClient;
 import android.database.ContentObserver;
 import android.app.Activity;
 import android.app.Instrumentation;
@@ -32,6 +33,7 @@ import android.media.tv.TvInputManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.SystemProperties;
 import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.ArrayMap;
@@ -926,8 +928,11 @@ public class Launcher extends Activity{
     }
 
     private boolean isBootvideoStopped() {
-        return !(TextUtils.equals(mSystemControlManager.getProperty("service.bootvideo"), "1")
-                && !TextUtils.equals(mSystemControlManager.getProperty("init.svc.bootanim"), "stopped"));
+        ContentProviderClient tvProvider = getContentResolver().acquireContentProviderClient(TvContract.AUTHORITY);
+
+        return TextUtils.equals(SystemProperties.get("init.svc.bootanim", "running"), "stopped")
+                && TextUtils.equals(SystemProperties.get("dev.bootcomplete", "0"), "1")
+                && (tvProvider != null);
     }
 
     private boolean isCurrentChannelBlocked() {
