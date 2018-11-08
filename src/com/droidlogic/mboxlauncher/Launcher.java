@@ -189,6 +189,9 @@ public class Launcher extends Activity{
     private FrameLayout mMainFrameLayout;
     private FrameLayout mBlackFrameLayout;
 
+    private static final int REQUEST_CODE_START_TV_SOURCE = 3;
+    private boolean mTvStartPlaying = false;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -275,6 +278,7 @@ public class Launcher extends Activity{
         recycleBigBackgroundDrawable();
         mTvHandler.removeMessages(TV_MSG_PLAY_TV);
         releaseTvView();
+        mTvStartPlaying = false;
     }
 
     @Override
@@ -356,7 +360,7 @@ public class Launcher extends Activity{
         super.onStop();
         Log.d(TAG, "------onStop");
 
-        if (needPreviewFeture()) {
+        if (needPreviewFeture() && mTvStartPlaying) {
             releasePlayingTv();
         }
     }
@@ -773,10 +777,34 @@ public class Launcher extends Activity{
         try {
             Intent intent = new Intent();
             intent.setComponent(ComponentName.unflattenFromString(COMPONENT_TV_SOURCE));
-            startActivity(intent);
+            intent.putExtra("requestpackage", "com.droidlogic.mboxlauncher");
+            startActivityForResult(intent, REQUEST_CODE_START_TV_SOURCE);
         } catch (ActivityNotFoundException e) {
             Log.e(TAG, " can't start TvSources:" + e);
         }
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Log.d(TAG, "onActivityResult requestCode = " + requestCode + ", resultCode = " + resultCode);
+        switch (requestCode) {
+            case REQUEST_CODE_START_TV_SOURCE:
+                if (resultCode == RESULT_OK && data != null) {
+                    if (mTvStartPlaying) {
+                        releasePlayingTv();
+                    }
+                    try {
+                        startActivity(data);
+                        finish();
+                    } catch (ActivityNotFoundException e) {
+                        Log.e(TAG, " can't start LiveTv:" + e);
+                    }
+                }
+                break;
+            default:
+                break;
+        }
+
     }
 
     public void startTvApp() {
@@ -1025,6 +1053,7 @@ public class Launcher extends Activity{
         if (mChannelObserver == null)
             mChannelObserver = new ChannelObserver();
         getContentResolver().registerContentObserver(Channels.CONTENT_URI, true, mChannelObserver);
+        mTvStartPlaying = true;
     }
 
     private void releaseTvView() {
