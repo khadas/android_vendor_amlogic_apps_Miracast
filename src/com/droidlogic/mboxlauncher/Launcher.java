@@ -195,6 +195,7 @@ public class Launcher extends Activity{
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        skipUserSetup();
         mTvInputManager = (TvInputManager) getSystemService(Context.TV_INPUT_SERVICE);
 
         if (mTvInputManager == null) {
@@ -1442,5 +1443,16 @@ public class Launcher extends Activity{
             diaplaylang = ESPANOL_INDEX;
         }
         return diaplaylang;
+    }
+
+    /*in AOSP version, we have no user setup APK, so force skip it
+    or we can't use home key */
+    private void skipUserSetup() {
+        if (Settings.Secure.getInt(getContentResolver(), Settings.Secure.TV_USER_SETUP_COMPLETE, 0) == 0) {
+            Log.d(TAG, "force skip user setup, or we can't use home key");
+            Settings.Global.putInt(getContentResolver(), Settings.Global.DEVICE_PROVISIONED, 1);
+            Settings.Secure.putInt(getContentResolver(), Settings.Secure.USER_SETUP_COMPLETE, 1);
+            Settings.Secure.putInt(getContentResolver(), Settings.Secure.TV_USER_SETUP_COMPLETE, 1);
+        }
     }
 }

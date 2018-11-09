@@ -15,21 +15,14 @@ LOCAL_JAVA_LIBRARIES := droidlogic droidlogic-tv
 
 LOCAL_PACKAGE_NAME := MboxLauncher
 
-ifeq ($(shell test $(PLATFORM_SDK_VERSION) -ge 26 && echo OK),OK)
-LOCAL_PROPRIETARY_MODULE := true
-else
-LOCAL_PRIVILEGED_MODULE := true
-endif
-
-ifndef PRODUCT_SHIPPING_API_LEVEL
-LOCAL_PRIVATE_PLATFORM_APIS := true
-endif
-
 LOCAL_OVERRIDES_PACKAGES := Home
 
 LOCAL_PROGUARD_ENABLED := full
 LOCAL_PROGUARD_FLAG_FILES := proguard.flags
+
+LOCAL_PRIVATE_PLATFORM_APIS := true
 LOCAL_CERTIFICATE := platform
+LOCAL_PRIVILEGED_MODULE := true
 
 FILE := device/*/$(TARGET_PRODUCT)/files/MboxLauncher2/AndroidManifest-common.xml
 FILES := $(foreach v,$(wildcard $(FILE)),$(v))
