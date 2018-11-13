@@ -82,12 +82,12 @@ public class Launcher extends Activity{
     public static String COMPONENT_LIVE_TV = "com.android.tv/com.android.tv.TvActivity";
     public static String COMPONENT_TV_SETTINGS = "com.android.tv.settings/com.android.tv.settings.MainSettings";
     public static String DEFAULT_INPUT_ID = "com.droidlogic.tvinput/.services.ATVInputService/HW0";
-    public static final String PROP_TV_PREVIEW = "tv.is.preview.window";
 
+    public static final String PROP_TV_PREVIEW = "tv.is.preview.window";
     public static final String COMPONENT_THOMASROOM = "com.android.gl2jni";
-    public static boolean isLaunchingThomasroom = false;
     public static final String COMPONENT_TVSETTINGS = "com.android.tv.settings/com.android.tv.settings.MainSettings";
     public static boolean isLaunchingTvSettings = false;
+    public static boolean isLaunchingThomasroom = false;
 
     public static final int TYPE_VIDEO                           = 0;
     public static final int TYPE_RECOMMEND                       = 1;
@@ -1264,7 +1264,9 @@ public class Launcher extends Activity{
                 isAvNoSignal = true;
                 setTvPrompt(TV_PROMPT_NO_SIGNAL);
             } else if (reason != TvInputManager.VIDEO_UNAVAILABLE_REASON_AUDIO_ONLY) {
-                setTvPrompt(TV_PROMPT_NO_SIGNAL);
+                if (!TextUtils.equals(mChannelUri.toString(), TvContract.buildChannelUri(-1).toString())) {
+                    setTvPrompt(TV_PROMPT_NO_SIGNAL);
+                }
             }
         }
 
