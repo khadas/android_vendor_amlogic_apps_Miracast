@@ -11,7 +11,9 @@ package com.droidlogic.mboxlauncher;
 
 import android.os.Build;
 import android.os.Environment;
+import android.os.storage.DiskInfo;
 import android.os.storage.StorageManager;
+import android.os.storage.VolumeInfo;
 import android.content.Context;
 import android.provider.Settings;
 import android.text.TextUtils;
@@ -30,9 +32,9 @@ import java.util.Locale;
 import java.util.List;
 import java.util.Calendar;
 import java.util.Collections;
-import java.util.Map;
+//import java.util.Map;
 
-import com.droidlogic.app.FileListManager;
+//import com.droidlogic.app.FileListManager;
 
 public class StatusLoader {
     private final static String TAG = "StatusLoader";
@@ -45,13 +47,13 @@ public class StatusLoader {
     private ConnectivityManager mConnectivityManager;
     private WifiManager mWifiManager;
     private StorageManager mStorageManager;
-    private FileListManager mFileListManager;
+    //private FileListManager mFileListManager;
 
-    private int devCnt = 0;
-    private List<Map<String, Object>> listFiles = null;
+    //private int devCnt = 0;
+    //private List<Map<String, Object>> listFiles = null;
 
     public StatusLoader (Context context) {
-        mFileListManager = new FileListManager(context);
+        //mFileListManager = new FileListManager(context);
         mContext = context;
         mConnectivityManager = (ConnectivityManager)mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
         mWifiManager = (WifiManager)mContext.getSystemService(Context.WIFI_SERVICE);
@@ -106,13 +108,12 @@ public class StatusLoader {
     }
 
     private boolean isSdcardExist() {
-        listFiles = mFileListManager.getDevices();
-        devCnt = listFiles.size();
-        for (int j = 0; j < devCnt; j++) {
-            Map<String, Object> map = listFiles.get(j);
-            String keyType = (String)map.get(FileListManager.KEY_TYPE);
-            if (keyType != null) {
-                if (keyType.equals(FileListManager.TYPE_SDCARD)) {
+        List<VolumeInfo> volumes = mStorageManager.getVolumes();
+        Collections.sort(volumes, VolumeInfo.getDescriptionComparator());
+        for (VolumeInfo vol : volumes) {
+            if (vol != null && vol.isMountedReadable() && vol.getType() == VolumeInfo.TYPE_PUBLIC) {
+                DiskInfo disk = vol.getDisk();
+                if (disk.isSd()) {
                     return true;
                 }
             }
@@ -121,13 +122,12 @@ public class StatusLoader {
     }
 
     private boolean isUdiskExist() {
-        listFiles = mFileListManager.getDevices();
-        devCnt = listFiles.size();
-        for (int j = 0; j < devCnt; j++) {
-            Map<String, Object> map = listFiles.get(j);
-            String keyType = (String)map.get(FileListManager.KEY_TYPE);
-            if (keyType != null) {
-                if (keyType.equals(FileListManager.TYPE_UDISK)) {
+        List<VolumeInfo> volumes = mStorageManager.getVolumes();
+        Collections.sort(volumes, VolumeInfo.getDescriptionComparator());
+        for (VolumeInfo vol : volumes) {
+            if (vol != null && vol.isMountedReadable() && vol.getType() == VolumeInfo.TYPE_PUBLIC) {
+                DiskInfo disk = vol.getDisk();
+                if (disk.isUsb()) {
                     return true;
                 }
             }
