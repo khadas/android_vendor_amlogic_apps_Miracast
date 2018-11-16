@@ -980,6 +980,8 @@ public class Launcher extends Activity{
 
     private void tuneTvView() {
         stopMusicPlayer();
+        Log.d(TAG, "clear video data, avoid the last frame of other apps");
+        mSystemControlManager.writeSysFs("/sys/class/video/disable_video", "2");
 
         //float window don't need load PQ
         mSystemControlManager.setProperty(PROP_TV_PREVIEW, "true");
