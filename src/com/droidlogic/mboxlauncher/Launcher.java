@@ -205,7 +205,7 @@ public class Launcher extends Activity{
         }
         Log.d(TAG, "------onCreate");
 
-        mSystemControlManager = new SystemControlManager(this);
+        mSystemControlManager = SystemControlManager.getInstance();
         mMainFrameLayout = (FrameLayout) findViewById(R.id.layout_main);
         mBlackFrameLayout = (FrameLayout) findViewById(R.id.layout_black);
         if (!checkNeedStartTvApp(false)) {
