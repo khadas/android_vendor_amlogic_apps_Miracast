@@ -86,7 +86,6 @@ public class Launcher extends Activity{
     public static final String PROP_TV_PREVIEW = "tv.is.preview.window";
     public static final String COMPONENT_THOMASROOM = "com.android.gl2jni";
     public static final String COMPONENT_TVSETTINGS = "com.android.tv.settings/com.android.tv.settings.MainSettings";
-    public static final String NETWORK_STATUS = "network_status";
     public static boolean isLaunchingTvSettings = false;
     public static boolean isLaunchingThomasroom = false;
 
@@ -444,7 +443,6 @@ public class Launcher extends Activity{
     }
 
     private void displayStatus() {
-
         LocalAdapter ad = new LocalAdapter(this,
                 mStatusLoader.getStatusData(),
                 R.layout.homelist_item,
@@ -698,7 +696,7 @@ public class Launcher extends Activity{
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
 
-            Log.d(TAG, " mediaReceiver action = " + action);
+            //Log.d(TAG, " mediaReceiver		  action = " + action);
             if (action == null)
                 return;
 
@@ -723,7 +721,7 @@ public class Launcher extends Activity{
             if (action == null)
                 return;
 
-            Log.d(TAG, "netReceiver action = " + action);
+             //Log.d(TAG, "netReceiver         action = " + action);
             if (action.equals(Intent.ACTION_TIME_CHANGED)) {
                 displayDate();
             }
@@ -732,15 +730,7 @@ public class Launcher extends Activity{
             } else if (Intent.ACTION_EXTERNAL_APPLICATIONS_AVAILABLE.equals(action)
                     || Intent.ACTION_EXTERNAL_APPLICATIONS_UNAVAILABLE.equals(action)) {
                 updateAppList(intent);
-            } else {
-                if (action.equals(net_change_action)) {
-                    int networkStatus = Settings.System.getInt(getContentResolver(), NETWORK_STATUS, 0);
-                    if (networkStatus == 0) {
-                        Settings.System.putInt(getContentResolver(), NETWORK_STATUS, 1);
-                    } else if (networkStatus == 1) {
-                        Settings.System.putInt(getContentResolver(), NETWORK_STATUS, 0);
-                    }
-                }
+            }else {
                 displayStatus();
                 updateStatus();
             }
