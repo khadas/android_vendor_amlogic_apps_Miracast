@@ -148,9 +148,10 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver
                          mWfdPort = String.valueOf(device.wfdInfo.getControlPort());
                          mWfdMac = device.deviceAddress;
                      }
+                     Log.d (WiFiDirectMainActivity.TAG, "mDnsmasqInfoList:" + mDnsmasqInfoList.size());
 
                      for (DnsmasqInfo dnsmasqInfo : mDnsmasqInfoList) {
-                         if (mWfdMac.equals(dnsmasqInfo.mMacAddr)) {
+                         if ((mWfdMac.substring(0, 11)).equals(dnsmasqInfo.mMacAddr.substring(0, 11))) {
                              Log.d (WiFiDirectMainActivity.TAG, "wfdMac:" + mWfdMac + ", dnsmasqMac:" + dnsmasqInfo.mMacAddr + " is mate!!");
                              activity.startMiracast (dnsmasqInfo.mIpAddr, mWfdPort);
                          } else {

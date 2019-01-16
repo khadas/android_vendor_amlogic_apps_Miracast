@@ -18,12 +18,12 @@
 #define LOG_TAG "amlMiracast-jni"
 
 #include <utils/Log.h>
-#include <nativehelper/jni.h>
-#include <nativehelper/JNIHelp.h>
-#include <android_runtime/AndroidRuntime.h>
-
+#include <jni.h>
+//#include <nativehelper/JNIHelp.h>
+//#include <android_runtime/AndroidRuntime.h>
+#include "sink/AmANetworkSession.h"
 #include "sink/WifiDisplaySink.h"
-#include "source/WifiDisplaySource.h"
+//#include "source/WifiDisplaySource.h"
 
 #include <media/IRemoteDisplay.h>
 #include <media/IRemoteDisplayClient.h>
@@ -31,15 +31,16 @@
 #include <binder/ProcessState.h>
 #include <binder/IServiceManager.h>
 #include <media/IMediaPlayerService.h>
-#include <media/stagefright/DataSource.h>
+//#include <media/stagefright/DataSource.h>
 #include <media/stagefright/foundation/ADebug.h>
 #include <media/stagefright/foundation/AMessage.h>
+
 
 using namespace android;
 
 sp<ALooper> mSinkLooper = new ALooper;
 
-sp<ANetworkSession> mSession = new ANetworkSession;
+sp<AmANetworkSession> mSession = new AmANetworkSession;
 sp<WifiDisplaySink> mSink;
 bool mStart = false;
 bool mInit = false;
@@ -64,8 +65,8 @@ static jobject sinkObject;
 
 static void report_wfd_error(void)
 {
-    JNIEnv* env = AndroidRuntime::getJNIEnv();
-    env->CallVoidMethod(sinkObject, notifyWfdError);
+    //JNIEnv* env = AndroidRuntime::getJNIEnv();
+    //env->CallVoidMethod(sinkObject, notifyWfdError);
 }
 
 void SinkHandler::onMessageReceived(const sp<AMessage> &msg)
@@ -92,7 +93,7 @@ static int connect(const char *sourceHost, int32_t sourcePort)
     ProcessState::self()->startThreadPool();
     DataSource::RegisterDefaultSniffers();
 
-    sp<ANetworkSession> session = new ANetworkSession;
+    sp<AmANetworkSession> session = new AmANetworkSession;
     session->start();
 
     sp<WifiDisplaySink> sink = new WifiDisplaySink(session);
@@ -108,7 +109,7 @@ static int connect(const char *sourceHost, int32_t sourcePort)
     */
 
     ProcessState::self()->startThreadPool();
-    DataSource::RegisterDefaultSniffers();
+    //DataSource::RegisterDefaultSniffers();
 
     if (!mInit)
     {
@@ -223,7 +224,7 @@ static void source_start(const char *ip) {
 
     DataSource::RegisterDefaultSniffers();
 
-  sp<ANetworkSession> session = new ANetworkSession;
+  sp<AmANetworkSession> session = new AmANetworkSession;
     session->start();
 
   mSourceLooper = new ALooper();
@@ -296,11 +297,19 @@ static JNINativeMethod gMethods[] =
 
 int register_com_droidlogic_miracast_WiFiDirectActivity(JNIEnv *env)
 {
+    jint rc;
     static const char *const kClassPathName = "com/droidlogic/miracast/SinkActivity";
     jclass clazz;
     FIND_CLASS(clazz, kClassPathName);
     GET_METHOD_ID(notifyWfdError, clazz, "notifyWfdError", "()V");
-    return jniRegisterNativeMethods(env, kClassPathName, gMethods, sizeof(gMethods) / sizeof(gMethods[0]));
+    //return jniRegisterNativeMethods(env, kClassPathName, gMethods, sizeof(gMethods) / sizeof(gMethods[0]));
+    if (rc = (env->RegisterNatives(clazz, gMethods, sizeof(gMethods) / sizeof(gMethods[0]))) < 0) {
+        env->DeleteLocalRef(clazz);
+        return -1;
+    }
+
+    env->DeleteLocalRef(clazz);
+    return 0;
 }
 jint JNI_OnLoad(JavaVM *vm, void *reserved)
 {

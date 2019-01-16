@@ -23,17 +23,28 @@ LOCAL_PACKAGE_NAME := Miracast
 LOCAL_CERTIFICATE := platform
 
 ifeq ($(shell test $(PLATFORM_SDK_VERSION) -ge 26 && echo OK),OK)
-LOCAL_PROPRIETARY_MODULE := true
+#LOCAL_PROPRIETARY_MODULE := true
 endif
 
+#ifndef PRODUCT_SHIPPING_API_LEVEL
+LOCAL_PRIVATE_PLATFORM_APIS := true
+#endif
 #LOCAL_JNI_SHARED_LIBRARIES := libwfd_jni
 LOCAL_REQUIRED_MODULES := libwfd_jni
+
+LOCAL_JAVA_LIBRARIES += \
+    android.hidl.base-V1.0-java \
+    android.hidl.manager-V1.0-java
+
+LOCAL_STATIC_JAVA_LIBRARIES += \
+    vendor.amlogic.hardware.miracastserver-V1.0-java
 
 #LOCAL_PROGUARD_ENABLED := disabled
 LOCAL_PROGUARD_ENABLED := full
 LOCAL_PROGUARD_FLAG_FILES := proguard.flags
-
+LOCAL_DEX_PREOPT := false
 LOCAL_ARM_MODE := arm
+LOCAL_PRODUCT_MODULE := true
 #WITH_DEXPREOPT = false
 include $(BUILD_PACKAGE)
 

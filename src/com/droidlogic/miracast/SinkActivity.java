@@ -115,7 +115,8 @@ public class SinkActivity extends Activity
 
     private View mRootView;
 
-    private SystemControlManager mSystemControl = new SystemControlManager (this);
+    private SystemControlManager mSystemControl = SystemControlManager.getInstance();
+    //private SystemControlManager mSystemControl = null;
     private int certBtnState = 0; // 0: none oper, 1:play, 2:pause
 
     static

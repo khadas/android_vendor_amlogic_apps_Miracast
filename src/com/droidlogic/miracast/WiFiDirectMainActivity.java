@@ -109,6 +109,7 @@ public class WiFiDirectMainActivity extends Activity implements
 
     public static final String  ACTION_FIX_RTSP_FAIL 	= "com.droidlogic.miracast.RTSP_FAIL";
     public static final String  ACTION_REMOVE_GROUP 	= "com.droidlogic.miracast.REMOVE_GROUP";
+    public static final String  DNSMASQ_PATH = "/data/misc/dhcp";
     /***Miracast cert begin***/
     public boolean mForceStopScan = false;
     public boolean mStartConnecting = false;
@@ -158,9 +159,23 @@ public class WiFiDirectMainActivity extends Activity implements
     private TextView mFunlistText, mListChannelText, mOperChannelText, mDeviceListText;
     private InputMethodManager imm;
     private WifiP2pDevice mSelectDevice = null;
+    private MiracastControlManager mMcm = null;
      /***Miracast cert end***/
     private boolean mFirstInit = false;
 
+    private final MiracastControlManager.WatchHandler mWatchHandler = new MiracastControlManager.WatchHandler() {
+        @Override
+        public void onEvent(ArrayList<String> dnsmasqInfo) {
+            Log.d (TAG, "Sending WIFI_P2P_IP_ADDR_CHANGED_ACTION broadcast");
+            Intent intent = new Intent(WIFI_P2P_IP_ADDR_CHANGED_ACTION);
+            Bundle b = new Bundle();
+            b.putStringArrayList(WIFI_P2P_PEER_DNSMASQ_EXTRA, dnsmasqInfo);
+            intent.putExtras(b);
+            sendBroadcastAsUser(intent, UserHandle.ALL);
+        }
+    };
+
+    /*
     private File mFolder = new File("/data/misc/dhcp");
     private FileObserver mAddrObserver = new FileObserver(mFolder.getPath(), FileObserver.MODIFY | FileObserver.CREATE)
     {
@@ -241,7 +256,7 @@ public class WiFiDirectMainActivity extends Activity implements
         return true;
     }
 
-
+*/
 /********************Miracast cert begin**********************/
     private void initFunlist() {
         mFunList = new ArrayList<String>();
@@ -647,7 +662,7 @@ public class WiFiDirectMainActivity extends Activity implements
             mFirstInit = true;
         }
         registerReceiver (mReceiver, intentFilter);
-        mAddrObserver.startWatching();
+        //mAddrObserver.startWatching();
 
         initCert();//miracast certification
         mConnectStatus = (ImageView) findViewById(R.id.show_connect);
@@ -859,7 +874,9 @@ public class WiFiDirectMainActivity extends Activity implements
     {
         Log.d(TAG, "onPause====>");
         super.onPause();
-        mAddrObserver.stopWatching();
+        //mAddrObserver.stopWatching();
+        mMcm.StopWatching();
+        stopMonitoringDns();
         unregisterReceiver (mReceiver);
         mWakeLock.release();
     }
@@ -1042,6 +1059,9 @@ public class WiFiDirectMainActivity extends Activity implements
         manager = (WifiP2pManager) getSystemService (Context.WIFI_P2P_SERVICE);
         mWifiManager = (WifiManager) getSystemService (Context.WIFI_SERVICE);
         channel = manager.initialize (this, getMainLooper(), null);
+        mMcm = MiracastControlManager.getInstance();
+        startMonitoringDns();
+        mMcm.StartWatching(DNSMASQ_PATH, MiracastControlManager.CREATE | MiracastControlManager.MODIFY);
         mRenameListener = new OnClickListener()
         {
             @Override
@@ -1377,5 +1397,13 @@ public class WiFiDirectMainActivity extends Activity implements
         {
             progressDialog.dismiss();
         }
+    }
+
+    private void startMonitoringDns() {
+        mMcm.registerSignalHandler(mWatchHandler);
+    }
+
+    private void stopMonitoringDns() {
+        mMcm.unregisterSignalHandler(mWatchHandler);
     }
 }
