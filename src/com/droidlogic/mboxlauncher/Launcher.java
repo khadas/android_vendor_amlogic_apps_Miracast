@@ -1074,6 +1074,11 @@ public class Launcher extends Activity{
     private void releaseTvView() {
         tvView.setVisibility(View.GONE);
         tvView.reset();
+
+        if (mTvHandler.hasMessages(TV_MSG_PLAY_TV)) {
+            mTvHandler.removeMessages(TV_MSG_PLAY_TV);
+        }
+
         if (mTvInputChangeCallback != null) {
             Log.d(TAG, "unregisterCallback:" + mTvInputChangeCallback);
             mTvInputManager.unregisterCallback(mTvInputChangeCallback);
