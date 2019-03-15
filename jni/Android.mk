@@ -33,6 +33,8 @@ else
 LOCAL_C_INCLUDES+=$(TOP)/vendor/amlogic/frameworks/av/libstagefright/wifi-display
 endif
 
+LOCAL_CFLAGS += -DANDROID_PLATFORM_SDK_VERSION=$(PLATFORM_SDK_VERSION)
+
 LOCAL_MODULE := libwfd_jni
 LOCAL_MODULE_TAGS := optional
 include $(BUILD_SHARED_LIBRARY)
