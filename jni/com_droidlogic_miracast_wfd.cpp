@@ -19,8 +19,8 @@
 
 #include <utils/Log.h>
 #include <jni.h>
-//#include <nativehelper/JNIHelp.h>
-//#include <android_runtime/AndroidRuntime.h>
+#include <nativehelper/JNIHelp.h>
+#include <android_runtime/AndroidRuntime.h>
 #include "sink/AmANetworkSession.h"
 #include "sink/WifiDisplaySink.h"
 //#include "source/WifiDisplaySource.h"
@@ -45,6 +45,8 @@ sp<WifiDisplaySink> mSink;
 bool mStart = false;
 bool mInit = false;
 
+static android::sp<android::Surface> native_surface;
+
 struct SinkHandler : public AHandler
 {
     SinkHandler() {};
@@ -56,6 +58,7 @@ private:
     enum
     {
         kWhatSinkNotify,
+        kWhatStopCompleted,
     };
 };
 
@@ -65,8 +68,8 @@ static jobject sinkObject;
 
 static void report_wfd_error(void)
 {
-    //JNIEnv* env = AndroidRuntime::getJNIEnv();
-    //env->CallVoidMethod(sinkObject, notifyWfdError);
+    JNIEnv* env = AndroidRuntime::getJNIEnv();
+    env->CallVoidMethod(sinkObject, notifyWfdError);
 }
 
 void SinkHandler::onMessageReceived(const sp<AMessage> &msg)
@@ -82,47 +85,54 @@ void SinkHandler::onMessageReceived(const sp<AMessage> &msg)
             report_wfd_error();
             break;
         }
+        case kWhatStopCompleted:
+        {
+            ALOGI("SinkHandler received stop completed\n:");
+            mSinkLooper->unregisterHandler(mSink->id());
+            mSinkLooper->unregisterHandler(mHandler->id());
+            mSinkLooper->stop();
+            mSink.clear();
+            JNIEnv* env = AndroidRuntime::getJNIEnv();
+            env->DeleteGlobalRef(sinkObject);
+            mStart = false;
+            mInit = false;
+            break;
+        }
         default:
             TRESPASS();
     }
 }
 
+static android::Surface* getNativeSurface(JNIEnv* env, jobject jsurface)
+{
+    jclass clazz = env->FindClass("android/view/Surface");
+    jfieldID field_surface;
+    field_surface = env->GetFieldID(clazz, "mNativeObject", "J");
+    if (field_surface == NULL) {
+        ALOGE("field_surface get failed");
+        return NULL;
+    }
+    return (android::Surface *)env->GetLongField(jsurface, field_surface);
+}
+
 static int connect(const char *sourceHost, int32_t sourcePort)
 {
-    /*
     ProcessState::self()->startThreadPool();
-    DataSource::RegisterDefaultSniffers();
-
-    sp<AmANetworkSession> session = new AmANetworkSession;
-    session->start();
-
-    sp<WifiDisplaySink> sink = new WifiDisplaySink(session);
-    mSinkLooper->registerHandler(sink);
-
-    if (sourcePort >= 0) {
-        sink->start(sourceHost, sourcePort);
-    } else {
-        sink->start(sourceHost);
-    }
-
-    mSinkLooper->start(true);
-    */
-
-    ProcessState::self()->startThreadPool();
-    //DataSource::RegisterDefaultSniffers();
-
     if (!mInit)
     {
         mSession->start();
-        mSink = new WifiDisplaySink(mSession);
+        if (native_surface.get()) {
+            ALOGE("native_surface is not null we use it");
+            mSink = new WifiDisplaySink(mSession, native_surface.get()->getIGraphicBufferProducer());
+        } else {
+            ALOGE("native_surface is null");
+            mSink = new WifiDisplaySink(mSession);
+        }
         mHandler = new SinkHandler();
-
         mSinkLooper->registerHandler(mSink);
         mSinkLooper->registerHandler(mHandler);
-
         mSink->setSinkHandler(mHandler);
     }
-
     ALOGI("SinkHandler mSink=%d, mHandler=%d", mSink->id(), mHandler->id());
     if (sourcePort >= 0)
     {
@@ -143,15 +153,19 @@ static int connect(const char *sourceHost, int32_t sourcePort)
     return 0;
 }
 
-static void connect_to_wifi_source(JNIEnv *env, jclass clazz, jobject sinkobj, jstring jip, jint jport)
+static void connect_to_wifi_source(JNIEnv *env, jclass clazz, jobject sinkobj, jobject surface, jstring jip, jint jport)
 {
     const char *ip = env->GetStringUTFChars(jip, NULL);
 
     ALOGI("ref sinkobj");
     sinkObject = env->NewGlobalRef(sinkobj);
-
-    ALOGI("connect to wifi source %s:%d\n", ip, jport);
-
+    native_surface = getNativeSurface(env, surface);
+    if (android::Surface::isValid(native_surface)) {
+        ALOGE("native_surface is valid");
+    } else {
+        ALOGE("native_surface is Invalid");
+    }
+    ALOGI("connect to wifi source %s:%d native_surface.get() is %p\n", ip, jport, native_surface.get());
     connect(ip, jport);
     env->ReleaseStringUTFChars(jip, ip);
 }
@@ -169,7 +183,12 @@ static void connect_to_rtsp_uri(JNIEnv *env, jclass clazz, jstring juri)
 static void resolutionSettings(JNIEnv *env, jclass clazz, jboolean isHD)
 {
     unsigned long b = isHD;
+
     ALOGI("\n c-boolean: %lu  ", b);
+    if (!mSink.get()) {
+        ALOGE("mSink is null");
+        return;
+    }
     if (b)
     {
         mSink->setResolution(WifiDisplaySink::High);
@@ -182,20 +201,15 @@ static void resolutionSettings(JNIEnv *env, jclass clazz, jboolean isHD)
 
 static void disconnectSink(JNIEnv *env, jclass clazz)
 {
-    ALOGI("disconnect sink mStart:%d\n", mStart);
-
+    ALOGI("disconnect sink mInit:%d\n", mInit);
+    if (mInit == false)
+        return;
     ALOGI("deref sinkobj");
-    env->DeleteGlobalRef(sinkObject);
-
     if (mStart)
     {
         ALOGI("stop WifiDisplaySink");
+        mSession->stop();
         mSink->stop();
-        //mSession->stop();
-        //mSinkLooper->unregisterHandler(mSink->id());
-        //mSinkLooper->unregisterHandler(mHandler->id());
-        //mSinkLooper->stop();
-        mStart = false;
     }
 }
 
@@ -217,65 +231,30 @@ static void setTeardown(JNIEnv* env, jclass clazz)
     mSink->setTeardown();
 }
 
-
-/*
-static void source_start(const char *ip) {
-  ProcessState::self()->startThreadPool();
-
-    DataSource::RegisterDefaultSniffers();
-
-  sp<AmANetworkSession> session = new AmANetworkSession;
-    session->start();
-
-  mSourceLooper = new ALooper();
-  sp<IRemoteDisplayClient> client;
-    sp<WifiDisplaySource> source = new WifiDisplaySource(session, client);
-    mSourceLooper->registerHandler(source);
-
-    source->start(ip);
-
-    mSourceLooper->start(true);
-}
-
-static void source_stop(JNIEnv* env, jclass clazz) {
-  ALOGI("source stop \n");
-  mSourceLooper->stop();
-}
-
-static void run_as_source(JNIEnv* env, jclass clazz, jstring jip) {
-  const char *ip = env->GetStringUTFChars(jip, NULL);
-
-  ALOGI("run as source %s\n", ip);
-
-    source_start(ip);
-    env->ReleaseStringUTFChars(jip, ip);
-}
-*/
-
 // ----------------------------------------------------------------------------
 static JNINativeMethod gMethods[] =
 {
     {
-        "nativeConnectWifiSource", "(Lcom/droidlogic/miracast/SinkActivity;Ljava/lang/String;I)V",
-        (void *) connect_to_wifi_source
+        "nativeConnectWifiSource", "(Lcom/droidlogic/miracast/SinkActivity;Landroid/view/Surface;Ljava/lang/String;I)V",
+        (void *)connect_to_wifi_source
     },
     //{ "nativeConnectRTSPUri", "(Ljava/lang/String;)V",
     //        (void*) connect_to_rtsp_uri },
     {
         "nativeDisconnectSink", "()V",
-        (void *) disconnectSink
+        (void *)disconnectSink
     },
     {
         "nativeResolutionSettings", "(Z)V",
-        (void *) resolutionSettings
+        (void *)resolutionSettings
     },
     {
         "nativeSetPlay", "()V",
-        (void*) setPlay
+        (void*)setPlay
     },
     {
         "nativeSetPause", "()V",
-        (void*) setPause
+        (void*)setPause
     },
     {
         "nativeSetTeardown", "()V",
@@ -311,6 +290,7 @@ int register_com_droidlogic_miracast_WiFiDirectActivity(JNIEnv *env)
     env->DeleteLocalRef(clazz);
     return 0;
 }
+
 jint JNI_OnLoad(JavaVM *vm, void *reserved)
 {
     JNIEnv *env = NULL;

@@ -9,11 +9,12 @@ LOCAL_C_INCLUDES := \
     $(JNI_H_INCLUDE) \
     libnativehelper/include_jni \
     system/core/libutils/include \
-    system/core/liblog/include
-#    frameworks/av/media/libstagefright/wifi-display \
-#    $(TOP)/vendor/amlogic/frameworks/av/media/libstagefright/wifi-display
+    system/core/liblog/include  \
+    frameworks/base/core/jni/include/
 
 LOCAL_SHARED_LIBRARIES:= \
+        libandroid_runtime\
+        libnativehelper\
         libbinder \
         libgui \
         libmedia \

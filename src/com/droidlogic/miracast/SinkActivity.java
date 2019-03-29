@@ -53,12 +53,14 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.Surface;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ImageButton;
 import android.widget.Toast;
+import android.media.AudioManager;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -118,7 +120,7 @@ public class SinkActivity extends Activity
     private SystemControlManager mSystemControl = SystemControlManager.getInstance();
     //private SystemControlManager mSystemControl = null;
     private int certBtnState = 0; // 0: none oper, 1:play, 2:pause
-
+    private boolean mEnterStandby = false;
     static
     {
         System.loadLibrary ("wfd_jni");
@@ -153,10 +155,22 @@ public class SinkActivity extends Activity
                 NetworkInfo networkInfo = (NetworkInfo) intent
                                           .getParcelableExtra (WifiP2pManager.EXTRA_NETWORK_INFO);
 
-                Log.d (TAG, "P2P connection changed isConnected:" + networkInfo.isConnected() );
-                if (!networkInfo.isConnected() )
+                Log.d (TAG, "P2P connection changed isConnected:" + networkInfo.isConnected() + mMiracastRunning);
+                if (!networkInfo.isConnected() && mMiracastRunning)
                 {
+                    stopMiracast(true);
                     finishView();
+                }
+            } else if (action.equals(Intent.ACTION_SCREEN_OFF)) {
+                Log.d(TAG, "ACTION_SCREEN_OFF");
+                mEnterStandby = true;
+            } else if (action.equals(Intent.ACTION_SCREEN_ON)) {
+                Log.e(TAG, "ACTION_SCREEN_ON");
+                if (mEnterStandby) {
+                    if (mMiracastRunning)
+                        stopMiracast(true);
+                    finishView();
+                    mEnterStandby = false;
                 }
             }
         }
@@ -164,6 +178,7 @@ public class SinkActivity extends Activity
 
     private void finishView()
     {
+        Log.e(TAG, "finishView");
         Intent homeIntent = new Intent (SinkActivity.this, WiFiDirectMainActivity.class);
         homeIntent.setFlags (Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT);
         SinkActivity.this.startActivity (homeIntent);
@@ -176,12 +191,12 @@ public class SinkActivity extends Activity
         super.onCreate (savedInstanceState);
 
         //no title and no status bar
+
         requestWindowFeature (Window.FEATURE_NO_TITLE);
         getWindow().setFlags (WindowManager.LayoutParams.FLAG_FULLSCREEN,
                               WindowManager.LayoutParams.FLAG_FULLSCREEN);
-
         setContentView (R.layout.sink);
-
+        this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
         mSurfaceView = (SurfaceView) findViewById (R.id.wifiDisplaySurface);
 
         //full screen test
@@ -190,13 +205,6 @@ public class SinkActivity extends Activity
         mSurfaceView.getHolder().addCallback (new SurfaceCallback() );
         mSurfaceView.getHolder().setKeepScreenOn (true);
         mSurfaceView.getHolder().setType (SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
-        mSurfaceView.setVisibility(View.GONE);
-
-        Window window=getWindow();
-        WindowManager.LayoutParams wl = window.getAttributes();
-        wl.flags=WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON;
-        wl.alpha=0.0f;
-        window.setAttributes(wl);
 
         Intent intent = getIntent();
         Bundle bundle = intent.getExtras();
@@ -218,29 +226,31 @@ public class SinkActivity extends Activity
         }
         mFileObserver.startWatching();
 
-        PowerManager pm = (PowerManager) getSystemService (Context.POWER_SERVICE);
-        mWakeLock = pm.newWakeLock (PowerManager.SCREEN_BRIGHT_WAKE_LOCK |
-                                    PowerManager.ON_AFTER_RELEASE, TAG);
+        PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        mWakeLock = pm.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK | PowerManager.ON_AFTER_RELEASE, TAG);
         mWakeLock.acquire();
-
-        IntentFilter intentFilter = new IntentFilter (WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
-        registerReceiver (mReceiver, intentFilter);
-
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
+        intentFilter.addAction(Intent.ACTION_SCREEN_ON);
+        intentFilter.addAction(Intent.ACTION_SCREEN_OFF);
+        registerReceiver(mReceiver, intentFilter);
         setSinkParameters(true);
-        startMiracast(mIP, mPort);
-        strIP = getlocalip();
+        mSurfaceView.setVisibility(View.VISIBLE);
+        Window window=getWindow();
+        WindowManager.LayoutParams wl = window.getAttributes();
+        wl.flags=WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON;
+        wl.alpha=0.0f;
+        window.setAttributes(wl);
     }
 
     protected void onDestroy()
     {
         super.onDestroy();
-
         certBtnState = 0;
-        stopMiracast (true);
         unregisterReceiver (mReceiver);
+        stopMiracast (true);
         mWakeLock.release();
         setSinkParameters (false);
-
         quitLoop();
         mFileObserver.stopWatching();
     }
@@ -318,7 +328,7 @@ public class SinkActivity extends Activity
     @Override
     public boolean onKeyDown (int keyCode, KeyEvent event)
     {
-        Log.d (TAG, "onKeyDown miracast running:" + mMiracastRunning + " keyCode:" + keyCode + " event:"  + event);
+        Log.d(TAG, "onKeyDown miracast running:" + mMiracastRunning + " keyCode:" + keyCode + " event:"  + event);
         if (mMiracastRunning)
         {
             switch (keyCode)
@@ -328,31 +338,32 @@ public class SinkActivity extends Activity
             case KeyEvent.KEYCODE_VOLUME_MUTE:
                 //openOsd();
                 break;
-
             case KeyEvent.KEYCODE_BACK:
                 //openOsd();
                 return true;
             }
         }
-
         return super.onKeyDown (keyCode, event);
     }
 
     @Override
-    public boolean onKeyUp (int keyCode, KeyEvent event)
+    public boolean onKeyUp(int keyCode, KeyEvent event)
     {
-        Log.d (TAG, "onKeyUp miracast running:" + mMiracastRunning + " keyCode:" + keyCode + " event:"  + event);
+        Log.d(TAG, "onKeyUp miracast running:" + mMiracastRunning + " keyCode:" + keyCode + " event:"  + event);
         if (mMiracastRunning)
         {
             switch (keyCode)
             {
-            case KeyEvent.KEYCODE_VOLUME_UP:
-            case KeyEvent.KEYCODE_VOLUME_DOWN:
-            case KeyEvent.KEYCODE_VOLUME_MUTE:
-                break;
-
-            case KeyEvent.KEYCODE_BACK:
-                exitMiracastDialog();
+                case KeyEvent.KEYCODE_VOLUME_UP:
+                case KeyEvent.KEYCODE_VOLUME_DOWN:
+                case KeyEvent.KEYCODE_VOLUME_MUTE:
+                     break;
+                case KeyEvent.KEYCODE_HOME:
+                     stopMiracast(true);
+                     break;
+                case KeyEvent.KEYCODE_MENU:
+                case KeyEvent.KEYCODE_BACK:
+                    exitMiracastDialog();
                 return true;
             }
         }
@@ -362,7 +373,7 @@ public class SinkActivity extends Activity
     @Override
     public void onConfigurationChanged (Configuration config)
     {
-        super.onConfigurationChanged (config);
+        super.onConfigurationChanged(config);
 
         //Log.d(TAG, "onConfigurationChanged: " + config);
         /*
@@ -495,11 +506,11 @@ public class SinkActivity extends Activity
         .setNegativeButton("cancel", null).show();
     }
 
-    public void startMiracast (String ip, String port)
+    public void startMiracast(String ip, String port)
     {
-        Log.d (TAG, "start miracast isRunning:" + mMiracastRunning + " IP:" + ip + ":" + port);
+        Log.d(TAG, "start miracast isRunning:" + mMiracastRunning + " IP:" + ip + ":" + port);
         mMiracastRunning = true;
-
+        certBtnState = 1;
         Message msg = Message.obtain();
         msg.what = CMD_MIRACAST_START;
         Bundle data = msg.getData();
@@ -648,7 +659,7 @@ public class SinkActivity extends Activity
             }
         }
     }
-    private native void nativeConnectWifiSource (SinkActivity sink, String ip, int port);
+    private native void nativeConnectWifiSource (SinkActivity sink, Surface surface, String ip, int port);
     private native void nativeDisconnectSink();
     private native void nativeResolutionSettings (boolean isHD);
     private native void nativeSetPlay();
@@ -659,8 +670,9 @@ public class SinkActivity extends Activity
     // Native callback.
     private void notifyWfdError()
     {
-         Log.d(TAG, "notifyWfdError received!!!");
-         finishView();
+        Log.d(TAG, "notifyWfdError received!!!");
+        stopMiracast(false);
+        finishView();
     }
 
     private final int CMD_MIRACAST_START      = 10;
@@ -682,13 +694,12 @@ public class SinkActivity extends Activity
                         case CMD_MIRACAST_START:
                             {
                                 Bundle data = msg.getData();
-                                String ip = data.getString (KEY_IP);
-                                String port = data.getString (KEY_PORT);
-
-                                nativeConnectWifiSource (SinkActivity.this, ip, Integer.parseInt (port) );
+                                String ip = data.getString(KEY_IP);
+                                String port = data.getString(KEY_PORT);
+                                nativeConnectWifiSource(SinkActivity.this, mSurfaceView.getHolder().getSurface(), ip, Integer.parseInt (port));
+                                nativeResolutionSettings(isHD);
                             }
                             break;
-
                         default:
                             break;
                     }
@@ -725,8 +736,11 @@ public class SinkActivity extends Activity
         public void surfaceCreated (SurfaceHolder holder)
         {
             // TODO Auto-generated method stub
-            Log.v (TAG, "surfaceCreated");
-            nativeResolutionSettings (isHD);
+            Log.e (TAG, "surfaceCreated mSurfaceView.getHolder().getSurface() is" + mSurfaceView.getHolder().getSurface() + "and holder.getSurface() is %p" + holder.getSurface() + mMiracastRunning + mEnterStandby);
+            if (mMiracastRunning == false && mEnterStandby == false) {
+                startMiracast(mIP, mPort);
+                strIP = getlocalip();
+            }
         }
 
         @Override
@@ -739,6 +753,8 @@ public class SinkActivity extends Activity
                 writeSysfs ("/sys/class/graphics/fb0/free_scale", "0");
                 writeSysfs ("/sys/class/graphics/fb0/free_scale", "1");
             }
+            if (mMiracastRunning)
+                stopMiracast(true);
         }
     }
 

@@ -37,15 +37,14 @@ import java.util.Iterator;
  */
 public class WiFiDirectBroadcastReceiver extends BroadcastReceiver
 {
-    protected ArrayList<DnsmasqInfo> mDnsmasqInfoList = new ArrayList<DnsmasqInfo>();
     private String mWfdMac;
     private String mWfdPort;
     private boolean mWfdIsConnected = false;
-
+    private boolean mSinkIsConnected = false;
     private WifiP2pManager manager;
     private Channel channel;
     private WiFiDirectMainActivity activity;
-
+    Object lock = new Object();
     /**
      * @param manager WifiP2pManager system service
      * @param channel Wifi p2p channel
@@ -66,17 +65,15 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver
      * android.content.Intent)
      */
     @Override
-    public void onReceive (Context context, Intent intent)
+    public void onReceive(Context context, Intent intent)
     {
         String action = intent.getAction();
-
         if (WiFiDirectMainActivity.DEBUG)
         {
             Log.d (WiFiDirectMainActivity.TAG, "onReceive action:" + action);
         }
         if (WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION.equals (action) )
         {
-
             // UI update to indicate wifi p2p status.
             int state = intent.getIntExtra (WifiP2pManager.EXTRA_WIFI_STATE, -1);
             if (state == WifiP2pManager.WIFI_P2P_STATE_ENABLED)
@@ -97,7 +94,6 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver
         }
         else if (WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION.equals (action) )
         {
-
             // request available peers from the wifi p2p manager. This is an
             // asynchronous call and the calling activity is notified with a
             // callback on PeerListListener.onPeersAvailable()
@@ -116,7 +112,6 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver
             {
                 return;
             }
-
             NetworkInfo networkInfo = (NetworkInfo) intent
                                       .getParcelableExtra (WifiP2pManager.EXTRA_NETWORK_INFO);
             WifiP2pInfo p2pInfo = (WifiP2pInfo) intent.getParcelableExtra (WifiP2pManager.EXTRA_WIFI_P2P_INFO);
@@ -130,7 +125,6 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver
                 Log.d (WiFiDirectMainActivity.TAG, "p2pGroup=" + p2pGroup);
                 Log.d (WiFiDirectMainActivity.TAG, "===================");
             }
-
             if (networkInfo.isConnected())
             {
                 mWfdIsConnected = true;
@@ -148,33 +142,23 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver
                          mWfdPort = String.valueOf(device.wfdInfo.getControlPort());
                          mWfdMac = device.deviceAddress;
                      }
-                     Log.d (WiFiDirectMainActivity.TAG, "mDnsmasqInfoList:" + mDnsmasqInfoList.size());
-
-                     for (DnsmasqInfo dnsmasqInfo : mDnsmasqInfoList) {
-                         if ((mWfdMac.substring(0, 11)).equals(dnsmasqInfo.mMacAddr.substring(0, 11))) {
-                             Log.d (WiFiDirectMainActivity.TAG, "wfdMac:" + mWfdMac + ", dnsmasqMac:" + dnsmasqInfo.mMacAddr + " is mate!!");
-                             activity.startMiracast (dnsmasqInfo.mIpAddr, mWfdPort);
-                         } else {
-                             Log.d (WiFiDirectMainActivity.TAG, "wfdMac:" + mWfdMac + ", dnsmasqMac:" + dnsmasqInfo.mMacAddr + " is unmate!!");
-                         }
-                     }
-                 }
+                }
                 else
                 {
                     Log.d (WiFiDirectMainActivity.TAG, "I am GC");
                     WifiP2pDevice device = p2pGroup.getOwner();
                     if (device != null && device.wfdInfo != null)
                         mWfdPort = String.valueOf(device.wfdInfo.getControlPort());
-                    activity.startMiracast (p2pInfo.groupOwnerAddress.getHostAddress(), mWfdPort);
+                    activity.startMiracast(p2pInfo.groupOwnerAddress.getHostAddress(), mWfdPort);
                 }
+                mSinkIsConnected = false;
             }
             else
             {
                 mWfdIsConnected = false;
-                mDnsmasqInfoList.clear();
                 // It's a disconnect
                 activity.resetData();
-                activity.stopMiracast (false);
+                activity.stopMiracast(false);
                 //start a search when we are disconnected
                 if (!activity.mForceStopScan)
                     activity.startSearch();
@@ -198,7 +182,6 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver
             if ( activity != null && discoveryState == WifiP2pManager.WIFI_P2P_DISCOVERY_STOPPED)
             {
                 activity.discoveryStop();
-                mDnsmasqInfoList.clear();
                 if (!activity.mForceStopScan && !activity.mStartConnecting)
                     activity.startSearchTimer();
             }
@@ -209,43 +192,22 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver
         }
         else if (WiFiDirectMainActivity.WIFI_P2P_IP_ADDR_CHANGED_ACTION.equals (action) )
         {
-            if (!mDnsmasqInfoList.isEmpty())
-                return;
-
-            ArrayList<String> dnsmasqArray = intent.getExtras().getStringArrayList(WiFiDirectMainActivity.WIFI_P2P_PEER_DNSMASQ_EXTRA);
-
-            Iterator it = dnsmasqArray.iterator();
-            while (it.hasNext()) {
-                String str1 = (String)it.next();
-                if (it.hasNext()) {
-                    String str2 = (String)it.next();
-                    mDnsmasqInfoList.add(new DnsmasqInfo(str1, str2));
-                    //Log.d (WiFiDirectMainActivity.TAG, "dnsmasqArray ip:" + str1 + ", mac:" + str2);
-                } else {
-                    Log.e (WiFiDirectMainActivity.TAG, "dnsmasqArray only has ip:" + str1);
-                }
-            }
-
-            if (mWfdIsConnected) {
-                for (DnsmasqInfo dnsmasqInfo : mDnsmasqInfoList) {
-                    if ((mWfdMac.substring(0, 11)).equals(dnsmasqInfo.mMacAddr.substring(0, 11))) {
-                         Log.d (WiFiDirectMainActivity.TAG, "wfdMac:" + mWfdMac + ", dnsmasqMac:" + dnsmasqInfo.mMacAddr + " is mate!!");
-                         activity.startMiracast (dnsmasqInfo.mIpAddr, mWfdPort);
-                    } else {
-                         Log.d (WiFiDirectMainActivity.TAG, "wfdMac:" + mWfdMac + ", dnsmasqMac:" + dnsmasqInfo.mMacAddr + " is unmate!!");
+            String ipaddr = intent.getStringExtra(WiFiDirectMainActivity.WIFI_P2P_PEER_IP_EXTRA);
+            String macaddr = intent.getStringExtra(WiFiDirectMainActivity.WIFI_P2P_PEER_MAC_EXTRA);;
+            Log.d (WiFiDirectMainActivity.TAG, "ipaddr is " + ipaddr + "  macaddr is " + macaddr);
+            if (ipaddr != null && macaddr != null) {
+                if (mWfdIsConnected) {
+                    if (!mSinkIsConnected) {
+                        if ((mWfdMac.substring(0, 11)).equals(macaddr.substring(0, 11))) {
+                            Log.d (WiFiDirectMainActivity.TAG, "wfdMac:" + mWfdMac + ", macaddr:" + macaddr + " is mate!!");
+                            activity.startMiracast(ipaddr, mWfdPort);
+                            mSinkIsConnected = true;
+                        } else {
+                            Log.d (WiFiDirectMainActivity.TAG, "wfdMac:" + mWfdMac + ", macaddr:" + macaddr + " is unmate!!");
+                        }
                     }
                 }
             }
-        }
-    }
-
-    private class DnsmasqInfo {
-        public String mIpAddr;
-        public String mMacAddr;
-
-        public DnsmasqInfo(String ip, String mac) {
-            this.mIpAddr = ip;
-            this.mMacAddr = mac;
         }
     }
 }

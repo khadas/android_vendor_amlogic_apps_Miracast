@@ -36,9 +36,6 @@ LOCAL_JAVA_LIBRARIES += \
     android.hidl.base-V1.0-java \
     android.hidl.manager-V1.0-java
 
-LOCAL_STATIC_JAVA_LIBRARIES += \
-    vendor.amlogic.hardware.miracastserver-V1.0-java
-
 #LOCAL_PROGUARD_ENABLED := disabled
 LOCAL_PROGUARD_ENABLED := full
 LOCAL_PROGUARD_FLAG_FILES := proguard.flags

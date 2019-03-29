@@ -98,10 +98,9 @@ public class WiFiDirectMainActivity extends Activity implements
     public static final String       TAG                    = "amlWifiDirect";
     public static final boolean     DEBUG              = true;
     public static final String       HRESOLUTION_DISPLAY     = "display_resolution_hd";
-    public static final String       WIFI_P2P_IP_ADDR_CHANGED_ACTION = "com.droidlogic.miracast.IP_ADDR_CHANGED";
-    //public static final String       WIFI_P2P_PEER_IP_EXTRA       = "IP_EXTRA";
-    //public static final String       WIFI_P2P_PEER_MAC_EXTRA       = "MAC_EXTRA";
-    public static final String       WIFI_P2P_PEER_DNSMASQ_EXTRA       = "DNSMASQ_EXTRA";
+    public static final String       WIFI_P2P_IP_ADDR_CHANGED_ACTION = "android.net.wifi.p2p.IPADDR_INFORMATION";
+    public static final String       WIFI_P2P_PEER_IP_EXTRA       = "IP_EXTRA";
+    public static final String       WIFI_P2P_PEER_MAC_EXTRA       = "MAC_EXTRA";
     private static final String      MIRACAST_PREF          = "miracast_prefences";
     private static final String      IP_ADDR                = "ip_addr";
     public static final String ENCODING = "UTF-8";
@@ -159,104 +158,9 @@ public class WiFiDirectMainActivity extends Activity implements
     private TextView mFunlistText, mListChannelText, mOperChannelText, mDeviceListText;
     private InputMethodManager imm;
     private WifiP2pDevice mSelectDevice = null;
-    private MiracastControlManager mMcm = null;
      /***Miracast cert end***/
     private boolean mFirstInit = false;
 
-    private final MiracastControlManager.WatchHandler mWatchHandler = new MiracastControlManager.WatchHandler() {
-        @Override
-        public void onEvent(ArrayList<String> dnsmasqInfo) {
-            Log.d (TAG, "Sending WIFI_P2P_IP_ADDR_CHANGED_ACTION broadcast");
-            Intent intent = new Intent(WIFI_P2P_IP_ADDR_CHANGED_ACTION);
-            Bundle b = new Bundle();
-            b.putStringArrayList(WIFI_P2P_PEER_DNSMASQ_EXTRA, dnsmasqInfo);
-            intent.putExtras(b);
-            sendBroadcastAsUser(intent, UserHandle.ALL);
-        }
-    };
-
-    /*
-    private File mFolder = new File("/data/misc/dhcp");
-    private FileObserver mAddrObserver = new FileObserver(mFolder.getPath(), FileObserver.MODIFY | FileObserver.CREATE)
-    {
-        public void onEvent(int event, String path) {
-            Log.d(TAG, "WFD : File changed : path=" + path + " event=" + event);
-            if (null == path)
-            {
-                return;
-            }
-
-            if (path.equals(new String("dnsmasq.leases")))
-            {
-                File ipFile = new File(mFolder, path);
-                String fullName = ipFile.getPath();
-                parseDnsmasqAddr(fullName);
-            }
-        }
-    };
-
-    private boolean parseDnsmasqAddr(String fileName)
-    {
-        File file = new File(fileName);
-        BufferedReader reader = null;
-        String info = new String();
-        ArrayList<String> dnsmasqInfo = new ArrayList<String>();
-
-        try {
-            reader = new BufferedReader(new FileReader(file));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-	while (true) {
-            try {
-                info = reader.readLine();
-            } catch (IOException e) {
-                e.printStackTrace();
-            } finally {
-                if (info == null)
-                {
-                    //Log.d (TAG, "parseDnsmasqAddr info end");
-                    break;
-                }
-                else
-                {
-                    StringTokenizer strToke = new StringTokenizer(info," ");
-                    if (strToke.hasMoreElements())
-                    {
-                        strToke.nextToken();
-                        if (strToke.hasMoreElements())
-                        {
-                            String mac = strToke.nextToken();
-                            if (strToke.hasMoreElements())
-                            {
-                                String ip = strToke.nextToken();
-                                Log.d (TAG, "parseDnsmasqAddr: ip=" + ip + ", mac=" + mac);
-                                dnsmasqInfo.add(ip);
-                                dnsmasqInfo.add(mac);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        //Log.d (TAG, "Sending WIFI_P2P_IP_ADDR_CHANGED_ACTION broadcast");
-        Intent intent = new Intent(WIFI_P2P_IP_ADDR_CHANGED_ACTION);
-        Bundle b = new Bundle();
-        b.putStringArrayList(WIFI_P2P_PEER_DNSMASQ_EXTRA, dnsmasqInfo);
-        intent.putExtras(b);
-        sendBroadcastAsUser(intent, UserHandle.ALL);
-
-        try {
-            reader.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return true;
-    }
-
-*/
 /********************Miracast cert begin**********************/
     private void initFunlist() {
         mFunList = new ArrayList<String>();
@@ -661,9 +565,6 @@ public class WiFiDirectMainActivity extends Activity implements
         } else {
             mFirstInit = true;
         }
-        registerReceiver (mReceiver, intentFilter);
-        //mAddrObserver.startWatching();
-
         initCert();//miracast certification
         mConnectStatus = (ImageView) findViewById(R.id.show_connect);
         mConnectImageNum = 5;
@@ -710,7 +611,6 @@ public class WiFiDirectMainActivity extends Activity implements
         mConnectDesc.setFocusable (true);
         mConnectDesc.requestFocus();
         mPeerList = (TextView) findViewById (R.id.peer_devices);
-
         mClick2Settings.setOnClickListener (new View.OnClickListener()
         {
             @Override
@@ -744,6 +644,7 @@ public class WiFiDirectMainActivity extends Activity implements
             setCertComponentVisible(false);
         else
             setCertComponentVisible(true);
+        registerReceiver(mReceiver, intentFilter);
     }
 
     private final Runnable startSearchRunnable = new Runnable()
@@ -874,10 +775,7 @@ public class WiFiDirectMainActivity extends Activity implements
     {
         Log.d(TAG, "onPause====>");
         super.onPause();
-        //mAddrObserver.stopWatching();
-        mMcm.StopWatching();
-        stopMonitoringDns();
-        unregisterReceiver (mReceiver);
+        unregisterReceiver(mReceiver);
         mWakeLock.release();
     }
 
@@ -1048,7 +946,6 @@ public class WiFiDirectMainActivity extends Activity implements
     {
         super.onCreate (savedInstanceState);
         setContentView (R.layout.connect_layout);
-
         // add necessary intent values to be matched.
         intentFilter.addAction (WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
         intentFilter.addAction (WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
@@ -1059,9 +956,6 @@ public class WiFiDirectMainActivity extends Activity implements
         manager = (WifiP2pManager) getSystemService (Context.WIFI_P2P_SERVICE);
         mWifiManager = (WifiManager) getSystemService (Context.WIFI_SERVICE);
         channel = manager.initialize (this, getMainLooper(), null);
-        mMcm = MiracastControlManager.getInstance();
-        startMonitoringDns();
-        mMcm.StartWatching(DNSMASQ_PATH, MiracastControlManager.CREATE | MiracastControlManager.MODIFY);
         mRenameListener = new OnClickListener()
         {
             @Override
@@ -1399,11 +1293,4 @@ public class WiFiDirectMainActivity extends Activity implements
         }
     }
 
-    private void startMonitoringDns() {
-        mMcm.registerSignalHandler(mWatchHandler);
-    }
-
-    private void stopMonitoringDns() {
-        mMcm.unregisterSignalHandler(mWatchHandler);
-    }
 }
