@@ -235,12 +235,6 @@ public class SinkActivity extends Activity
         intentFilter.addAction(Intent.ACTION_SCREEN_OFF);
         registerReceiver(mReceiver, intentFilter);
         setSinkParameters(true);
-        mSurfaceView.setVisibility(View.VISIBLE);
-        Window window=getWindow();
-        WindowManager.LayoutParams wl = window.getAttributes();
-        wl.flags=WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON;
-        wl.alpha=0.0f;
-        window.setAttributes(wl);
     }
 
     protected void onDestroy()
