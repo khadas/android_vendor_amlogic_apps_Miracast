@@ -179,6 +179,10 @@ public class SinkActivity extends Activity
     private void finishView()
     {
         Log.e(TAG, "finishView");
+        Window window=getWindow();
+        WindowManager.LayoutParams wl = window.getAttributes();
+        wl.alpha=0.0f;
+        window.setAttributes(wl);
         Intent homeIntent = new Intent (SinkActivity.this, WiFiDirectMainActivity.class);
         homeIntent.setFlags (Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT);
         SinkActivity.this.startActivity (homeIntent);

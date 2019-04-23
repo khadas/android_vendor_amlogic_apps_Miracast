@@ -94,6 +94,7 @@ void SinkHandler::onMessageReceived(const sp<AMessage> &msg)
             mSink.clear();
             JNIEnv* env = AndroidRuntime::getJNIEnv();
             env->DeleteGlobalRef(sinkObject);
+            native_surface.clear();
             mStart = false;
             mInit = false;
             break;
@@ -210,6 +211,7 @@ static void disconnectSink(JNIEnv *env, jclass clazz)
         ALOGI("stop WifiDisplaySink");
         mSession->stop();
         mSink->stop();
+        native_surface.clear();
     }
 }
 
