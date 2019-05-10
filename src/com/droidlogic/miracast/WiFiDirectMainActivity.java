@@ -108,6 +108,7 @@ public class WiFiDirectMainActivity extends Activity implements
 
     public static final String  ACTION_FIX_RTSP_FAIL 	= "com.droidlogic.miracast.RTSP_FAIL";
     public static final String  ACTION_REMOVE_GROUP 	= "com.droidlogic.miracast.REMOVE_GROUP";
+    private static final String ACTION_NETWORK_SETTINGS = "android.settings.NETWORK_SETTINGS";
     public static final String  DNSMASQ_PATH = "/data/misc/dhcp";
     /***Miracast cert begin***/
     public boolean mForceStopScan = false;
@@ -387,8 +388,10 @@ public class WiFiDirectMainActivity extends Activity implements
         });
     }
 
-    private void stopPeerDiscovery() {
+    public void stopPeerDiscovery() {
+        Log.d(TAG, "stopPeerDiscover , do ForceStopScan....");
         mForceStopScan = true;
+        Log.d(TAG, "WPM.stopPeerDiscovery", new Throwable());
         manager.stopPeerDiscovery(channel, new ActionListener() {
             @Override
             public void onSuccess() {
@@ -541,6 +544,7 @@ public class WiFiDirectMainActivity extends Activity implements
     public void onResume()
     {
         Log.d(TAG, "onResume====>");
+        Log.d(TAG, "removeGroup...");
         super.onResume();
         manager.removeGroup(channel, new WifiP2pManager.ActionListener() {
             @Override
@@ -617,7 +621,7 @@ public class WiFiDirectMainActivity extends Activity implements
             public void onClick (View v)
             {
                 WiFiDirectMainActivity.this.startActivity (new Intent (
-                            Settings.ACTION_WIFI_SETTINGS) );
+                            ACTION_NETWORK_SETTINGS) );
             }
         });
         if (!isNetAvailiable() )
@@ -652,16 +656,19 @@ public class WiFiDirectMainActivity extends Activity implements
         @Override
         public void run()
         {
-            startSearch();
+            if (!mForceStopScan) {
+                Log.d(TAG, "ForceStopScan = false ; startSearchRunnable.");
+                startSearch();
+            }
         }
     };
 
     private final Runnable searchAgainRunnable = new Runnable() {
     @Override
         public void run() {
-            if (peers.isEmpty()) {
+            if (!mForceStopScan && peers.isEmpty()) {
                 if (DEBUG)
-                    Log.d(TAG, "no peers, search again.");
+                    Log.d(TAG, "mForceStopScan is false, no peers, search again.");
                 startSearch();
             }
         }
@@ -733,6 +740,7 @@ public class WiFiDirectMainActivity extends Activity implements
             return;
         }
         if (!SystemProperties.getBoolean("wfd.p2p.go", false)) {
+            Log.d(TAG, "WPM.discoverPeers", new Throwable());
             manager.discoverPeers(channel, new WifiP2pManager.ActionListener() {
                 @Override
                 public void onSuccess() {
@@ -886,6 +894,7 @@ public class WiFiDirectMainActivity extends Activity implements
     public void setIsWifiP2pEnabled (boolean enable)
     {
         this.isWifiP2pEnabled = enable;
+        Log.d(TAG,"setIsWifiP2pEnabled isWifiP2pEnabled = " + isWifiP2pEnabled);
         String sFinal1 = String.format(getString(R.string.connect_ready),getString(R.string.device_name));
         mConnectDesc.setText(sFinal1);
         if (enable)
@@ -928,8 +937,6 @@ public class WiFiDirectMainActivity extends Activity implements
             }
         }, MAX_DELAY_MS);
     }
-
-    public void stopMiracast(boolean stop) {}
 
     private void fixRtspFail()
     {
@@ -1021,6 +1028,10 @@ public class WiFiDirectMainActivity extends Activity implements
     protected void onDestroy()
     {
         changeRole(false);
+        Log.d (TAG, "onDestroy do stopPeerDiscovery");
+        stopPeerDiscovery();
+        setIsWifiP2pEnabled (false);
+        resetData();
         unregisterReceiver (mReceiver2);
         mFirstInit = false;
         super.onDestroy();

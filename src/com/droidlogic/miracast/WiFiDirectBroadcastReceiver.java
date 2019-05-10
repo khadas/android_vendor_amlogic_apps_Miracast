@@ -158,8 +158,9 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver
                 mWfdIsConnected = false;
                 // It's a disconnect
                 activity.resetData();
-                activity.stopMiracast(false);
+                //activity.stopMiracast(false);
                 //start a search when we are disconnected
+                Log.d (WiFiDirectMainActivity.TAG, "ForceStopScan=" + activity.mForceStopScan);
                 if (!activity.mForceStopScan)
                     activity.startSearch();
             }
