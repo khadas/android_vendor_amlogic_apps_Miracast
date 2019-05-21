@@ -114,12 +114,14 @@ public class SinkActivity extends Activity
     private Handler mMiracastHandler = null;
     private boolean isHD = false;
     private SurfaceView mSurfaceView;
+    protected Handler mSessionHandler;
 
     private View mRootView;
 
     private SystemControlManager mSystemControl = SystemControlManager.getInstance();
     //private SystemControlManager mSystemControl = null;
     private int certBtnState = 0; // 0: none oper, 1:play, 2:pause
+    private static final int CMD_MIRACAST_FINISHVIEW = 1;
     private boolean mEnterStandby = false;
     static
     {
@@ -179,14 +181,9 @@ public class SinkActivity extends Activity
     private void finishView()
     {
         Log.e(TAG, "finishView");
-        Window window=getWindow();
-        WindowManager.LayoutParams wl = window.getAttributes();
-        wl.alpha=0.0f;
-        window.setAttributes(wl);
-        Intent homeIntent = new Intent (SinkActivity.this, WiFiDirectMainActivity.class);
-        homeIntent.setFlags (Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT);
-        SinkActivity.this.startActivity (homeIntent);
-        SinkActivity.this.finish();
+        Message msg = Message.obtain();
+        msg.what = CMD_MIRACAST_FINISHVIEW;
+        mSessionHandler.sendMessage(msg);
     }
 
     @Override
@@ -239,6 +236,25 @@ public class SinkActivity extends Activity
         intentFilter.addAction(Intent.ACTION_SCREEN_OFF);
         registerReceiver(mReceiver, intentFilter);
         setSinkParameters(true);
+
+        mSessionHandler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            Log.d(TAG, "handleMessage, msg.what=" + msg.what);
+            switch (msg.what) {
+                case CMD_MIRACAST_FINISHVIEW:
+                    Window window=getWindow();
+                    WindowManager.LayoutParams wl = window.getAttributes();
+                    wl.alpha=0.0f;
+                    window.setAttributes(wl);
+                    Intent homeIntent = new Intent (SinkActivity.this, WiFiDirectMainActivity.class);
+                    homeIntent.setFlags (Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT);
+                    SinkActivity.this.startActivity (homeIntent);
+                    SinkActivity.this.finish();
+                break;
+                }
+            }
+        };
     }
 
     protected void onDestroy()
