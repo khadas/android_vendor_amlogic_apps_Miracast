@@ -114,8 +114,6 @@ public class WiFiDirectMainActivity extends Activity implements
     public static final String ENCODING = "UTF-8";
     private static final String VERSION_FILE = "version";
 
-    public static final String  ACTION_FIX_RTSP_FAIL 	= "com.droidlogic.miracast.RTSP_FAIL";
-    public static final String  ACTION_REMOVE_GROUP 	= "com.droidlogic.miracast.REMOVE_GROUP";
     private static final String ACTION_NETWORK_SETTINGS = "android.settings.NETWORK_SETTINGS";
     public static final String  DNSMASQ_PATH = "/data/misc/dhcp";
     /***Miracast cert begin***/
@@ -133,12 +131,10 @@ public class WiFiDirectMainActivity extends Activity implements
     private String                   mPort;
     private String                   mIP;
     private Handler                  mHandler               = new Handler();
-    private static final int         MAX_DELAY_MS           = 500;
     private static final int DIALOG_RENAME = 3;
     private final IntentFilter       intentFilter           = new IntentFilter();
     private Channel                  channel;
     private BroadcastReceiver        mReceiver              = null;
-    private BroadcastReceiver        mReceiver2              = null;
     private PowerManager.WakeLock    mWakeLock;
     private ImageView                mConnectStatus;
     private TextView                 mConnectWarn;
@@ -513,17 +509,14 @@ public class WiFiDirectMainActivity extends Activity implements
         if (mManualInitWfdSession) {
             Log.d(TAG, "start Manual WfdSession ");
             setConnect();
-            Log.d(TAG, "start miracast delay " + MAX_DELAY_MS + " ms");
-            mHandler.postDelayed(new Runnable() {
-                public void run() {
-                    Intent intent = new Intent(WiFiDirectMainActivity.this, SinkActivity.class);
-                    Bundle bundle = new Bundle();
-                    bundle.putString(SinkActivity.KEY_PORT, mPort);
-                    bundle.putString(SinkActivity.KEY_IP, mIP);
-                    bundle.putBoolean(HRESOLUTION_DISPLAY, mPref.getBoolean(HRESOLUTION_DISPLAY, true));
-                    intent.putExtras(bundle);
-                    startActivity(intent);
-                }}, MAX_DELAY_MS);
+            Log.d(TAG, "start miracast");
+            Intent intent = new Intent(WiFiDirectMainActivity.this, SinkActivity.class);
+            Bundle bundle = new Bundle();
+            bundle.putString(SinkActivity.KEY_PORT, mPort);
+            bundle.putString(SinkActivity.KEY_IP, mIP);
+            bundle.putBoolean(HRESOLUTION_DISPLAY, mPref.getBoolean(HRESOLUTION_DISPLAY, true));
+            intent.putExtras(bundle);
+            startActivity(intent);
         } else {
             Log.d(TAG, "error Auto WfdSessionMode,return");
             return;
@@ -930,20 +923,14 @@ public class WiFiDirectMainActivity extends Activity implements
             return;
         }
         setConnect();
-        Log.d(TAG, "start miracast delay " + MAX_DELAY_MS + " ms");
-        mHandler.postDelayed (new Runnable()
-        {
-            public void run()
-            {
-                Intent intent = new Intent (WiFiDirectMainActivity.this, SinkActivity.class);
-                Bundle bundle = new Bundle();
-                bundle.putString (SinkActivity.KEY_PORT, mPort);
-                bundle.putString (SinkActivity.KEY_IP, mIP);
-                bundle.putBoolean (HRESOLUTION_DISPLAY, mPref.getBoolean (HRESOLUTION_DISPLAY, true) );
-                intent.putExtras (bundle);
-                startActivity (intent);
-            }
-        }, MAX_DELAY_MS);
+        Log.d(TAG, "start miracast");
+        Intent intent = new Intent (WiFiDirectMainActivity.this, SinkActivity.class);
+        Bundle bundle = new Bundle();
+        bundle.putString (SinkActivity.KEY_PORT, mPort);
+        bundle.putString (SinkActivity.KEY_IP, mIP);
+        bundle.putBoolean (HRESOLUTION_DISPLAY, mPref.getBoolean (HRESOLUTION_DISPLAY, true) );
+        intent.putExtras (bundle);
+        startActivity (intent);
     }
 
     private void fixRtspFail()
@@ -1004,28 +991,7 @@ public class WiFiDirectMainActivity extends Activity implements
                 }
             }
         };
-        mReceiver2 = new BroadcastReceiver()
-        {
-            @Override
-            public void onReceive (Context context, Intent intent)
-            {
-                String action = intent.getAction();
-                if (action.equals (ACTION_FIX_RTSP_FAIL) )
-                {
-                    Log.d (TAG, "ACTION_FIX_RTSP_FAIL : mNetId=" + mNetId);
-                    fixRtspFail();
-                }
-                else if (action.equals (ACTION_REMOVE_GROUP) )
-                {
-                    Log.d (TAG, "ACTION_REMOVE_GROUP");
-                    manager.removeGroup (channel, null);
-                }
-            }
-        };
-        IntentFilter filter = new IntentFilter();
-        filter.addAction (ACTION_FIX_RTSP_FAIL);
-        filter.addAction (ACTION_REMOVE_GROUP);
-        registerReceiver (mReceiver2, filter);
+
         mReceiver = new WiFiDirectBroadcastReceiver (manager, channel, this);
         mPref = PreferenceManager.getDefaultSharedPreferences (this);
         mEditor = mPref.edit();
@@ -1040,7 +1006,6 @@ public class WiFiDirectMainActivity extends Activity implements
         stopPeerDiscovery();
         setIsWifiP2pEnabled (false);
         resetData();
-        unregisterReceiver (mReceiver2);
         mFirstInit = false;
         super.onDestroy();
     }
