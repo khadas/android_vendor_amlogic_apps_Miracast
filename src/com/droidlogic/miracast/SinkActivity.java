@@ -169,9 +169,10 @@ public class SinkActivity extends Activity
             } else if (action.equals(Intent.ACTION_SCREEN_ON)) {
                 Log.e(TAG, "ACTION_SCREEN_ON");
                 if (mEnterStandby) {
-                    if (mMiracastRunning)
+                    if (mMiracastRunning) {
                         stopMiracast(true);
-                    finishView();
+                        finishView();
+                    }
                     mEnterStandby = false;
                 }
             }
