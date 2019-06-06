@@ -122,6 +122,7 @@ public class SinkActivity extends Activity
     //private SystemControlManager mSystemControl = null;
     private int certBtnState = 0; // 0: none oper, 1:play, 2:pause
     private static final int CMD_MIRACAST_FINISHVIEW = 1;
+    private static final int CMD_MIRACAST_EXIT       = 2;
     private boolean mEnterStandby = false;
     static
     {
@@ -157,7 +158,7 @@ public class SinkActivity extends Activity
                 NetworkInfo networkInfo = (NetworkInfo) intent
                                           .getParcelableExtra (WifiP2pManager.EXTRA_NETWORK_INFO);
 
-                Log.d (TAG, "P2P connection changed isConnected:" + networkInfo.isConnected() + mMiracastRunning);
+                Log.d (TAG, "P2P connection changed isConnected:" + networkInfo.isConnected() + " mMiracastRunning:" + mMiracastRunning);
                 if (!networkInfo.isConnected() && mMiracastRunning)
                 {
                     stopMiracast(true);
@@ -253,6 +254,15 @@ public class SinkActivity extends Activity
                     SinkActivity.this.startActivity (homeIntent);
                     SinkActivity.this.finish();
                 break;
+                case CMD_MIRACAST_EXIT:
+                    certBtnState = 0;
+                    unregisterReceiver (mReceiver);
+                    stopMiracast (true);
+                    mWakeLock.release();
+                    setSinkParameters (false);
+                    quitLoop();
+                    mFileObserver.stopWatching();
+                break;
                 }
             }
         };
@@ -261,13 +271,7 @@ public class SinkActivity extends Activity
     protected void onDestroy()
     {
         super.onDestroy();
-        certBtnState = 0;
-        unregisterReceiver (mReceiver);
-        stopMiracast (true);
-        mWakeLock.release();
-        setSinkParameters (false);
-        quitLoop();
-        mFileObserver.stopWatching();
+        Log.d(TAG, "Sink Activity destory");
     }
 
     /** register the BroadcastReceiver with the intent values to be matched */
@@ -275,6 +279,7 @@ public class SinkActivity extends Activity
     public void onResume()
     {
         super.onResume();
+        Log.d(TAG, "sink activity onResume");
     }
 
     private boolean parseSessionId(String fileName)
@@ -338,6 +343,11 @@ public class SinkActivity extends Activity
     public void onPause()
     {
         super.onPause();
+        Log.d(TAG, " start sink activity onPause");
+        Message msg = Message.obtain();
+        msg.what = CMD_MIRACAST_EXIT;
+        mSessionHandler.sendMessage(msg);
+        Log.d(TAG, " end sink activity onPause");
     }
 
     @Override
@@ -497,7 +507,7 @@ public class SinkActivity extends Activity
                        {
                             case 0:
                                 nativeSetTeardown();
-                                finishView();
+                                //finishView();
                                 break;
                             case 1:
                                 if (certBtnState == 2)
@@ -543,16 +553,20 @@ public class SinkActivity extends Activity
      */
     public void stopMiracast (boolean owner)
     {
-        Log.d (TAG, "stop miracast running:" + mMiracastRunning);
+        Log.d (TAG, "stop miracast running:" + mMiracastRunning + ",owner:" + owner);
 
-        if (mMiracastRunning)
+        if (mMiracastRunning && owner)
         {
             mMiracastRunning = false;
+            nativeSetTeardown();
             nativeDisconnectSink();
-
+            Log.d(TAG, "stop Miracast and tear down");
             //Message msg = Message.obtain();
             //msg.what = CMD_MIRACAST_STOP;
             //mMiracastThreadHandler.sendMessage(msg);
+        } else if (mMiracastRunning) {
+            mMiracastRunning = false;
+            nativeDisconnectSink();
         }
     }
 

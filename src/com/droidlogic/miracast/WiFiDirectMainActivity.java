@@ -395,7 +395,7 @@ public class WiFiDirectMainActivity extends Activity implements
     public void stopPeerDiscovery() {
         Log.d(TAG, "stopPeerDiscover , do ForceStopScan....");
         mForceStopScan = true;
-        Log.d(TAG, "WPM.stopPeerDiscovery", new Throwable());
+        //Log.d(TAG, "WPM.stopPeerDiscovery", new Throwable());
         manager.stopPeerDiscovery(channel, new ActionListener() {
             @Override
             public void onSuccess() {
@@ -530,7 +530,6 @@ public class WiFiDirectMainActivity extends Activity implements
             public void onSuccess() {
                 Log.d(TAG, "setWifiP2pChannels succeeded.  ");
             }
-
             @Override
             public void onFailure(int reason) {
                 Log.d(TAG, "setWifiP2pChannels failed with reason " + reason + ".");
@@ -741,7 +740,7 @@ public class WiFiDirectMainActivity extends Activity implements
             return;
         }
         if (!SystemProperties.getBoolean("wfd.p2p.go", false)) {
-            Log.d(TAG, "WPM.discoverPeers", new Throwable());
+            //Log.d(TAG, "WPM.discoverPeers", new Throwable());
             manager.discoverPeers(channel, new WifiP2pManager.ActionListener() {
                 @Override
                 public void onSuccess() {

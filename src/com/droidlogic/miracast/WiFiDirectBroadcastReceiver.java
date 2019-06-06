@@ -44,6 +44,8 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver
     private WifiP2pManager manager;
     private Channel channel;
     private WiFiDirectMainActivity activity;
+    private final String DEFAULT_PORT = "7236";
+
     Object lock = new Object();
     /**
      * @param manager WifiP2pManager system service
@@ -147,9 +149,18 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver
                 {
                     Log.d (WiFiDirectMainActivity.TAG, "I am GC");
                     WifiP2pDevice device = p2pGroup.getOwner();
-                    if (device != null && device.wfdInfo != null)
+                    if (device != null && device.wfdInfo != null) {
                         mWfdPort = String.valueOf(device.wfdInfo.getControlPort());
-                    activity.startMiracast(p2pInfo.groupOwnerAddress.getHostAddress(), mWfdPort);
+                        Log.d(WiFiDirectMainActivity.TAG, "mWfdPort:" + mWfdPort);
+                        if (mWfdPort.equals(DEFAULT_PORT))
+                            activity.startMiracast(p2pInfo.groupOwnerAddress.getHostAddress(), mWfdPort);
+                         else {
+                            Log.d(WiFiDirectMainActivity.TAG, "use default port");
+                            activity.startMiracast(p2pInfo.groupOwnerAddress.getHostAddress(), DEFAULT_PORT);
+                         }
+                    } else {
+                        Log.d(WiFiDirectMainActivity.TAG, "device or device wfdInfo is null");
+                    }
                 }
                 mSinkIsConnected = false;
             }
