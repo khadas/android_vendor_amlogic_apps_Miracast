@@ -649,6 +649,7 @@ public class WiFiDirectMainActivity extends Activity implements
         else
             setCertComponentVisible(true);
         registerReceiver(mReceiver, intentFilter);
+        tryDiscoverPeers();
     }
 
     private final Runnable startSearchRunnable = new Runnable()
@@ -785,6 +786,7 @@ public class WiFiDirectMainActivity extends Activity implements
         super.onPause();
         unregisterReceiver(mReceiver);
         mWakeLock.release();
+        stopPeerDiscovery();
     }
 
     @Override
@@ -1002,7 +1004,6 @@ public class WiFiDirectMainActivity extends Activity implements
     {
         changeRole(false);
         Log.d (TAG, "onDestroy do stopPeerDiscovery");
-        stopPeerDiscovery();
         setIsWifiP2pEnabled (false);
         resetData();
         mFirstInit = false;
