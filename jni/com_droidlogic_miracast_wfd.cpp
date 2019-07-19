@@ -42,7 +42,6 @@ sp<ALooper> mSinkLooper = new ALooper;
 
 sp<AmANetworkSession> mSession = new AmANetworkSession;
 sp<WifiDisplaySink> mSink;
-bool mStart = false;
 bool mInit = false;
 
 static android::sp<android::Surface> native_surface;
@@ -80,14 +79,13 @@ void SinkHandler::onMessageReceived(const sp<AMessage> &msg)
         {
             AString reason;
             msg->findString("reason", &reason);
-            ALOGI("SinkHandler received : %s\n", reason.c_str());
-
+            ALOGI("SinkHandler received : %s", reason.c_str());
             report_wfd_error();
             break;
         }
         case kWhatStopCompleted:
         {
-            ALOGI("SinkHandler received stop completed\n:");
+            ALOGI("SinkHandler received stop completed");
             mSinkLooper->unregisterHandler(mSink->id());
             mSinkLooper->unregisterHandler(mHandler->id());
             mSinkLooper->stop();
@@ -95,7 +93,6 @@ void SinkHandler::onMessageReceived(const sp<AMessage> &msg)
             JNIEnv* env = AndroidRuntime::getJNIEnv();
             env->DeleteGlobalRef(sinkObject);
             native_surface.clear();
-            mStart = false;
             mInit = false;
             break;
         }
@@ -133,31 +130,35 @@ static int connect(const char *sourceHost, int32_t sourcePort)
         mSinkLooper->registerHandler(mSink);
         mSinkLooper->registerHandler(mHandler);
         mSink->setSinkHandler(mHandler);
-    }
-    ALOGI("SinkHandler mSink=%d, mHandler=%d", mSink->id(), mHandler->id());
-    if (sourcePort >= 0)
-    {
-        mSink->start(sourceHost, sourcePort);
-    }
-    else
-    {
-        mSink->start(sourceHost);
-    }
-
-    mStart = true;
-    if (!mInit)
-    {
+        ALOGI("SinkHandler mSink=%d, mHandler=%d", mSink->id(), mHandler->id());
+        if (sourcePort >= 0)
+            mSink->start(sourceHost, sourcePort);
+        else
+            mSink->start(sourceHost);
+        mSinkLooper->start(false, true, PRIORITY_DEFAULT);
         mInit = true;
-        mSinkLooper->start(true /* runOnCallingThread */);
+        ALOGI("connected");
     }
-    //ALOGI("connected\n");
     return 0;
 }
 
 static void connect_to_wifi_source(JNIEnv *env, jclass clazz, jobject sinkobj, jobject surface, jstring jip, jint jport)
 {
+   if (mInit) {
+        ALOGI("We should be stop WifiDisplaySink first");
+        mSession->stop();
+        mSink->stop();
+        if (native_surface.get())
+            native_surface.clear();
+        int times = 5;
+        do {
+            usleep(50000);
+            times--;
+            if (mInit == false)
+                break;
+        } while(times-- > 0);
+    }
     const char *ip = env->GetStringUTFChars(jip, NULL);
-
     ALOGI("ref sinkobj");
     sinkObject = env->NewGlobalRef(sinkobj);
     native_surface = getNativeSurface(env, surface);
@@ -166,7 +167,7 @@ static void connect_to_wifi_source(JNIEnv *env, jclass clazz, jobject sinkobj, j
     } else {
         ALOGE("native_surface is Invalid");
     }
-    ALOGI("connect to wifi source %s:%d native_surface.get() is %p\n", ip, jport, native_surface.get());
+    ALOGI("connect to wifi source %s:%d native_surface.get() is %p", ip, jport, native_surface.get());
     connect(ip, jport);
     env->ReleaseStringUTFChars(jip, ip);
 }
@@ -174,9 +175,7 @@ static void connect_to_wifi_source(JNIEnv *env, jclass clazz, jobject sinkobj, j
 static void connect_to_rtsp_uri(JNIEnv *env, jclass clazz, jstring juri)
 {
     const char *ip = env->GetStringUTFChars(juri, NULL);
-
-    ALOGI("connect to rtsp uri %s\n", ip);
-
+    ALOGI("connect to rtsp uri %s", ip);
     connect(ip, -1);
     env->ReleaseStringUTFChars(juri, ip);
 }
@@ -184,52 +183,43 @@ static void connect_to_rtsp_uri(JNIEnv *env, jclass clazz, jstring juri)
 static void resolutionSettings(JNIEnv *env, jclass clazz, jboolean isHD)
 {
     unsigned long b = isHD;
-
-    ALOGI("\n c-boolean: %lu  ", b);
+    ALOGI("c-boolean: %lu  ", b);
     if (!mSink.get()) {
         ALOGE("mSink is null");
         return;
     }
     if (b)
-    {
         mSink->setResolution(WifiDisplaySink::High);
-    }
     else
-    {
         mSink->setResolution(WifiDisplaySink::Normal);
-    }
 }
 
 static void disconnectSink(JNIEnv *env, jclass clazz)
 {
-    ALOGI("disconnect sink mInit:%d\n", mInit);
+    ALOGI("disconnect sink mInit:%d", mInit);
     if (mInit == false)
         return;
-    ALOGI("deref sinkobj");
-    if (mStart)
-    {
-        ALOGI("stop WifiDisplaySink");
-        mSession->stop();
-        mSink->stop();
-        native_surface.clear();
-    }
+    ALOGI("stop WifiDisplaySink");
+    mSession->stop();
+    mSink->stop();
+    native_surface.clear();
 }
 
 static void setPlay(JNIEnv* env, jclass clazz)
 {
-    ALOGI("setPlay\n");
+    ALOGI("setPlay");
     mSink->setPlay();
 }
 
 static void setPause(JNIEnv* env, jclass clazz)
 {
-    ALOGI("setPause\n");
+    ALOGI("setPause");
     mSink->setPause();
 }
 
 static void setTeardown(JNIEnv* env, jclass clazz)
 {
-    ALOGI("setTeardown\n");
+    ALOGI("setTeardown");
     mSink->setTeardown();
 }
 
@@ -323,5 +313,3 @@ jint JNI_OnLoad(JavaVM *vm, void *reserved)
 bail:
     return result;
 }
-
-
