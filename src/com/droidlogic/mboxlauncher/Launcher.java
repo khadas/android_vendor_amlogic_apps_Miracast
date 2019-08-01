@@ -612,6 +612,10 @@ public class Launcher extends Activity{
             current_screen_mode = MODE_HOME;
             mSecondScreen.setVisibility(View.GONE);
             mHomeView.setVisibility(View.VISIBLE);
+            if (!mHomeView.hasFocus()) {
+                MyRelativeLayout videoView = (MyRelativeLayout)findViewById(R.id.layout_video);
+                videoView.requestFocus();
+            }
             if (needPreviewFeture())
                 setTvViewPosition(TV_MODE_NORMAL);
         } else {
