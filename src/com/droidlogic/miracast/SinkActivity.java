@@ -259,7 +259,6 @@ public class SinkActivity extends Activity
                     unregisterReceiver (mReceiver);
                     stopMiracast (true);
                     mWakeLock.release();
-                    setSinkParameters (false);
                     quitLoop();
                     mFileObserver.stopWatching();
                 break;
