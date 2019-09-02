@@ -237,7 +237,7 @@ public class SinkActivity extends Activity
         intentFilter.addAction(Intent.ACTION_SCREEN_ON);
         intentFilter.addAction(Intent.ACTION_SCREEN_OFF);
         registerReceiver(mReceiver, intentFilter);
-        setSinkParameters(true);
+
 
         mSessionHandler = new Handler() {
         @Override
@@ -570,124 +570,6 @@ public class SinkActivity extends Activity
         }
     }
 
-    private boolean checkPathActive () {
-        String defaultNode = null;
-
-        String vfm_map = readSysfs("/sys/class/vfm/map");
-        if (vfm_map == null) {
-            Log.d(TAG, "readSysfs /sys/class/vfm/map is null");
-            return false;
-        }
-        Log.d(TAG, "readSysfs /sys/class/vfm/map : " + vfm_map);
-
-        int defaultStartIndex = vfm_map.indexOf("default {");
-        Log.d(TAG, "defaultStartIndex : " + defaultStartIndex);
-        if (defaultStartIndex >= 0) {
-            int defaultEndIndex = vfm_map.indexOf("}", defaultStartIndex);
-            Log.d(TAG, "defaultEndIndex : " + defaultEndIndex);
-            if (defaultEndIndex >= 0) {
-                defaultNode = vfm_map.substring(defaultStartIndex, defaultEndIndex);
-                Log.d(TAG, "defaultNode : " + defaultNode);
-                if (defaultNode.contains("(1)")) {
-                    Log.d(TAG, "contains defaultNode");
-                    return true;
-                }
-            }
-        }
-
-        Log.d(TAG, "uncontains defaultNode");
-        return false;
-    }
-
-    private void waitForVideoUnreg() {
-        boolean ret = false;
-        int i = 0;
-        for ( i = 0; i<50; i++ ) {
-            ret = checkPathActive ();
-            if (ret == false) {
-                Log.d(TAG, "defaultNode inactive, return");
-                return;
-            } else {
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                Log.d(TAG, "defaultNode active, wait");
-            }
-        }
-
-        Log.d(TAG, "defaultNode check timeout, return");
-        return;
-    }
-
-    public void setSinkParameters (boolean start)
-    {
-        if (start)
-        {
-            if (null != mSystemControl)
-            {
-                mCueEnable = mSystemControl.readSysFs("/sys/module/di/parameters/cue_enable");
-                mBypassDynamic = mSystemControl.readSysFs("/sys/module/di/parameters/bypass_dynamic");
-                mBypassProg = mSystemControl.readSysFs("/sys/module/di/parameters/bypass_prog");
-
-                mSystemControl.writeSysFs("/sys/module/di/parameters/cue_enable", "0");
-                mSystemControl.writeSysFs("/sys/module/di/parameters/bypass_dynamic", "0");
-                mSystemControl.writeSysFs("/sys/module/di/parameters/bypass_prog", "1");
-
-                mSystemControl.writeSysFs("/sys/class/vfm/map", "rm default");
-                mSystemControl.writeSysFs("/sys/class/vfm/map", "add default decoder deinterlace amvideo");
-                mSystemControl.writeSysFs("/sys/module/amvdec_h264/parameters/error_recovery_mode", "1");
-            }
-            else
-            {
-                mCueEnable = readSysfs("/sys/module/di/parameters/cue_enable");
-                mBypassDynamic = readSysfs("/sys/module/di/parameters/bypass_dynamic");
-                mBypassProg = readSysfs("/sys/module/di/parameters/bypass_prog");
-
-                writeSysfs("/sys/module/di/parameters/cue_enable", "0");
-                writeSysfs("/sys/module/di/parameters/bypass_dynamic", "0");
-                writeSysfs("/sys/module/di/parameters/bypass_prog", "1");
-
-                writeSysfs("/sys/class/vfm/map", "rm default");
-                writeSysfs("/sys/class/vfm/map", "add default decoder deinterlace amvideo");
-                writeSysfs("/sys/module/amvdec_h264/parameters/error_recovery_mode", "1");
-            }
-        }
-        else
-        {
-            waitForVideoUnreg();
-            StringBuilder b = new StringBuilder(60);
-            String vfmdefmap = SystemProperties.get("media.decoder.vfm.defmap");
-            if (vfmdefmap == null) {
-                b.append("add default decoder ppmgr amvideo");
-            }
-            else {
-                b.append("add default ");
-                b.append(vfmdefmap);
-            }
-
-            if (null != mSystemControl) {
-                mSystemControl.writeSysFs("/sys/module/di/parameters/cue_enable", mCueEnable);
-                mSystemControl.writeSysFs("/sys/module/di/parameters/bypass_dynamic", mBypassDynamic);
-                mSystemControl.writeSysFs("/sys/module/di/parameters/bypass_prog", mBypassProg);
-                mSystemControl.writeSysFs("/sys/class/video/vsync_pts_inc_upint", "0");
-
-                mSystemControl.writeSysFs("/sys/class/vfm/map", "rm default");
-                mSystemControl.writeSysFs("/sys/class/vfm/map", b.toString());
-                mSystemControl.writeSysFs("/sys/module/amvdec_h264/parameters/error_recovery_mode", "0");
-            } else {
-                writeSysfs("/sys/module/di/parameters/cue_enable", mCueEnable);
-                writeSysfs("/sys/module/di/parameters/bypass_dynamic", mBypassDynamic);
-                writeSysfs("/sys/module/di/parameters/bypass_prog", mBypassProg);
-                writeSysfs("/sys/class/video/vsync_pts_inc_upint", "0");
-
-                writeSysfs("/sys/class/vfm/map", "rm default");
-                writeSysfs("/sys/class/vfm/map", b.toString());
-                writeSysfs("/sys/module/amvdec_h264/parameters/error_recovery_mode", "0");
-            }
-        }
-    }
     private native void nativeConnectWifiSource (SinkActivity sink, Surface surface, String ip, int port);
     private native void nativeDisconnectSink();
     private native void nativeResolutionSettings (boolean isHD);
