@@ -270,6 +270,10 @@ public class SinkActivity extends Activity
     protected void onDestroy()
     {
         super.onDestroy();
+        if (mSessionHandler != null) {
+            mSessionHandler.removeCallbacksAndMessages(null);
+        }
+        mSessionHandler = null;
         Log.d(TAG, "Sink Activity destory");
     }
 
@@ -629,7 +633,9 @@ public class SinkActivity extends Activity
           if (mMiracastHandler != null && mMiracastHandler.getLooper() != null)
           {
               Log.v(TAG, "miracast thread quit");
+              mMiracastHandler.removeCallbacksAndMessages(null);
               mMiracastHandler.getLooper().quit();
+              mMiracastHandler = null;
           }
       }
 
