@@ -256,8 +256,8 @@ public class SinkActivity extends Activity
                 break;
                 case CMD_MIRACAST_EXIT:
                     certBtnState = 0;
-                    unregisterReceiver (mReceiver);
-                    stopMiracast (true);
+                    unregisterReceiver(mReceiver);
+                    stopMiracast(true);
                     mWakeLock.release();
                     quitLoop();
                     mFileObserver.stopWatching();
@@ -347,9 +347,11 @@ public class SinkActivity extends Activity
     {
         super.onPause();
         Log.d(TAG, " start sink activity onPause");
-        Message msg = Message.obtain();
-        msg.what = CMD_MIRACAST_EXIT;
-        mSessionHandler.sendMessage(msg);
+        if (mIP != null) {
+            Message msg = Message.obtain();
+            msg.what = CMD_MIRACAST_EXIT;
+            mSessionHandler.sendMessage(msg);
+        }
         Log.d(TAG, " end sink activity onPause");
     }
 
@@ -571,6 +573,8 @@ public class SinkActivity extends Activity
             mMiracastRunning = false;
             nativeDisconnectSink();
         }
+        mIP = null;
+        mPort = null;
     }
 
     private native void nativeConnectWifiSource (SinkActivity sink, Surface surface, String ip, int port);
@@ -653,6 +657,10 @@ public class SinkActivity extends Activity
         {
             // TODO Auto-generated method stub
             Log.e (TAG, "surfaceCreated mSurfaceView.getHolder().getSurface() is" + mSurfaceView.getHolder().getSurface() + "and holder.getSurface() is %p" + holder.getSurface() + mMiracastRunning + mEnterStandby);
+            if (mIP == null) {
+                finishView();
+                return;
+            }
             if (mMiracastRunning == false && mEnterStandby == false) {
                 startMiracast(mIP, mPort);
                 strIP = getlocalip();
