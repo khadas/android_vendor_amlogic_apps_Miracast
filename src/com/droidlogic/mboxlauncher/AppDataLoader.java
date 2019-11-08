@@ -45,7 +45,7 @@ public class AppDataLoader {
     public final static String ICON = "icon";
     public final static String COMPONENT_NAME = "component name";
 
-    public final static String SHORTCUT_PATH = "/data/data/com.droidlogic.mboxlauncher/shortcut.cfg";
+    public String SHORTCUT_PATH ;//= "/data/data/com.droidlogic.mboxlauncher/shortcut.cfg";
     public final static int DEFAULT_SHORTCUR_PATH = R.raw.default_shortcut;
     public final static String HOME_SHORTCUT_HEAD = "Home_Shortcut:";
     public final static String VIDEO_SHORTCUT_HEAD = "Video_Shortcut:";
@@ -80,6 +80,7 @@ public class AppDataLoader {
 
     public AppDataLoader (Context context) {
         mContext = context;
+	SHORTCUT_PATH = mContext.getFilesDir() + "/shortcut.cfg";
         mLauncherApps = (LauncherApps)mContext.getSystemService(Context.LAUNCHER_APPS_SERVICE);
         mActivityManager = (ActivityManager)mContext.getSystemService(Context.ACTIVITY_SERVICE);
         mLock = ((Launcher)mContext).getLock();
