@@ -86,8 +86,10 @@ public class Launcher extends Activity{
     public static final String PROP_TV_PREVIEW = "tv.is.preview.window";
     public static final String COMPONENT_THOMASROOM = "com.android.gl2jni";
     public static final String COMPONENT_TVSETTINGS = "com.android.tv.settings/com.android.tv.settings.MainSettings";
+    public static final String DTVKIT_PACKAGE = "org.dtvkit.inputsource";
     public static boolean isLaunchingTvSettings = false;
     public static boolean isLaunchingThomasroom = false;
+    public static final String PROP_TV_PREVIEW_STATUS = "tv.is.preview.window.playing";
 
     public static final int TYPE_VIDEO                           = 0;
     public static final int TYPE_RECOMMEND                       = 1;
@@ -157,6 +159,8 @@ public class Launcher extends Activity{
     private static final int TV_PROMPT_SPDIF                   = 4;
     private static final int TV_PROMPT_BLOCKED                 = 5;
     private static final int TV_PROMPT_NO_CHANNEL              = 6;
+    private static final int TV_PROMPT_RADIO                   = 7;
+    private static final int TV_PROMPT_TUNING                  = 8;
     private static final int TV_WINDOW_WIDTH                   = 310;
     private static final int TV_WINDOW_HEIGHT                  = 174;
     private static final int TV_WINDOW_NORMAL_LEFT             = 120;
@@ -166,6 +170,8 @@ public class Launcher extends Activity{
     private static final int TV_WINDOW_BOTTOM_TOP              = 719 - TV_WINDOW_HEIGHT;
     private static final int TV_MSG_PLAY_TV                    = 0;
     private static final int TV_MSG_BOOTUP_TO_TVAPP                = 1;
+
+    private static final int INPUT_ID_LENGTH = 3;
 
     public int tvViewMode = -1;
     private int mTvTop = -1;
@@ -279,6 +285,7 @@ public class Launcher extends Activity{
         recycleBigBackgroundDrawable();
         mTvHandler.removeMessages(TV_MSG_PLAY_TV);
         releaseTvView();
+        mSystemControlManager.setProperty(PROP_TV_PREVIEW_STATUS, "false");
         mTvStartPlaying = false;
     }
 
@@ -330,6 +337,12 @@ public class Launcher extends Activity{
             }
 
             tvView.setVisibility(View.VISIBLE);
+
+            // if pressing Home key in Launcher screen, don't re-tune TV source.
+            if (mTvStartPlaying) {
+                return;
+            }
+
             if (!isChannelBlocked || !isCurrentChannelBlockBlocked()) {
                 mTvHandler.sendEmptyMessage(TV_MSG_PLAY_TV);
             } else {
@@ -348,8 +361,6 @@ public class Launcher extends Activity{
         Log.d(TAG, "------onPause");
 
         if (needPreviewFeture()) {
-            mSystemControlManager.writeSysFs("/sys/module/tvin_hdmirx/parameters/en_4k_2_2k", "0");
-
             //if launch Thomas' Room, we should call onStop() to release TvView.
             if (isLaunchingThomasroom || isLaunchingTvSettings
                     || mSecondScreen.getVisibility() == View.VISIBLE) {
@@ -372,6 +383,10 @@ public class Launcher extends Activity{
 
     @Override
     protected void onDestroy(){
+        Log.d(TAG, "------onDestroy");
+        if (needPreviewFeture()) {
+            releasePlayingTv();
+        }
         unregisterReceiver(mediaReceiver);
         unregisterReceiver(netReceiver);
         unregisterReceiver(appReceiver);
@@ -704,7 +719,7 @@ public class Launcher extends Activity{
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
 
-            //Log.d(TAG, " mediaReceiver		  action = " + action);
+            //Log.d(TAG, " mediaReceiver          action = " + action);
             if (action == null)
                 return;
 
@@ -828,6 +843,7 @@ public class Launcher extends Activity{
 
     private boolean checkNeedStartTvApp(boolean close) {
         boolean ret = false;
+        mSystemControlManager.setProperty(PROP_TV_PREVIEW_STATUS, "false");
         if (TextUtils.equals(mSystemControlManager.getProperty("ro.vendor.platform.has.tvuimode"), "true") &&
             !TextUtils.equals(mSystemControlManager.getProperty("tv.launcher.firsttime.launch"), "false") &&
             Settings.System.getInt(getContentResolver(), "tv_start_up_enter_app", 0) > 0) {
@@ -967,9 +983,10 @@ public class Launcher extends Activity{
     private boolean isBootvideoStopped() {
         ContentProviderClient tvProvider = getContentResolver().acquireContentProviderClient(TvContract.AUTHORITY);
 
-        return TextUtils.equals(SystemProperties.get("init.svc.bootanim", "running"), "stopped")
-                && TextUtils.equals(SystemProperties.get("dev.bootcomplete", "0"), "1")
-                && (tvProvider != null);
+        return (tvProvider != null) &&
+                (((SystemProperties.getInt("persist.vendor.media.bootvideo", 50)  > 100)
+                        && TextUtils.equals(SystemProperties.get("service.bootvideo.exit", "1"), "0"))
+                || ((SystemProperties.getInt("persist.vendor.media.bootvideo", 50)  <= 100)));
     }
 
     private boolean isCurrentChannelBlocked() {
@@ -1005,7 +1022,7 @@ public class Launcher extends Activity{
             Log.d(TAG, "registerCallback:" + mTvInputChangeCallback);
             mTvInputManager.registerCallback(mTvInputChangeCallback, new Handler());
         }
-        setTvPrompt(TV_PROMPT_GOT_SIGNAL);
+        setTvPrompt(TV_PROMPT_TUNING/*TV_PROMPT_GOT_SIGNAL*/);
 
         int device_id;
         long channel_id;
@@ -1016,12 +1033,15 @@ public class Launcher extends Activity{
 
         List<TvInputInfo> input_list = mTvInputManager.getTvInputList();
         String inputid = DroidLogicTvUtils.getCurrentInputId(this);
+        TvInputInfo currentInfo = null;
         for (TvInputInfo info : input_list) {
             /*if (parseDeviceId(info.getId()) == device_id) {
                 mTvInputId = info.getId();
             }*/
-            if (TextUtils.equals(inputid, info.getId())) {
+            if (compareInputId(inputid, info)) {
                 mTvInputId = info.getId();
+                currentInfo = info;
+                break;
             }
         }
 
@@ -1035,13 +1055,13 @@ public class Launcher extends Activity{
             if (isTunerSource(device_id)) {
                 setChannelUri(channel_id);
             } else {
-                mSystemControlManager.writeSysFs("/sys/module/tvin_hdmirx/parameters/en_4k_2_2k", "1");
                 mChannelUri = TvContract.buildChannelUriForPassthroughInput(mTvInputId);
             }
         }
 
         Log.d(TAG, "TV play tune inputId=" + mTvInputId + " uri=" + mChannelUri);
-        if (mChannelUri != null) {
+        if (mChannelUri != null && (DroidLogicTvUtils.getChannelId(mChannelUri) > 0
+                || (currentInfo != null && currentInfo.isPassthroughInput()))) {
             tvView.tune(mTvInputId, mChannelUri);
         }
 
@@ -1049,10 +1069,11 @@ public class Launcher extends Activity{
             ChannelInfo current = mTvDataBaseManager.getChannelInfo(mChannelUri);
             if (current != null/* && (!mTvInputManager.isParentalControlsEnabled() ||
                         (mTvInputManager.isParentalControlsEnabled() && !current.isLocked()))*/) {
-                if (isCurrentChannelBlocked()) {
+                if (isCurrentChannelBlocked() && !current.getInputId().startsWith(DTVKIT_PACKAGE)) {
                     Log.d(TAG, "current channel is blocked");
                     setTvPrompt(TV_PROMPT_BLOCKED);
                 } else {
+                    setTvPrompt(TV_PROMPT_TUNING);
                     Log.d(TAG, "TV play tune continue as no channel blocks");
                 }
             } else {
@@ -1072,10 +1093,39 @@ public class Launcher extends Activity{
         if (mChannelObserver == null)
             mChannelObserver = new ChannelObserver();
         getContentResolver().registerContentObserver(Channels.CONTENT_URI, true, mChannelObserver);
+        mSystemControlManager.setProperty(PROP_TV_PREVIEW_STATUS, "true");
         mTvStartPlaying = true;
     }
 
+    private boolean compareInputId(String inputId, TvInputInfo info) {
+        Log.d(TAG, "compareInputId currentInputId " + inputId + " info " + info);
+        if (null == info) {
+            Log.d(TAG, "compareInputId info null");
+            return false;
+        }
+        String infoInputId = info.getId();
+        if (TextUtils.isEmpty(inputId) || TextUtils.isEmpty(infoInputId)) {
+            Log.d(TAG, "inputId empty");
+            return false;
+        }
+        if (TextUtils.equals(inputId, infoInputId)) {
+            return true;
+        }
+
+        String[] inputIdArr = inputId.split("/");
+        String[] infoInputIdArr = infoInputId.split("/");
+        // InputId is like com.droidlogic.tvinput/.services.Hdmi1InputService/HW5
+        if (inputIdArr.length == INPUT_ID_LENGTH && infoInputIdArr.length == INPUT_ID_LENGTH) {
+            // For hdmi device inputId could change to com.droidlogic.tvinput/.services.Hdmi2InputService/HDMI200008
+            if (inputIdArr[0].equals(infoInputIdArr[0]) && inputIdArr[1].equals(infoInputIdArr[1])) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private void releaseTvView() {
+        Log.d(TAG, "releaseTvView:" + mChannelUri);
         tvView.setVisibility(View.GONE);
         tvView.reset();
 
@@ -1199,13 +1249,21 @@ public class Launcher extends Activity{
                 tvPrompt.setText(getResources().getString(R.string.str_no_channel));
                 tvPrompt.setBackground(getResources().getDrawable(R.drawable.black));
                 break;
+            case TV_PROMPT_RADIO:
+                tvPrompt.setText(getResources().getString(R.string.str_audio_only));
+                tvPrompt.setBackgroundDrawable(getResources().getDrawable(R.drawable.bg_radio));
+                break;
+            case TV_PROMPT_TUNING:
+                tvPrompt.setText(null);
+                tvPrompt.setBackground(getResources().getDrawable(R.drawable.black));
+                break;
         }
     }
 
     //stop the background music player
     public void stopMusicPlayer() {
         Intent intent = new Intent();
-        intent.setAction ("com.android.music.musicservicecommand.pause");
+        intent.setAction ("com.android.music.pause");
         intent.putExtra ("command", "stop");
         sendBroadcast (intent);
     }
@@ -1218,8 +1276,8 @@ public class Launcher extends Activity{
                         Log.d(TAG, "======== bootvideo is stopped, and tvapp released, start tv play");
                         tuneTvView();
                     } else {
-                        Log.d(TAG, "======== bootvideo is not stopped, or tvapp not released, wait it");
-                        mTvHandler.sendEmptyMessageDelayed(TV_MSG_PLAY_TV, 200);
+                        //Log.d(TAG, "======== bootvideo is not stopped, or tvapp not released, wait it");
+                        mTvHandler.sendEmptyMessageDelayed(TV_MSG_PLAY_TV, 10);
                     }
                     break;
                 case TV_MSG_BOOTUP_TO_TVAPP:
@@ -1302,6 +1360,10 @@ public class Launcher extends Activity{
                 if (!TextUtils.equals(mChannelUri.toString(), TvContract.buildChannelUri(-1).toString())) {
                     setTvPrompt(TV_PROMPT_NO_SIGNAL);
                 }
+            } else if (reason == TvInputManager.VIDEO_UNAVAILABLE_REASON_AUDIO_ONLY) {
+                if (inputId != null && inputId.startsWith(DTVKIT_PACKAGE)) {
+                    setTvPrompt(TV_PROMPT_RADIO);
+                }
             }
         }
 
@@ -1347,22 +1409,20 @@ public class Launcher extends Activity{
     private final class TvInputChangeCallback extends TvInputManager.TvInputCallback {
         @Override
         public void onInputAdded(String inputId) {
-            Log.d(TAG, "==== onInputAdded, inputId=" + inputId + " curent inputid=" + mTvInputId);
-            int device_id = Settings.System.getInt(getContentResolver(), DroidLogicTvUtils.TV_CURRENT_DEVICE_ID, 0);
-            if (device_id == parseDeviceId(inputId)) {
-                switch (device_id) {
-                    case DroidLogicTvUtils.DEVICE_ID_AV1:
-                    case DroidLogicTvUtils.DEVICE_ID_AV2:
-                    case DroidLogicTvUtils.DEVICE_ID_HDMI1:
-                    case DroidLogicTvUtils.DEVICE_ID_HDMI2:
-                    case DroidLogicTvUtils.DEVICE_ID_HDMI3:
-                    case DroidLogicTvUtils.DEVICE_ID_HDMI4:
-                        //tvView.reset();
-                        setTvPrompt(TV_PROMPT_GOT_SIGNAL);
-                        mTvInputId = inputId;
-                        mChannelUri = TvContract.buildChannelUriForPassthroughInput(mTvInputId);
-                        tvView.tune(mTvInputId, mChannelUri);
-                        break;
+            String current_inputid = DroidLogicTvUtils.getCurrentInputId(getApplicationContext());
+            Log.d(TAG, "==== onInputAdded, inputId=" + inputId + " curent inputid=" + current_inputid + "curent mChannelUri" + mChannelUri);
+            if (inputId.equals(current_inputid) || mTvInputId == null) {
+                mTvInputId = inputId;
+                if (!mTvInputManager.getTvInputInfo(inputId).isPassthroughInput()) {
+                    if (!mTvStartPlaying) {
+                        tuneTvView();
+                    }
+                    /*setChannelUri(Settings.System.getLong(getContentResolver(), DroidLogicTvUtils.TV_DTV_CHANNEL_INDEX, -1));
+                    tvView.tune(mTvInputId, mChannelUri);*/
+                } else {
+                    setTvPrompt(TV_PROMPT_GOT_SIGNAL);
+                    mChannelUri = TvContract.buildChannelUriForPassthroughInput(mTvInputId);
+                    tvView.tune(mTvInputId, mChannelUri);
                 }
             }
         }

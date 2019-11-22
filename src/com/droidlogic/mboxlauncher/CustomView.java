@@ -259,7 +259,9 @@ public class CustomView extends FrameLayout implements OnItemClickListener, OnGl
                 }
             } else {
                 String str_package_name = ((ComponentName)item.get(COMPONENT_NAME)).getPackageName();
-                str_custom_apps = str_custom_apps.replaceAll(str_package_name + ";", "");
+                if (!TextUtils.isEmpty(str_custom_apps)) {
+                    str_custom_apps = str_custom_apps.replaceAll(str_package_name + ";", "");
+                }
                 ((ArrayMap<String, Object>)parent.getItemAtPosition(pos)).put(SELECTION, R.drawable.item_img_unsel);
                 updateView();
                 if (mMode == Launcher.MODE_HOME) {

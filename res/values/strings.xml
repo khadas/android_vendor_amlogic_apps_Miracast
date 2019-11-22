@@ -26,6 +26,7 @@
     <string name="str_exit">Exit</string>
     <string name="str_no_signal">No signal</string>
     <string name="str_no_channel">No channel</string>
+    <string name="str_audio_only">Audio Only</string>
     <string name="str_scrambeled">Scrambled</string>
     <string name="str_blocked">Program is blocked</string>
     <string name="toast_livetv_warn">LiveTv is releasing, please wait</string>
