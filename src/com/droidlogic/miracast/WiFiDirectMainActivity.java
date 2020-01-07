@@ -91,6 +91,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
+import android.content.ComponentName;
 
 /**
  * @ClassName WiFiDirectMainActivity
@@ -114,7 +115,9 @@ public class WiFiDirectMainActivity extends Activity implements
     public static final String ENCODING = "UTF-8";
     private static final String VERSION_FILE = "version";
 
-    private static final String ACTION_NETWORK_SETTINGS = "android.settings.NETWORK_SETTINGS";
+    //private static final String ACTION_NETWORK_SETTINGS = "android.settings.NETWORK_SETTINGS";
+    private static final String ACTION_NETWORK_SETTINGS_PACKAGE = "com.android.tv.settings";
+    private static final String ACTION_NETWORK_SETTINGS_ACTIVITY = "com.android.tv.settings.MainSettings";
     public static final String  DNSMASQ_PATH = "/data/misc/dhcp";
     /***Miracast cert begin***/
     public boolean mForceStopScan = false;
@@ -620,8 +623,11 @@ public class WiFiDirectMainActivity extends Activity implements
             @Override
             public void onClick (View v)
             {
-                WiFiDirectMainActivity.this.startActivity (new Intent (
-                            ACTION_NETWORK_SETTINGS) );
+                //WiFiDirectMainActivity.this.startActivity (new Intent (
+                //            ACTION_NETWORK_SETTINGS) );
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                intent.setComponent(new ComponentName(ACTION_NETWORK_SETTINGS_PACKAGE, ACTION_NETWORK_SETTINGS_ACTIVITY));
+                startActivity(intent);
             }
         });
         if (!isNetAvailiable() )
