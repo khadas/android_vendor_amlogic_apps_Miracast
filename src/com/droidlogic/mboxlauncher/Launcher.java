@@ -45,6 +45,8 @@ import android.view.KeyEvent;
 import android.view.View.OnTouchListener;
 import android.media.tv.TvContentRating;
 import android.media.tv.TvTrackInfo;
+import android.content.ContentValues;
+import android.database.Cursor;
 
 import android.widget.TextView;
 import android.widget.ImageView;
@@ -57,6 +59,7 @@ import android.graphics.Rect;
 import android.widget.FrameLayout;
 
 import com.droidlogic.app.SystemControlManager;
+import com.droidlogic.app.DataProviderManager;
 import com.droidlogic.app.tv.ChannelInfo;
 import com.droidlogic.app.tv.DroidLogicTvUtils;
 import com.droidlogic.app.tv.TvControlManager;
@@ -321,34 +324,13 @@ public class Launcher extends Activity{
         displayDate();
 
         if (needPreviewFeture()) {
-            long channelId = Settings.System.getLong(getContentResolver(), DroidLogicTvUtils.TV_DTV_CHANNEL_INDEX, -1);
-            int deviceId = Settings.System.getInt(getContentResolver(), DroidLogicTvUtils.TV_CURRENT_DEVICE_ID, 0);
-            if (channelId != -1) {
-                Uri channelUri = TvContract.buildChannelUri(channelId);
-                ChannelInfo currentChannel = mTvDataBaseManager.getChannelInfo(channelUri);
-                if (isTunerSource(deviceId) && currentChannel != null
-                        && currentChannel.isLocked() && mTvInputManager.isParentalControlsEnabled()) {
-                    isChannelBlocked = true;
-                } else {
-                    isChannelBlocked = false;
-                }
-            } else {
-                isChannelBlocked = false;
-            }
-
+            //need to init channel when tv provider is ready
             tvView.setVisibility(View.VISIBLE);
-
             // if pressing Home key in Launcher screen, don't re-tune TV source.
             if (mTvStartPlaying) {
                 return;
             }
-
-            if (!isChannelBlocked || !isCurrentChannelBlockBlocked()) {
-                mTvHandler.sendEmptyMessage(TV_MSG_PLAY_TV);
-            } else {
-                setTvPrompt(TV_PROMPT_BLOCKED);
-                tvView.setStreamVolume(0);
-            }
+            mTvHandler.sendEmptyMessage(TV_MSG_PLAY_TV);
         } else if (tvView != null) {
             tvView.setVisibility(View.INVISIBLE);
         }
@@ -990,17 +972,15 @@ public class Launcher extends Activity{
     }
 
     private boolean isCurrentChannelBlocked() {
-        return mSystemControlManager.getPropertyBoolean(DroidLogicTvUtils.TV_CURRENT_BLOCK_STATUS, false);
+        return DataProviderManager.getBooleanValue(this, DroidLogicTvUtils.TV_CURRENT_BLOCK_STATUS, false);
     }
 
     private boolean isCurrentChannelBlockBlocked() {
-        String value = mSystemControlManager.getProperty(DroidLogicTvUtils.TV_CURRENT_CHANNELBLOCK_STATUS);
-        boolean status = mSystemControlManager.getPropertyBoolean(DroidLogicTvUtils.TV_CURRENT_CHANNELBLOCK_STATUS, false);
-        return status && !TextUtils.isEmpty(value);
+        return DataProviderManager.getBooleanValue(this, DroidLogicTvUtils.TV_CURRENT_CHANNELBLOCK_STATUS, false);
     }
 
     public void setCurrentChannelBlocked(boolean blocked){
-        mSystemControlManager.setProperty(DroidLogicTvUtils.TV_CURRENT_BLOCK_STATUS, blocked ? "true" : "false");
+        DataProviderManager.putBooleanValue(this, DroidLogicTvUtils.TV_CURRENT_BLOCK_STATUS, blocked);
     }
 
     private boolean isTunerSource (int deviceId) {
@@ -1274,7 +1254,11 @@ public class Launcher extends Activity{
                 case TV_MSG_PLAY_TV:
                     if (isBootvideoStopped()) {
                         Log.d(TAG, "======== bootvideo is stopped, and tvapp released, start tv play");
-                        tuneTvView();
+                        if (initChannelWhenChannelReady()) {
+                            tuneTvView();
+                        } else {
+                            Log.d(TAG, "======== screen blocked and no need start tv play");
+                        }
                     } else {
                         //Log.d(TAG, "======== bootvideo is not stopped, or tvapp not released, wait it");
                         mTvHandler.sendEmptyMessageDelayed(TV_MSG_PLAY_TV, 10);
@@ -1312,7 +1296,7 @@ public class Launcher extends Activity{
             if (device_id == DroidLogicTvUtils.DEVICE_ID_AV1 || device_id == DroidLogicTvUtils.DEVICE_ID_AV2) {
                 isAvNoSignal = false;
             }
-            if (!isChannelBlocked) {
+            if (!isChannelBlocked || !isCurrentChannelBlockBlocked()) {
                 setTvPrompt(TV_PROMPT_GOT_SIGNAL);
             } else {
                 setTvPrompt(TV_PROMPT_BLOCKED);
@@ -1551,5 +1535,32 @@ public class Launcher extends Activity{
             Settings.Secure.putInt(getContentResolver(), Settings.Secure.USER_SETUP_COMPLETE, 1);
             Settings.Secure.putInt(getContentResolver(), Settings.Secure.TV_USER_SETUP_COMPLETE, 1);
         }
+    }
+
+    private boolean initChannelWhenChannelReady() {
+        boolean result = false;
+        long channelId = Settings.System.getLong(getContentResolver(), DroidLogicTvUtils.TV_DTV_CHANNEL_INDEX, -1);
+        int deviceId = Settings.System.getInt(getContentResolver(), DroidLogicTvUtils.TV_CURRENT_DEVICE_ID, 0);
+        if (channelId != -1) {
+            Uri channelUri = TvContract.buildChannelUri(channelId);
+            ChannelInfo currentChannel = mTvDataBaseManager.getChannelInfo(channelUri);
+            if (isTunerSource(deviceId) && currentChannel != null
+                    && currentChannel.isLocked() && mTvInputManager.isParentalControlsEnabled()) {
+                isChannelBlocked = true;
+            } else {
+                isChannelBlocked = false;
+            }
+        } else {
+            isChannelBlocked = false;
+        }
+        Log.d(TAG, "initChannelWhenChannelReady isChannelBlocked = " + isChannelBlocked + ", isCurrentChannelBlockBlocked = " + isCurrentChannelBlockBlocked());
+        if (!isChannelBlocked || !isCurrentChannelBlockBlocked()) {
+            result = true;
+        } else {
+            setTvPrompt(TV_PROMPT_BLOCKED);
+            tvView.setStreamVolume(0);
+            result = false;
+        }
+        return result;
     }
 }
