@@ -1202,8 +1202,13 @@ public class Launcher extends Activity{
                 tvPrompt.setBackground(null);
                 break;
             case TV_PROMPT_NO_SIGNAL:
-                tvPrompt.setText(null);
-                tvPrompt.setBackground(null);
+                if (mTvInputId != null && mTvInputId.startsWith(DTVKIT_PACKAGE)) {
+                    tvPrompt.setText(getResources().getString(R.string.str_no_signal));
+                    tvPrompt.setBackground(getResources().getDrawable(R.drawable.black));
+                } else {
+                    tvPrompt.setText(null);
+                    tvPrompt.setBackground(null);
+                }
                 break;
             case TV_PROMPT_IS_SCRAMBLED:
                 tvPrompt.setText(getResources().getString(R.string.str_scrambeled));
@@ -1298,6 +1303,9 @@ public class Launcher extends Activity{
             }
             if (!isChannelBlocked || !isCurrentChannelBlockBlocked()) {
                 setTvPrompt(TV_PROMPT_GOT_SIGNAL);
+                if (inputId != null && inputId.startsWith(DTVKIT_PACKAGE)) {
+                    tvView.setStreamVolume(1);
+                }
             } else {
                 setTvPrompt(TV_PROMPT_BLOCKED);
                 tvView.setStreamVolume(0);
@@ -1340,13 +1348,20 @@ public class Launcher extends Activity{
             } else if (device_id == DroidLogicTvUtils.DEVICE_ID_AV1 || device_id == DroidLogicTvUtils.DEVICE_ID_AV2) {
                 isAvNoSignal = true;
                 setTvPrompt(TV_PROMPT_NO_SIGNAL);
-            } else if (reason != TvInputManager.VIDEO_UNAVAILABLE_REASON_AUDIO_ONLY) {
+            } else if (reason != TvInputManager.VIDEO_UNAVAILABLE_REASON_AUDIO_ONLY &&
+                    reason != TvInputManager.VIDEO_UNAVAILABLE_REASON_TUNING) {
                 if (!TextUtils.equals(mChannelUri.toString(), TvContract.buildChannelUri(-1).toString())) {
                     setTvPrompt(TV_PROMPT_NO_SIGNAL);
+                    if (inputId != null && inputId.startsWith(DTVKIT_PACKAGE)) {
+                        tvView.setStreamVolume(0);
+                    }
                 }
             } else if (reason == TvInputManager.VIDEO_UNAVAILABLE_REASON_AUDIO_ONLY) {
                 if (inputId != null && inputId.startsWith(DTVKIT_PACKAGE)) {
                     setTvPrompt(TV_PROMPT_RADIO);
+                    if (inputId != null && inputId.startsWith(DTVKIT_PACKAGE)) {
+                        tvView.setStreamVolume(1);
+                    }
                 }
             }
         }
