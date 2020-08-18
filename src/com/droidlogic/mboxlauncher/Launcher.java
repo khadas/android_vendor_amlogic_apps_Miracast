@@ -886,7 +886,14 @@ public class Launcher extends Activity{
 
     public static int dipToPx(Context context, float dpValue) {
         final float scale = context.getResources().getDisplayMetrics().density;
-        return (int) (dpValue * scale + 0.5f);
+		if ((SystemProperties.getInt("persist.sys.builtinrotation", 0)%2) > 0)
+		{
+			return (int) (dpValue * scale + 0.5f)/2;
+		}
+        else
+		{
+			return (int) (dpValue * scale + 0.5f);
+		}
     }
 
     private void setTvView() {
